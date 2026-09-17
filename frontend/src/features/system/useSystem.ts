@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 
 import { ApiError, apiFetch } from '@/api/client'
-import type { AppDetail, AppState, Diagnostics, Health } from '@/api/types'
+import type { AppDetail, AppState, Diagnostics, Health, SystemSummary } from '@/api/types'
 
 export function useApps() {
   return useQuery<AppState[]>({
@@ -33,5 +33,13 @@ export function useDiagnostics() {
     queryKey: ['diagnostics'],
     queryFn: () => apiFetch<Diagnostics>('/diagnostics'),
     refetchInterval: 60_000,
+  })
+}
+
+export function useSummary() {
+  return useQuery<SystemSummary>({
+    queryKey: ['summary'],
+    queryFn: () => apiFetch<SystemSummary>('/system/summary'),
+    refetchInterval: 30_000,
   })
 }

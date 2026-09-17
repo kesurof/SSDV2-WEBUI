@@ -41,3 +41,9 @@ class AppDetailOut(AppStateOut):
     container_list: list[ContainerOut]
     ssddb: SsddbAppOut | None
     registries: RegistriesOut
+
+
+class LogsOut(BaseModel):
+    app: str
+    container: str
+    lines: list[str]

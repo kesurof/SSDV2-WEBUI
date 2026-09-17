@@ -72,6 +72,76 @@
         }
       }
     },
+    "/api/v1/apps/{app}/logs": {
+      "get": {
+        "tags": [
+          "apps"
+        ],
+        "summary": "Get App Logs",
+        "operationId": "get_app_logs_api_v1_apps__app__logs_get",
+        "parameters": [
+          {
+            "name": "app",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "App"
+            }
+          },
+          {
+            "name": "container",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Container"
+            }
+          },
+          {
+            "name": "lines",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1000,
+              "minimum": 1,
+              "default": 200,
+              "title": "Lines"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LogsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/auth/login": {
       "post": {
         "tags": [
@@ -183,6 +253,27 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HealthOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/system/summary": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Get Summary",
+        "operationId": "get_summary_api_v1_system_summary_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemSummaryOut"
                 }
               }
             }
@@ -561,6 +652,89 @@
         ],
         "title": "HealthOut"
       },
+      "HostSummary": {
+        "properties": {
+          "hostname": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hostname"
+          },
+          "os": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Os"
+          },
+          "kernel": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kernel"
+          },
+          "architecture": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Architecture"
+          },
+          "cpus": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cpus"
+          },
+          "memory_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Memory Bytes"
+          },
+          "server_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Server Version"
+          }
+        },
+        "type": "object",
+        "title": "HostSummary"
+      },
       "LoginRequest": {
         "properties": {
           "username": {
@@ -578,6 +752,32 @@
           "password"
         ],
         "title": "LoginRequest"
+      },
+      "LogsOut": {
+        "properties": {
+          "app": {
+            "type": "string",
+            "title": "App"
+          },
+          "container": {
+            "type": "string",
+            "title": "Container"
+          },
+          "lines": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Lines"
+          }
+        },
+        "type": "object",
+        "required": [
+          "app",
+          "container",
+          "lines"
+        ],
+        "title": "LogsOut"
       },
       "RegistriesOut": {
         "properties": {
@@ -654,6 +854,97 @@
           "port"
         ],
         "title": "SsddbAppOut"
+      },
+      "Ssdv2Summary": {
+        "properties": {
+          "branch": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Branch"
+          },
+          "commit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Commit"
+          },
+          "apps_total": {
+            "type": "integer",
+            "title": "Apps Total",
+            "default": 0
+          },
+          "installed": {
+            "type": "integer",
+            "title": "Installed",
+            "default": 0
+          },
+          "running": {
+            "type": "integer",
+            "title": "Running",
+            "default": 0
+          },
+          "stopped": {
+            "type": "integer",
+            "title": "Stopped",
+            "default": 0
+          },
+          "unknown": {
+            "type": "integer",
+            "title": "Unknown",
+            "default": 0
+          },
+          "not_installed": {
+            "type": "integer",
+            "title": "Not Installed",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "title": "Ssdv2Summary"
+      },
+      "SystemSummaryOut": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "degraded"
+            ],
+            "title": "Status"
+          },
+          "host": {
+            "$ref": "#/components/schemas/HostSummary"
+          },
+          "ssdv2": {
+            "$ref": "#/components/schemas/Ssdv2Summary"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "host",
+          "ssdv2",
+          "warnings"
+        ],
+        "title": "SystemSummaryOut"
       },
       "UserOut": {
         "properties": {

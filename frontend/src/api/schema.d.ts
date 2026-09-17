@@ -38,6 +38,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/apps/{app}/logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get App Logs */
+        get: operations["get_app_logs_api_v1_apps__app__logs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/login": {
         parameters: {
             query?: never;
@@ -115,6 +132,23 @@ export interface paths {
         };
         /** Health */
         get: operations["health_api_v1_health_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/system/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Summary */
+        get: operations["get_summary_api_v1_system_summary_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -249,12 +283,38 @@ export interface components {
             /** Database */
             database: boolean;
         };
+        /** HostSummary */
+        HostSummary: {
+            /** Hostname */
+            hostname?: string | null;
+            /** Os */
+            os?: string | null;
+            /** Kernel */
+            kernel?: string | null;
+            /** Architecture */
+            architecture?: string | null;
+            /** Cpus */
+            cpus?: number | null;
+            /** Memory Bytes */
+            memory_bytes?: number | null;
+            /** Server Version */
+            server_version?: string | null;
+        };
         /** LoginRequest */
         LoginRequest: {
             /** Username */
             username: string;
             /** Password */
             password: string;
+        };
+        /** LogsOut */
+        LogsOut: {
+            /** App */
+            app: string;
+            /** Container */
+            container: string;
+            /** Lines */
+            lines: string[];
         };
         /** RegistriesOut */
         RegistriesOut: {
@@ -273,6 +333,55 @@ export interface components {
             subdomain: string | null;
             /** Port */
             port: number | null;
+        };
+        /** Ssdv2Summary */
+        Ssdv2Summary: {
+            /** Branch */
+            branch?: string | null;
+            /** Commit */
+            commit?: string | null;
+            /**
+             * Apps Total
+             * @default 0
+             */
+            apps_total: number;
+            /**
+             * Installed
+             * @default 0
+             */
+            installed: number;
+            /**
+             * Running
+             * @default 0
+             */
+            running: number;
+            /**
+             * Stopped
+             * @default 0
+             */
+            stopped: number;
+            /**
+             * Unknown
+             * @default 0
+             */
+            unknown: number;
+            /**
+             * Not Installed
+             * @default 0
+             */
+            not_installed: number;
+        };
+        /** SystemSummaryOut */
+        SystemSummaryOut: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "ok" | "degraded";
+            host: components["schemas"]["HostSummary"];
+            ssdv2: components["schemas"]["Ssdv2Summary"];
+            /** Warnings */
+            warnings: string[];
         };
         /** UserOut */
         UserOut: {
@@ -339,6 +448,40 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AppDetailOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_app_logs_api_v1_apps__app__logs_get: {
+        parameters: {
+            query?: {
+                container?: string | null;
+                lines?: number;
+            };
+            header?: never;
+            path: {
+                app: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogsOut"];
                 };
             };
             /** @description Validation Error */
@@ -459,6 +602,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HealthOut"];
+                };
+            };
+        };
+    };
+    get_summary_api_v1_system_summary_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SystemSummaryOut"];
                 };
             };
         };

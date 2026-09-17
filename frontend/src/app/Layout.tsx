@@ -6,6 +6,12 @@ import { useLogout, useMe } from '@/features/auth/useAuth'
 import { useHealth } from '@/features/system/useSystem'
 import { fr } from '@/i18n/fr'
 
+const NAV_ITEMS = [
+  { to: '/dashboard', label: fr.nav.dashboard },
+  { to: '/apps', label: fr.nav.apps },
+  { to: '/diagnostics', label: fr.nav.diagnostics },
+]
+
 export function Layout() {
   const me = useMe()
   const health = useHealth()
@@ -30,26 +36,19 @@ export function Layout() {
       <aside className="flex w-56 flex-col border-r bg-muted/20 p-3">
         <div className="px-2 py-3 text-sm font-semibold">SSDV2 WebUI</div>
         <nav className="flex-1 space-y-1">
-          <NavLink
-            to="/apps"
-            className={({ isActive }) =>
-              `block rounded-md px-2 py-1.5 text-sm ${
-                isActive ? 'bg-accent font-medium' : 'text-muted-foreground hover:bg-accent/50'
-              }`
-            }
-          >
-            {fr.nav.apps}
-          </NavLink>
-          <NavLink
-            to="/diagnostics"
-            className={({ isActive }) =>
-              `block rounded-md px-2 py-1.5 text-sm ${
-                isActive ? 'bg-accent font-medium' : 'text-muted-foreground hover:bg-accent/50'
-              }`
-            }
-          >
-            {fr.nav.diagnostics}
-          </NavLink>
+          {NAV_ITEMS.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className={({ isActive }) =>
+                `block rounded-md px-2 py-1.5 text-sm ${
+                  isActive ? 'bg-accent font-medium' : 'text-muted-foreground hover:bg-accent/50'
+                }`
+              }
+            >
+              {item.label}
+            </NavLink>
+          ))}
         </nav>
         <div className="space-y-2 border-t p-2">
           <div className="truncate text-xs text-muted-foreground">{me.data.username}</div>

@@ -17,14 +17,14 @@ export function LoginPage() {
   const [password, setPassword] = useState('')
 
   if (me.data) {
-    return <Navigate to="/apps" replace />
+    return <Navigate to="/dashboard" replace />
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     login.mutate(
       { username, password },
-      { onSuccess: () => navigate('/apps', { replace: true }) },
+      { onSuccess: () => navigate('/dashboard', { replace: true }) },
     )
   }
 

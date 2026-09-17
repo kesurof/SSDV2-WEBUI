@@ -103,3 +103,83 @@ def test_app_detail_unknown_app(auth_client, write_catalogue):
 
     assert response.status_code == 404
     assert "inconnue" in response.json()["detail"]
+
+
+def test_app_logs_requires_authentication(client):
+    assert client.get("/api/v1/apps/sonarr/logs").status_code == 401
+
+
+def test_app_logs_default_container(auth_client, write_catalogue, write_registry, fake_containers):
+    write_catalogue("sonarr - Gestion Séries\n")
+    write_registry("sonarr", "containers", ["sonarr", "db-sonarr"])
+
+    from tests.conftest import FakeContainer
+
+    fake_containers.append(FakeContainer(name="sonarr"))
+    fake_containers.append(FakeContainer(name="db-sonarr"))
+
+    response = auth_client.get("/api/v1/apps/sonarr/logs")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["container"] == "sonarr"
+    assert len(body["lines"]) == 2
+    assert body["lines"][0].endswith("ligne 1 de sonarr")
+
+
+def test_app_logs_explicit_container(auth_client, write_catalogue, write_registry, fake_containers):
+    write_catalogue("sonarr - Gestion Séries\n")
+    write_registry("sonarr", "containers", ["sonarr", "db-sonarr"])
+
+    from tests.conftest import FakeContainer
+
+    fake_containers.append(FakeContainer(name="sonarr"))
+    fake_containers.append(FakeContainer(name="db-sonarr"))
+
+    response = auth_client.get("/api/v1/apps/sonarr/logs?container=db-sonarr&lines=1")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["container"] == "db-sonarr"
+    assert body["lines"] == ["2026-09-17T10:00:01Z ligne 1 de db-sonarr"]
+
+
+def test_app_logs_rejects_foreign_container(
+    auth_client, write_catalogue, write_registry, fake_containers
+):
+    write_catalogue("sonarr - Gestion Séries\n")
+    write_registry("sonarr", "containers", ["sonarr"])
+
+    from tests.conftest import FakeContainer
+
+    fake_containers.append(FakeContainer(name="sonarr"))
+
+    response = auth_client.get("/api/v1/apps/sonarr/logs?container=traefik")
+
+    assert response.status_code == 404
+    assert "non rattaché" in response.json()["detail"]
+
+
+def test_app_logs_unknown_app(auth_client, write_catalogue):
+    write_catalogue("wallos - Budget\n")
+
+    assert auth_client.get("/api/v1/apps/sonarr/logs").status_code == 404
+
+
+def test_app_logs_without_containers(auth_client, write_catalogue):
+    write_catalogue("sonarr - Gestion Séries\n")
+
+    response = auth_client.get("/api/v1/apps/sonarr/logs")
+
+    assert response.status_code == 404
+    assert "aucun conteneur" in response.json()["detail"]
+
+
+def test_app_logs_without_docker(auth_client, write_catalogue):
+    from app.deps import get_docker_client
+    from app.main import app
+
+    write_catalogue("sonarr - Gestion Séries\n")
+    app.dependency_overrides[get_docker_client] = lambda: None
+
+    assert auth_client.get("/api/v1/apps/sonarr/logs").status_code == 503

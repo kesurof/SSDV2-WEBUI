@@ -35,18 +35,22 @@ aucun push — ADR-0010 ; dernière révision `444b9681`).
   `GET /api/v1/diagnostics` renvoie les contrôles réels ; `GET /api/v1/apps` inchangé
   (183 applications, 8 installées).
 
-**Phase 2 — détail d'application et page Diagnostics**.
+**Phase 2 — détail d'application, Diagnostics et dashboard**.
 
 - Backend : `GET /api/v1/apps/{app}` (détail : `container_list`, `ssddb`, registres,
-  alertes ; 404 si app inconnue du catalogue) ; 40 tests pytest verts.
-- Frontend : route `/apps/:app` (onglets Vue générale, Conteneurs, Volumes, Réseau/DNS,
-  lien depuis la table), page `/diagnostics` alimentée par l'API, navigation étendue ;
-  10 tests Vitest verts.
+  alertes ; 404 si app inconnue du catalogue), `GET /api/v1/apps/{app}/logs` (conteneur
+  rattaché uniquement, 1-1000 lignes, horodatage) et `GET /api/v1/system/summary` (hôte
+  via Docker info, branche/commit SSDV2 lus dans `.git`, compteurs d'applications) ;
+  54 tests pytest verts.
+- Frontend : route `/dashboard` (index), `/apps/:app` (onglets Vue générale, Conteneurs,
+  Logs avec choix du conteneur et du nombre de lignes, Volumes, Réseau/DNS, lien depuis la
+  table), `/diagnostics` (API ssdv2ctl), navigation étendue ; 14 tests Vitest verts.
 - Preuves : CI verte, déploiement serveur validé (voir ci-dessous).
 
 ## Prochains chantiers pressentis
 
-1. Phase 2 : dashboard (`GET /api/v1/system/summary`), logs des conteneurs.
+1. Phase 2 : auth affichée dans le détail (via `ssdv2ctl auth get`), confort des logs
+   (recherche, pause, auto-scroll) — dépendra du SSE de la Phase 3.
 2. Phase 3 : jobs + SSE, puis mutations WebUI — dépend de la décision ouverte sur
    l'exécution des mutations depuis le conteneur (runtime ansible/jq, ADR-0014).
 

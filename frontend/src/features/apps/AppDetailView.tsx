@@ -12,6 +12,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { AppLogsTab } from '@/features/apps/AppLogsTab'
 import { StatusBadge } from '@/features/apps/StatusBadge'
 import { fr } from '@/i18n/fr'
 import type { AppDetail, Container } from '@/api/types'
@@ -128,6 +129,7 @@ export function AppDetailView({ app }: { app: AppDetail }) {
           <TabsTrigger value="containers">
             {fr.apps.tabs.containers} ({app.containers})
           </TabsTrigger>
+          <TabsTrigger value="logs">{fr.apps.tabs.logs}</TabsTrigger>
           <TabsTrigger value="volumes">{fr.apps.tabs.volumes}</TabsTrigger>
           <TabsTrigger value="network">{fr.apps.tabs.network}</TabsTrigger>
         </TabsList>
@@ -156,6 +158,10 @@ export function AppDetailView({ app }: { app: AppDetail }) {
 
         <TabsContent value="containers" className="pt-4">
           <ContainerTable containers={app.container_list} />
+        </TabsContent>
+
+        <TabsContent value="logs" className="pt-4">
+          <AppLogsTab app={app.name} containers={app.container_list.map((item) => item.name)} />
         </TabsContent>
 
         <TabsContent value="volumes" className="pt-4">

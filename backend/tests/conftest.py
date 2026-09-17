@@ -5,6 +5,7 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
 
+import docker
 import pytest
 from fastapi.testclient import TestClient
 
@@ -62,6 +63,12 @@ class FakeContainer:
             state["Health"] = {"Status": self.health}
         return {"State": state, "Config": {"Image": self.image, "Labels": self.labels}}
 
+    def logs(self, tail: int = 200, timestamps: bool = False) -> bytes:
+        lines = [
+            f"2026-09-17T10:00:0{index}Z ligne {index} de {self.name}" for index in range(1, 3)
+        ]
+        return ("\n".join(lines[:tail]) + "\n").encode("utf-8")
+
 
 class FakeContainers:
     def __init__(self, containers: list[FakeContainer]) -> None:
@@ -70,10 +77,27 @@ class FakeContainers:
     def list(self, all: bool = False) -> list[FakeContainer]:
         return self._containers
 
+    def get(self, name: str) -> FakeContainer:
+        for container in self._containers:
+            if container.name == name:
+                return container
+        raise docker.errors.NotFound(f"conteneur introuvable: {name}")
+
 
 class FakeDockerClient:
     def __init__(self, containers: list[FakeContainer]) -> None:
         self.containers = FakeContainers(containers)
+
+    def info(self) -> dict:
+        return {
+            "Name": "test-host",
+            "OperatingSystem": "Test OS",
+            "KernelVersion": "6.0.0-test",
+            "Architecture": "aarch64",
+            "NCPU": 4,
+            "MemTotal": 8_000_000_000,
+            "ServerVersion": "29.0.0",
+        }
 
 
 @pytest.fixture(scope="session")

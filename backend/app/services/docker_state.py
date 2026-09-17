@@ -18,6 +18,21 @@ class DockerSnapshot:
     error: str | None
 
 
+def read_container_logs(
+    client: docker.DockerClient,
+    name: str,
+    lines: int = 200,
+    timestamps: bool = True,
+) -> list[str]:
+    container = client.containers.get(name)
+    raw = container.logs(tail=lines, timestamps=timestamps)
+    if isinstance(raw, bytes):
+        text = raw.decode("utf-8", errors="replace")
+    else:
+        text = str(raw)
+    return [line for line in text.splitlines() if line.strip()]
+
+
 def collect_containers(client: docker.DockerClient | None) -> DockerSnapshot:
     if client is None:
         return DockerSnapshot([], "Docker indisponible")

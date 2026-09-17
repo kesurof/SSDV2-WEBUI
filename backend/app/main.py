@@ -8,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy import func, select
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.api import apps, auth, diagnostics, health
+from app.api import apps, auth, diagnostics, health, system
 from app.core.config import get_settings
 from app.core.logging import setup_logging
 from app.core.security import hash_password
@@ -57,6 +57,7 @@ def create_app() -> FastAPI:
     api_router.include_router(auth.router)
     api_router.include_router(diagnostics.router)
     api_router.include_router(health.router)
+    api_router.include_router(system.router)
     app.include_router(api_router)
     app.include_router(health.router)
 
