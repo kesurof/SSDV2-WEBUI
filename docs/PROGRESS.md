@@ -104,9 +104,23 @@ aucun push — ADR-0010 ; dernière révision `444b9681`).
   `error` « Échec : Redémarrage wallos » (lien `/jobs/22`), marquage lu et SSE validés ;
   audit : `admin | app_restart | wallos | failed` et `admin | login | success`.
 
+**Phase 4c — sauvegardes (liste et création)**.
+
+- `ssdv2ctl` : `app backup <app>` (mécanisme `sauve_one_appli`, garde-fou si
+  `rclone.remote` est absent avec un `rclone.conf` présent, `USER`/`HOME` cohérents) ;
+  46 tests unittest verts.
+- Backend : `GET /api/v1/backups` (archives de `~/backup`), `POST /api/v1/apps/{app}/
+  backup` (job `app_backup`, notification de succès) ; 99 tests pytest verts.
+- Frontend : page Sauvegardes (application, fichier, taille, date), action
+  « Sauvegarder » dans le menu d'actions ; 32 tests Vitest verts.
+- Preuves : CI verte ; job 23 `success`, archive `dozzle-20260917-1557.tar.gz` créée
+  (contenu vérifié : `dozzle/data/dozzle.yml`), listée par l'API, `dozzle` redémarré.
+- **Restauration non exposée** : le mécanisme SSDV2 est inopérant (patch
+  `20260916_remove_restore_menu`) ; à reprendre côté SSDV2 avant toute UI.
+
 ## Prochains chantiers pressentis
 
-1. Phase 4c : backups (voir/restaurer), auth en masse, `ssdv2ctl config`.
+1. Phase 4d : auth en masse, `ssdv2ctl config`, restauration (après décision SSDV2).
 2. Polish : confort des logs (recherche, pause), exposition Traefik, multiarch/GHCR.
 
 ## Points d'attention détectés
