@@ -4,6 +4,7 @@ import docker
 from fastapi import Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
+from app.adapters.ssdv2_cli import Ssdv2CtlRunner
 from app.core.config import Settings, get_settings
 from app.core.security import CSRF_COOKIE, CSRF_HEADER, SESSION_COOKIE, hash_token
 from app.db.models import User, UserSession, utcnow
@@ -11,6 +12,13 @@ from app.db.session import get_db
 
 SettingsDep = Annotated[Settings, Depends(get_settings)]
 DbDep = Annotated[Session, Depends(get_db)]
+
+
+def get_ssdv2ctl(settings: SettingsDep) -> Ssdv2CtlRunner:
+    return Ssdv2CtlRunner(settings)
+
+
+Ssdv2CtlDep = Annotated[Ssdv2CtlRunner, Depends(get_ssdv2ctl)]
 
 
 def get_docker_client() -> docker.DockerClient | None:

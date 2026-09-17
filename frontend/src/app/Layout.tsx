@@ -54,7 +54,8 @@ export function Layout() {
             <AlertTitle>{fr.common.degraded}</AlertTitle>
             <AlertDescription className="text-xs">
               Docker : {String(health.data.docker)} — SSDV2 : {String(health.data.ssdv2)} —
-              Base : {String(health.data.database)}
+              ssdv2ctl : {String(health.data.ssdv2ctl)} — Base :{' '}
+              {String(health.data.database)}
             </AlertDescription>
           </Alert>
         )}

@@ -3,5 +3,6 @@ def test_health_endpoints(client):
         response = client.get(path)
         assert response.status_code == 200
         body = response.json()
-        assert set(body) == {"status", "docker", "ssdv2", "database"}
+        assert set(body) == {"status", "docker", "ssdv2", "ssdv2ctl", "database"}
         assert body["status"] in {"ok", "degraded"}
+        assert isinstance(body["ssdv2ctl"], bool)

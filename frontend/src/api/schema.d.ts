@@ -72,6 +72,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/diagnostics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Run Diagnostics */
+        get: operations["run_diagnostics_api_v1_diagnostics_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/health": {
         parameters: {
             query?: never;
@@ -136,6 +153,23 @@ export interface components {
             /** Warnings */
             warnings: string[];
         };
+        /** DiagnosticsChecks */
+        DiagnosticsChecks: {
+            /** Missing Registries */
+            missing_registries: string[];
+            /** Orphan Containers */
+            orphan_containers: string[];
+            /** Dangling Volumes */
+            dangling_volumes: number;
+        };
+        /** DiagnosticsOut */
+        DiagnosticsOut: {
+            /** Schema */
+            schema: number;
+            checks: components["schemas"]["DiagnosticsChecks"];
+            /** Warnings */
+            warnings: string[];
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -152,6 +186,8 @@ export interface components {
             docker: boolean;
             /** Ssdv2 */
             ssdv2: boolean;
+            /** Ssdv2Ctl */
+            ssdv2ctl: boolean;
             /** Database */
             database: boolean;
         };
@@ -276,6 +312,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["UserOut"];
+                };
+            };
+        };
+    };
+    run_diagnostics_api_v1_diagnostics_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DiagnosticsOut"];
                 };
             };
         };

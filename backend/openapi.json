@@ -106,6 +106,27 @@
         }
       }
     },
+    "/api/v1/diagnostics": {
+      "get": {
+        "tags": [
+          "diagnostics"
+        ],
+        "summary": "Run Diagnostics",
+        "operationId": "run_diagnostics_api_v1_diagnostics_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiagnosticsOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/health": {
       "get": {
         "tags": [
@@ -240,6 +261,60 @@
         ],
         "title": "AppStateOut"
       },
+      "DiagnosticsChecks": {
+        "properties": {
+          "missing_registries": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Missing Registries"
+          },
+          "orphan_containers": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Orphan Containers"
+          },
+          "dangling_volumes": {
+            "type": "integer",
+            "title": "Dangling Volumes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "missing_registries",
+          "orphan_containers",
+          "dangling_volumes"
+        ],
+        "title": "DiagnosticsChecks"
+      },
+      "DiagnosticsOut": {
+        "properties": {
+          "schema": {
+            "type": "integer",
+            "title": "Schema"
+          },
+          "checks": {
+            "$ref": "#/components/schemas/DiagnosticsChecks"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "schema",
+          "checks",
+          "warnings"
+        ],
+        "title": "DiagnosticsOut"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -271,6 +346,10 @@
             "type": "boolean",
             "title": "Ssdv2"
           },
+          "ssdv2ctl": {
+            "type": "boolean",
+            "title": "Ssdv2Ctl"
+          },
           "database": {
             "type": "boolean",
             "title": "Database"
@@ -281,6 +360,7 @@
           "status",
           "docker",
           "ssdv2",
+          "ssdv2ctl",
           "database"
         ],
         "title": "HealthOut"

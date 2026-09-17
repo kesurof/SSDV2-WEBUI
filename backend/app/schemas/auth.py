@@ -16,4 +16,5 @@ class HealthOut(BaseModel):
     status: Literal["ok", "degraded"]
     docker: bool
     ssdv2: bool
+    ssdv2ctl: bool
     database: bool
