@@ -118,9 +118,24 @@ aucun push — ADR-0010 ; dernière révision `444b9681`).
 - **Restauration non exposée** : le mécanisme SSDV2 est inopérant (patch
   `20260916_remove_restore_menu`) ; à reprendre côté SSDV2 avant toute UI.
 
+**Phase 4d — auth en masse et paramètres (lecture seule)**.
+
+- `ssdv2ctl` : `auth list`, `auth set-many <type> <apps...>` (résultats par application),
+  `config get <clé>` / `config list` (allowlist de clés non secrètes) ; 51 tests unittest.
+- Backend : `GET /api/v1/auth/apps`, `POST /api/v1/auth/bulk` (job `auth_bulk`),
+  `GET /api/v1/config` ; 108 tests pytest verts.
+- Frontend : page Authentification (sélection multiple, type cible, confirmation),
+  page Paramètres (lecture seule, note sur les procédures SSDV2) ; 35 tests Vitest verts.
+- Preuves : CI verte ; sur le serveur, `config list` réel (domaine `exemple.tld`), 
+  `auth/apps` réel (dozzle `oauth2-proxy`, streamfusion `aucune`) ; jobs 24/25
+  `auth_bulk` `success` — dozzle passé à `aucune` puis restauré à `oauth2-proxy` ; audit
+  des deux changements.
+- **Écriture de configuration non exposée** : les modifications restent dans les
+  procédures SSDV2 (ex. `menu_change_domaine`) ; à trancher avant toute UI d'écriture.
+
 ## Prochains chantiers pressentis
 
-1. Phase 4d : auth en masse, `ssdv2ctl config`, restauration (après décision SSDV2).
+1. Phase 4e : restauration de sauvegarde (après réparation côté SSDV2), config en écriture.
 2. Polish : confort des logs (recherche, pause), exposition Traefik, multiarch/GHCR.
 
 ## Points d'attention détectés
