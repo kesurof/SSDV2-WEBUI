@@ -33,13 +33,18 @@ ENV ANSIBLE_COLLECTIONS_PATH=/opt/ansible/collections \
 
 COPY --from=frontend /build/dist ./static
 
-RUN useradd --system --uid 10001 webui \
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends gosu sudo \
+    && rm -rf /var/lib/apt/lists/* \
     && mkdir -p /data \
-    && chown webui:webui /data
-USER webui
+    && chown 10001:10001 /data
+
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"
 
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

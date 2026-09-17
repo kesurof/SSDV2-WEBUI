@@ -309,13 +309,15 @@ pointe vers son remplaçant. Une décision non tranchée reste dans « Décision
   `account.yml`, registres, `vars/`) et dans le dépôt source ; ces chemins appartiennent à
   l'utilisateur hôte. Le conteneur tournait avec l'utilisateur embarqué `webui`
   (uid 10001) → `Permission denied` à l'installation.
-- **Décision** : exécuter le conteneur avec l'UID/GID de l'utilisateur SSDV2
-  (`user: "${SSD_UID}:${SSD_GID}"` dans le compose, valeurs fournies par l'utilisateur) et
-  aligner la propriété du volume de données WebUI sur cet UID.
-- **Conséquences** : l'image reste livrée avec son utilisateur non-root mais le
-  déploiement l'écrase ; le volume `webui-data` doit appartenir à cet UID (chown unique au
-  déploiement) ; l'accès en écriture aux fichiers SSDV2 est de fait équivalent à celui de
-  l'utilisateur hôte.
+- **Décision** : exécuter le conteneur avec l'UID/GID de l'utilisateur SSDV2 via un
+  entrypoint PUID/PGID : l'entrypoint démarre en root, crée l'utilisateur `ssdv2` avec
+  l'UID/GID fournis, installe une règle `sudo` sans mot de passe (nécessaire aux tâches
+  Ansible `become`), aligne la propriété de `/data`, puis abandonne les privilèges
+  (`gosu`) ; le volume `webui-data` appartient à cet UID.
+- **Conséquences** : l'image ne fixe plus d'utilisateur final (`USER` retiré) ; le
+  conteneur dispose d'un `sudo` interne sans mot de passe — sans gain réel puisqu'il
+  possède déjà le socket Docker (contrôle root de l'hôte) et le mot de passe Vault ;
+  l'accès en écriture aux fichiers SSDV2 est équivalent à celui de l'utilisateur hôte.
 - **Alternatives écartées** : rendre `~/seedbox` accessible en écriture à l'uid 10001
   (modification invasive et durable de l'hôte) ; exécuter les mutations hors du conteneur.
 - **Références** : brief §10-§11, §72 ; ADR-0010, ADR-0015.
