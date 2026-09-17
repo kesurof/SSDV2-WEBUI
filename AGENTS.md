@@ -15,14 +15,13 @@ développement), CI/release self-hosted. Détails : `docs/ARCHITECTURE-CURRENT.m
 - Types API : régénérer `backend/openapi.json` (`python -m app.export_openapi`, même
   conteneur que les tests) puis `npm run gen:api` — les deux fichiers sont versionnés.
 - Image : `docker build -t ssdv2-webui:local .`
-- Serveur de test : application SSDV2 `ssdv2webui` (image `ghcr.io/kesurof/ssdv2-webui:latest`,
-  définition `~/seedbox-compose/includes/dockerapps/vars/ssdv2webui.yml` — arbre local, sans
-  commit, ADR-0010 ; données `~/seedbox/docker/utilisateur/ssdv2webui/data` ; UI
-  `https://ssdv2.exemple.tld`). Mise à jour : pousser sur `main`, puis
-  `docker pull ghcr.io/kesurof/ssdv2-webui:latest && ssdv2ctl app recreate ssdv2webui`
-  (ou attendre le prochain `install`/`recreate`). Le compose `~/ssdv2-webui` reste la voie
-  de développement (tunnel `ssh -L 8800:127.0.0.1:8800 utilisateur@198.51.100.10` s'il est
-  relancé localement).
+- Serveur de test privé (détails hors dépôt) : application SSDV2 `ssdv2webui`
+  (image `ghcr.io/kesurof/ssdv2-webui:latest`, définition
+  `includes/dockerapps/vars/ssdv2webui.yml` côté SSDV2, données sous
+  `~/seedbox/docker/<utilisateur>/ssdv2webui/data`). Mise à jour : pousser sur `main`
+  (release automatique), puis `docker pull ghcr.io/kesurof/ssdv2-webui:latest` et
+  `ssdv2ctl app recreate ssdv2webui`. Le compose local reste la voie de développement
+  (voir `.env.example`).
 - `ssdv2ctl` (Phase 0 complète, clone local `~/Developer/ssdv2`, branche `wip/ssdv2ctl`,
   jamais de push — ADR-0010) : tests
   `docker run --rm -v "$PWD:/src:ro" -w / python:3.13-slim sh -c "cp -r /src /work && cd /work && python3 -m unittest discover -s tests/python"` ;

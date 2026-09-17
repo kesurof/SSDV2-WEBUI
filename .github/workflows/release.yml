@@ -1,13 +1,14 @@
 name: Release
 
 on:
+  push:
+    branches: [main]
+    tags: ["v*"]
   workflow_dispatch:
     inputs:
       tag:
         description: "Tag de l'image (défaut : nom du tag Git ou sha court)"
         required: false
-  push:
-    tags: ["v*"]
 
 permissions:
   contents: read
@@ -28,12 +29,26 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Déterminer les tags de l'image
+        id: image_tags
+        run: |
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            primary="${GITHUB_REF_NAME}"
+          elif [ -n "${{ inputs.tag }}" ]; then
+            primary="${{ inputs.tag }}"
+          else
+            primary="dev"
+          fi
+          {
+            echo "tags<<TAGS"
+            echo "ghcr.io/kesurof/ssdv2-webui:${primary}"
+            echo "ghcr.io/kesurof/ssdv2-webui:latest"
+            echo "TAGS"
+          } >> "$GITHUB_OUTPUT"
       - name: Build et publication (amd64 + arm64)
         uses: docker/build-push-action@v6
         with:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: |
-            ghcr.io/kesurof/ssdv2-webui:${{ inputs.tag || github.ref_name }}
-            ghcr.io/kesurof/ssdv2-webui:latest
+          tags: ${{ steps.image_tags.outputs.tags }}

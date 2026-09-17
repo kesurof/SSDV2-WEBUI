@@ -1,3 +1,6 @@
+# Compose de développement local.
+# Le déploiement de référence est l'application SSDV2 `ssdv2webui` (voir README.md).
+# Copier .env.example en .env et renseigner les variables (fichier non versionné).
 services:
   ssdv2-webui:
     build: .
@@ -6,57 +9,40 @@ services:
     restart: unless-stopped
 
     environment:
-      SSDV2_SOURCE: /home/${SSD_USER:-utilisateur}/seedbox-compose
-      SSDV2_STORAGE: /home/${SSD_USER:-utilisateur}/seedbox
-      SSDV2CTL_PATH: /opt/ssdv2ctl/ssdv2ctl
-      HOME: /home/${SSD_USER:-utilisateur}
-      PUID: ${SSD_UID:-1000}
-      PGID: ${SSD_GID:-1000}
-      DOCKER_GID: ${DOCKER_GID:-999}
-      BACKUP_DIR: /home/${SSD_USER:-utilisateur}/backup
-      ANSIBLE_INVENTORY: /home/${SSD_USER:-utilisateur}/.ansible/inventories/local
-      ANSIBLE_VAULT_PASSWORD_FILE: /home/${SSD_USER:-utilisateur}/.vault_pass
+      HOME: /home/${SSDV2_USER:?définir SSDV2_USER dans .env}
+      SSDV2_SOURCE: /home/${SSDV2_USER}/seedbox-compose
+      SSDV2_STORAGE: /home/${SSDV2_USER}/seedbox
+      BACKUP_DIR: /home/${SSDV2_USER}/backup
+      ANSIBLE_INVENTORY: /home/${SSDV2_USER}/.ansible/inventories/local
+      ANSIBLE_VAULT_PASSWORD_FILE: /home/${SSDV2_USER}/.vault_pass
+      PUID: ${SSDV2_UID:?définir SSDV2_UID dans .env}
+      PGID: ${SSDV2_GID:?définir SSDV2_GID dans .env}
+      DOCKER_GID: ${DOCKER_GID:?définir DOCKER_GID dans .env}
+      TZ: ${TZ:-Europe/Paris}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
       WEBUI_DATA: /data
       WEBUI_ADMIN_USER: ${WEBUI_ADMIN_USER:-admin}
       WEBUI_ADMIN_PASSWORD: ${WEBUI_ADMIN_PASSWORD:-}
-      COOKIE_SECURE: "false"
-      TZ: Europe/Paris
+      # Pour tester un ssdv2ctl en cours de développement, décommenter la variable
+      # ci-dessous et le montage correspondant plus bas.
+      # SSDV2CTL_PATH: /opt/ssdv2ctl/ssdv2ctl
 
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - /usr/bin/docker:/usr/local/bin/docker:ro
-      - ${SSDV2CTL_DIR:-/home/utilisateur/ssdv2-ctl-dev}:/opt/ssdv2ctl:ro
-      - /home/${SSD_USER:-utilisateur}/.config/ssd/env:/home/${SSD_USER:-utilisateur}/.config/ssd/env:ro
-      - /home/${SSD_USER:-utilisateur}/.vault_pass:/home/${SSD_USER:-utilisateur}/.vault_pass:ro
-      - /home/${SSD_USER:-utilisateur}/.ansible/inventories:/home/${SSD_USER:-utilisateur}/.ansible/inventories
-      - /home/${SSD_USER:-utilisateur}/backup:/home/${SSD_USER:-utilisateur}/backup
-      - /home/${SSD_USER:-utilisateur}/seedbox-compose:/home/${SSD_USER:-utilisateur}/seedbox-compose
-      - /home/${SSD_USER:-utilisateur}/seedbox:/home/${SSD_USER:-utilisateur}/seedbox
+      - /home/${SSDV2_USER}/.config/ssd/env:/home/${SSDV2_USER}/.config/ssd/env:ro
+      - /home/${SSDV2_USER}/.vault_pass:/home/${SSDV2_USER}/.vault_pass:ro
+      - /home/${SSDV2_USER}/.ansible/inventories:/home/${SSDV2_USER}/.ansible/inventories
+      - /home/${SSDV2_USER}/backup:/home/${SSDV2_USER}/backup
+      - /home/${SSDV2_USER}/seedbox-compose:/home/${SSDV2_USER}/seedbox-compose
+      - /home/${SSDV2_USER}/seedbox:/home/${SSDV2_USER}/seedbox
+      # - ${SSDV2CTL_DIR:?définir SSDV2CTL_DIR dans .env}:/opt/ssdv2ctl:ro
       - webui-data:/data
 
     ports:
-      - "127.0.0.1:8800:8000"
-
-    labels:
-      traefik.enable: "true"
-      traefik.docker.network: traefik_proxy
-      traefik.http.routers.ssdv2-webui-rtr.entrypoints: http,https
-      traefik.http.routers.ssdv2-webui-rtr.middlewares: chain-oauth2-proxy@file
-      traefik.http.routers.ssdv2-webui-rtr.rule: Host(`ssdv2.exemple.tld`)
-      traefik.http.routers.ssdv2-webui-rtr.service: ssdv2-webui-svc
-      traefik.http.routers.ssdv2-webui-rtr.tls: "true"
-      traefik.http.routers.ssdv2-webui-rtr.tls.certresolver: letsencrypt
-      traefik.http.services.ssdv2-webui-svc.loadbalancer.server.port: "8000"
-
-    networks:
-      - traefik_proxy
+      - "127.0.0.1:${WEBUI_PORT:-8800}:8000"
 
     group_add:
-      - "${DOCKER_GID:-999}"
+      - "${DOCKER_GID}"
 
 volumes:
   webui-data:
-
-networks:
-  traefik_proxy:
-    external: true

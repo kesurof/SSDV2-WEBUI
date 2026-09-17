@@ -52,33 +52,32 @@
   `scripts/sync-ssdv2ctl.sh`) — plus aucune dépendance aux binaires ou chemins de
   l'hôte (ADR-0020). Les chemins par défaut du backend dérivent de `HOME`
   (`SSDV2_SOURCE`, `SSDV2_STORAGE`, `BACKUP_DIR`).
-- `compose.yaml` (voie de **développement**) : conteneur unique `ssdv2-webui` lié à
-  `127.0.0.1:8800`, exposé via Traefik (`https://ssdv2.exemple.tld`, middleware
-  `chain-oauth2-proxy@file`, réseau `traefik_proxy`, TLS via Cloudflare), exécuté avec
-  l'UID/GID de l'utilisateur SSDV2 (`SSD_UID`/`SSD_GID`, ADR-0017) ;
-  `WEBUI_ADMIN_PASSWORD` optionnel (sinon assistant de premier démarrage via le jeton
-  `WEBUI_DATA/setup-token`, ADR-0019) ; socket Docker, binaire Docker de l'hôte monté
-  (surcharge du binaire embarqué), `SSDV2CTL_PATH` et `HOME` pointant vers l'utilisateur
-  SSDV2, dossier `ssdv2ctl` de développement monté sur `/opt/ssdv2ctl`, fichiers
-  `~/.config/ssd/env` et `~/.vault_pass` montés en lecture seule (nécessaires à
-  `get_from_account_yml`), `SSDV2_SOURCE` et `SSDV2_STORAGE` montés, volume nommé
-  `webui-data` pour `/data`. Le déploiement de référence devient l'application SSDV2
+- `compose.yaml` (voie de **développement** uniquement) : variables requises via `.env`
+  (`.env.example` versionné : `SSDV2_USER`, `SSDV2_UID`, `SSDV2_GID`, `DOCKER_GID`),
+  conteneur unique `ssdv2-webui` lié à `127.0.0.1:8800`, socket Docker, montages SSDV2
+  (`SSDV2_SOURCE`, `SSDV2_STORAGE`, `~/.config/ssd/env` et `~/.vault_pass` en lecture
+  seule, nécessaires à `get_from_account_yml`, inventaire Ansible, `~/backup`), volume
+  nommé `webui-data` pour `/data`, `WEBUI_ADMIN_PASSWORD` optionnel (sinon assistant de
+  premier démarrage via le jeton `WEBUI_DATA/setup-token`, ADR-0019) ; `HOME`, `PUID`/
+  `PGID` et `DOCKER_GID` suivent l'utilisateur hôte (ADR-0017). L'exposition Traefik et
+  l'authentification relèvent du déploiement de référence, l'application SSDV2
   `ssdv2webui` (ADR-0020).
 - `.github/workflows/ci.yml` : runner `[self-hosted, SSDV2-WEBUI]` (ARM64) ; backend
   (ruff + pytest) et frontend (oxlint + tsc + Vitest + build) dans des conteneurs Docker,
   puis `docker build` et smoke test de l'image (`ssdv2ctl --version`, `docker --version`).
 - `.github/workflows/release.yml` : build multiarchitecture (buildx + QEMU,
-  `linux/amd64` + `linux/arm64`) et publication `ghcr.io/kesurof/ssdv2-webui`
-  (dispatch manuel ou tag `v*`).
+  `linux/amd64` + `linux/arm64`) et publication `ghcr.io/kesurof/ssdv2-webui` — `:dev` +
+  `:latest` sur push `main`, `:<tag>` + `:latest` sur tag `v*`, dispatch manuel conservé.
 - `backend/openapi.json` et `frontend/src/api/schema.d.ts` : générés et versionnés
   (ADR-0009).
 
 ## Exécution constatée
 
-- Serveur de test `exemple.tld` : application SSDV2 **`ssdv2webui`** installée (conteneur
-  `ssdv2webui`, image `ghcr.io/kesurof/ssdv2-webui:latest`, registres
-  `~/seedbox/conf/ssdv2webui.containers`, ligne `ssddb` `ssdv2webui|2|ssdv2|8000`, données
-  dans `~/seedbox/docker/utilisateur/ssdv2webui/data`), `/health` →
+- Serveur de test privé (domaine d'exemple `exemple.tld`) : application SSDV2
+  **`ssdv2webui`** installée (conteneur `ssdv2webui`, image
+  `ghcr.io/kesurof/ssdv2-webui:latest`, registres `~/seedbox/conf/ssdv2webui.containers`,
+  ligne `ssddb` `ssdv2webui|2|ssdv2|8000`, données dans
+  `~/seedbox/docker/<utilisateur>/ssdv2webui/data`), `/health` →
   `{"status":"ok","docker":true,"ssdv2":true,"ssdv2ctl":true,"database":true}`.
   UI publique : `https://ssdv2.exemple.tld` (routeur `ssdv2webui-rtr`, middleware
   `chain-oauth2-proxy@file`, TLS Cloudflare) puis compte admin interne (réactivé) ;

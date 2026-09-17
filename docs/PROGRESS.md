@@ -35,7 +35,7 @@ Aucun.
   ADR-0010), la surcharge restant réservée aux personnalisations.
 
 **Phase 0 — `ssdv2ctl` complet** (clone local `~/Developer/ssdv2`, branche `wip/ssdv2ctl`,
-aucun push — ADR-0010 ; dernière révision `444b9681`).
+aucun push — ADR-0010).
 
 - Livré : `apps list`, `app status`, `app start|stop|restart`, `app install|remove|
   reinstall|recreate`, `auth get|set`, `diagnostics run` — JSON par défaut, erreurs
@@ -49,7 +49,7 @@ aucun push — ADR-0010 ; dernière révision `444b9681`).
   - diagnostics réels : registres manquants `appname`/`boostsuitev2`, 0 conteneur
     orphelin, volumes anonymes.
 
-**Branchement WebUI de `ssdv2ctl`** (commit `a91643b`, déployé sur le serveur de test).
+**Branchement WebUI de `ssdv2ctl`** (déployé sur le serveur de test).
 
 - Adaptateur `Ssdv2CtlRunner` (allowlist, `shell=False`, erreurs structurées),
   `SSDV2CTL_PATH`/`SSDV2CTL_TIMEOUT`, health enrichi (`ssdv2ctl: true`), endpoint
@@ -165,7 +165,8 @@ aucun push — ADR-0010 ; dernière révision `444b9681`).
   proxifié) ; tunnel `127.0.0.1:8800` conservé. Preuve : HTTPS public renvoie 401 aux
   requêtes non authentifiées (oauth2-proxy), `/health` local inchangé.
 - Release : `.github/workflows/release.yml` (buildx + QEMU, `linux/amd64` + `linux/arm64`,
-  publication `ghcr.io/kesurof/ssdv2-webui`, dispatch manuel ou tag `v*`). Preuve :
+  publication `ghcr.io/kesurof/ssdv2-webui` — `:dev` + `:latest` sur push `main`,
+  dispatch manuel ou tag `v*`). Preuve :
   première publication réussie (runs `35233247887`, ~9 min, manifeste multiarch
   `sha256:65476cb4…`, tags `:dev` et `:latest`).
 - Restauration : hors périmètre de ce projet (mécanisme SSDV2 à réparer côté SSDV2).
@@ -212,9 +213,9 @@ aucun push — ADR-0010 ; dernière révision `444b9681`).
   (statut + détail, message réseau dédié). À supprimer ou adapter si un autre service
   réutilise ce sous-domaine.
 
-- **GitGuardian** : faux positif « Username Password » sur le commit `a51257c`
-  (identifiants de test). Motif supprimé ensuite, occurrence toujours dans l'historique →
-  incident `37391944` à ignorer dans le dashboard (exclusion `backend/tests/**` suggérée).
+- **GitGuardian** : faux positif « Username Password » sur un commit du dépôt
+  (identifiants de test). Motif supprimé ensuite ; incident `37391944` à ignorer dans le
+  dashboard (exclusion `backend/tests/**` suggérée).
 - **Duplication temporaire** : le parsing du catalogue existe dans le backend WebUI et dans
   `ssdv2ctl` ; résorption à trancher (ADR-0011, décision ouverte).
 - **Entrées `ssddb` hors catalogue** : `traefik`, `boostsuitev2` et `appname` (donnée de

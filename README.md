@@ -15,13 +15,32 @@ moteur SSDV2 existant.
 
 ## Installation
 
+### Application SSDV2 (déploiement de référence)
+
+La WebUI s'installe comme n'importe quelle application SSDV2 (menu « Installer
+Application » ou `ssdv2ctl app install ssdv2webui`) : image publique multiarchitecture,
+labels Traefik et choix d'authentification générés par SSDV2, données sous le stockage
+SSDV2, cycle de vie (recréer, sauvegarder, supprimer) géré par l'outillage existant.
+Détails : [`docs/ARCHITECTURE-CURRENT.md`](docs/ARCHITECTURE-CURRENT.md).
+
+### Développement local (compose)
+
+```sh
+cp .env.example .env   # renseigner SSDV2_USER, SSDV2_UID, SSDV2_GID, DOCKER_GID
+docker compose up -d --build
+```
+
 Au premier démarrage, deux chemins :
 
 1. **Assistant** (recommandé) : sans `WEBUI_ADMIN_PASSWORD`, ouvrir `/setup` et saisir le
    jeton d'installation affiché dans les journaux du conteneur
-   (`docker logs ssdv2-webui | grep -i jeton`) ou lu dans `./data/setup-token`.
+   (`docker logs ssdv2-webui | grep -i jeton`) ou lu dans le volume de données.
 2. **Automatisation** : fournir `WEBUI_ADMIN_USER` / `WEBUI_ADMIN_PASSWORD` au premier
    démarrage ; le compte est créé et l'assistant désactivé.
 
 Image publiée : `ghcr.io/kesurof/ssdv2-webui` (`linux/amd64`, `linux/arm64`). SSDV2 reste
 fonctionnel sans cette WebUI.
+
+## Licence
+
+GPL-3.0 — voir [`LICENSE`](LICENSE).
