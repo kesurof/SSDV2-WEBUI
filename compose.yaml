@@ -22,3 +22,6 @@ services:
 
     ports:
       - "127.0.0.1:8800:8000"
+
+    group_add:
+      - "${DOCKER_GID:-999}"
