@@ -34,7 +34,8 @@
 
 ## Ce qui n'existe pas (à ce jour)
 
-- Aucune mutation (install/start/stop/restart/remove) ; `ssdv2ctl` n'existe pas encore.
+- Aucune mutation (install/start/stop/restart/remove) : `ssdv2ctl` n'expose que `apps list`
+  et `app status` en lecture seule, dans un clone local non poussé (ADR-0010).
 - Aucun job, aucune file, aucun SSE, aucune notification persistante.
 - Aucun dashboard, page de détail d'application, logs, diagnostics, sauvegardes, pages
   Docker/réseau, command palette, thème.

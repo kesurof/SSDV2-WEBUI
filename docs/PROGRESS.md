@@ -6,41 +6,38 @@
 
 ## Chantier actif
 
-Aucun.
+**Phase 0 — `ssdv2ctl`, palier lecture seule** (démarré 2026-09-17).
 
-## Dernier chantier terminé
+- Code : clone local `~/Developer/ssdv2`, branche `wip/ssdv2ctl` (aucun push — ADR-0010),
+  commits `30a0cad0` et suivant.
+- Livré : `ssdv2ctl apps list` et `ssdv2ctl app status <app>`, JSON par défaut, erreurs
+  structurées sur stderr, codes 0/1/2, allowlist catalogue, contrat documenté (ADR-0011).
+- Preuves :
+  - 10 tests unittest verts (local en `python:3.13-slim` et serveur en python 3.12) ;
+  - validation serveur réelle : 183 entrées de catalogue ; `app status streamfusion` →
+    ssddb + registres + 7 conteneurs, 0 alerte (cohérent avec l'API WebUI) ; `wallos` non
+    installé ; `app status inconnue` → `unknown_app`, code de sortie 1.
 
-**M1 — socle et lecture seule** (2026-09-17, commit `950dd5b`, branche
-`feat/m1-lecture-seule`, PR #1 **fusionnée dans `main`** le 2026-09-17 — commit de merge
-`1d638d1`, CI verte sur `main`).
+### Suite de la Phase 0 (non commencée)
 
-Preuves :
-
-- CI verte sur le runner self-hosted : backend (ruff + 25 tests), frontend (oxlint, tsc,
-  5 tests Vitest, build), `docker build`.
-- Déploiement serveur de test (`~/ssdv2-webui`, compose) : `/health` =
-  `{"status":"ok","docker":true,"ssdv2":true,"database":true}` ; `GET /api/v1/apps` =
-  183 applications, 8 installées, 8 en marche, 0 alerte ; URLs dérivées du domaine
-  (`https://prowlarr.exemple.tld`).
-- Mode dégradé vérifié : base indisponible et Docker/SSDV2 absents → démarrage sans
-  crash-loop, health `degraded`, bandeau UI.
-
-## Prochain chantier pressenti
-
-Phase 0 — contrat `ssdv2ctl` (non commencé ; obligatoire avant toute mutation).
-Contrainte : développement **local uniquement**, aucune branche ni PR sur
-`projetssd/ssdv2` tant que le projet n'est pas finalisé (ADR-0010). Voir
-[`ROADMAP.md`](ROADMAP.md).
+- Actions non interactives (`app install/remove/reinstall/start/stop/restart`, `auth`,
+  `diagnostics`) — à valider sur une application dédiée, jamais sur les apps en service.
+- Décider si la WebUI doit consommer `ssdv2ctl` pour certaines lectures (réduirait la
+  duplication temporaire du parsing catalogue) — voir ADR-0011.
 
 ## Points d'attention détectés
 
 - **GitGuardian** : faux positif « Username Password » sur le commit `a51257c`
-  (identifiants de test). Le motif a été supprimé ensuite, mais l'occurrence reste dans
-  l'historique de la branche → incident `37391944` à ignorer dans le dashboard
-  GitGuardian (et exclusion `backend/tests/**` suggérée). Le check reste rouge sur PR #1.
+  (identifiants de test). Motif supprimé ensuite, occurrence toujours dans l'historique →
+  incident `37391944` à ignorer dans le dashboard (exclusion `backend/tests/**` suggérée).
+- **Duplication temporaire** : le parsing du catalogue existe dans le backend WebUI et dans
+  `ssdv2ctl` (implémentations volontairement alignées) ; à résorber par une décision
+  (ADR-0011, suite de la Phase 0).
 - **Entrées `ssddb` hors catalogue** : `traefik`, `boostsuitev2` et `appname` (donnée de
-  test) ne sont pas listées par la WebUI, qui est pilotée par le catalogue ; à traiter en
+  test) ne sont pas listées par la WebUI, pilotée par le catalogue ; à traiter en
   diagnostics (Phase 4).
+- `ssdv2ctl` n'est versionné nulle part en ligne tant que l'ADR-0010 s'applique : le clone
+  local est la seule copie (sauvegarde ponctuelle conseillée, ex. `git bundle`).
 - `~/ssdv2-webui/data/` (vide, appartient à root) est un résidu du premier déploiement en
   bind-mount ; remplacé par le volume nommé `webui-data`.
-- Aucune LICENSE dans le dépôt.
+- Aucune LICENSE dans le dépôt WebUI.

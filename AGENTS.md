@@ -17,6 +17,11 @@ frontend `frontend/` (React/Vite/shadcn/TanStack), `Dockerfile` multi-stage,
 - Image : `docker build -t ssdv2-webui:local .`
 - Serveur de test : `ssh utilisateur@198.51.100.10 "cd ~/ssdv2-webui && git pull && docker compose up -d --build"` ;
   UI sur `127.0.0.1:8800` uniquement (tunnel : `ssh -L 8800:127.0.0.1:8800 utilisateur@198.51.100.10`).
+- `ssdv2ctl` (Phase 0, clone local `~/Developer/ssdv2`, branche `wip/ssdv2ctl`, jamais de
+  push — ADR-0010) : tests
+  `docker run --rm -v "$PWD:/src:ro" -w / python:3.13-slim sh -c "cp -r /src /work && cd /work && python3 -m unittest discover -s tests/python"` ;
+  validation serveur : `rsync` vers `~/ssdv2-ctl-dev` puis exécution avec
+  `SETTINGS_SOURCE=~/seedbox-compose SETTINGS_STORAGE=~/seedbox`.
 
 ## Documentation
 

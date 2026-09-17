@@ -160,6 +160,31 @@ pointe vers son remplaçant. Une décision non tranchée reste dans « Décision
   pendant le développement.
 - **Références** : brief §9 et §63 (Phase 0), [`PROGRESS.md`](PROGRESS.md).
 
+## ADR-0011 — Contrat de sortie de `ssdv2ctl` (palier lecture seule)
+
+- **Statut** : acceptée — 2026-09-17
+- **Contexte** : `ssdv2ctl` devient la frontière stable entre SSDV2 et les interfaces
+  (WebUI, CLI) ; il faut un contrat vérifiable, non interactif et sans logique dupliquée
+  (ADR-0005).
+- **Décision** :
+  - commandes : `apps list`, `app status <app>` ; JSON par défaut sur stdout, erreurs JSON
+    structurées `{"error": {"code", "message"}}` sur stderr, codes de sortie 0/1/2 ;
+  - le JSON porte un champ `schema` versionné ;
+  - `app status` expose des **faits bruts** (ligne `ssddb`, registres
+    `.containers/.volumes/.dns`, conteneurs) avec les sources présentes et des alertes
+    (`ssddb_unavailable`, `docker_unavailable`) ; l'agrégation `AppState` reste côté WebUI
+    (brief §48/§50) ;
+  - le nom d'application est validé contre le catalogue (allowlist, brief §12) ;
+  - la correspondance application → conteneurs réutilise le mécanisme SSDV2 existant
+    (`generique.sh collect_app_containers` : label + registre + conventions) au lieu d'être
+    réimplémentée.
+- **Conséquences** : le parsing du catalogue reste temporairement dupliqué entre la WebUI
+  et `ssdv2ctl` (implémentations alignées, à résorber par une décision ultérieure) ;
+  toute évolution du contrat doit incrémenter `schema` et mettre à jour les tests.
+- **Alternatives écartées** : sortie texte par défaut ; agrégation complète de l'état dans
+  `ssdv2ctl` ; réimplémentation Python du rattachement des conteneurs ; `shell=True`.
+- **Références** : brief §9, §48, §71 (règles 1, 5, 6, 8), ADR-0005, ADR-0010.
+
 ## Décisions ouvertes
 
 À trancher explicitement puis consigner en ADR (voir brief §72) :
