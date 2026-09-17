@@ -88,9 +88,8 @@ aucun push — ADR-0010 ; dernière révision `444b9681`).
 - Frontend : actions de réparation sur la page Diagnostics, confirmation forte (saisie de
   « SUPPRIMER ») pour les suppressions ; 25 tests Vitest verts.
 - Preuves : CI verte ; sur le serveur, `rebuild-registries` (job 19 `success`, 8 registres
-  présents) et `cleanup-orphan-containers` (job 20 `success`, aucun orphelin) ;
-  `cleanup-dangling-volumes` livré mais non exécuté (2 volumes anonymes à supprimer,
-  décision utilisateur).
+  présents), `cleanup-orphan-containers` (job 20 `success`, aucun orphelin) et
+  `cleanup-dangling-volumes` (job 21 `success`, 2 volumes → 0, diagnostic à 0).
 
 ## Prochains chantiers pressentis
 
