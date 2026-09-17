@@ -146,6 +146,18 @@ aucun push — ADR-0010 ; dernière révision `444b9681`).
   `sha256:65476cb4…`, tags `:dev` et `:latest`).
 - Restauration : hors périmètre de ce projet (mécanisme SSDV2 à réparer côté SSDV2).
 
+**Authentification interne désactivable (ADR-0018)**.
+
+- Réglage `internal_auth` en SQLite WebUI (`webui_settings`, activé par défaut),
+  `GET`/`PATCH /api/v1/security`, carte « Authentification interne » dans la page
+  Paramètres avec confirmation forte (saisie de « DESACTIVER ») ; désactivation →
+  sessions supprimées, utilisateur synthétique `auth-externe`, `login`/`logout` 409 ;
+  CSRF double-submit conservé pour les mutations.
+- Preuves : CI verte ; sur le serveur, désactivation puis réactivation via l'API —
+  `/auth/me` sans session → `auth-externe`, `/apps` 200, `login` 409 ; réactivation →
+  `/auth/me` 401 puis reconnexion OK ; les deux changements audités. État final :
+  authentification interne **activée**. 113 tests backend, 40 tests frontend.
+
 ## Prochains chantiers pressentis
 
 1. Phase 5 : mise à jour SSDV2/Git, patches, Docker avancé, fonctions hôte (nécessite des
