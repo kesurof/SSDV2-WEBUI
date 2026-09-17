@@ -18,11 +18,15 @@ Aucun.
   multiarchitecture ; publication `:dev`/`:latest` (ou `:<tag>`) uniquement si les tests
   passent ; cache BuildKit `type=gha,mode=max`, métadonnées OCI, provenance et SBOM.
 - Dockerfile : stage frontend sur `$BUILDPLATFORM`, cache mounts npm/pip.
-- `release.yml` supprimé (fusionné) ; runner self-hosted et caches Docker du serveur à
-  retirer après validation.
-- Preuves : image locale reconstruite et smoke testée (`ssdv2ctl --version`,
-  `docker --version`) ; durées du premier run GitHub-hosted et manifeste multiarch à
-  relever.
+- `release.yml` supprimé (fusionné) ; runner self-hosted retiré (service désinstallé,
+  runner supprimé côté GitHub, répertoire et identifiants Docker nettoyés) ainsi que les
+  caches Docker du serveur (`ssdv2-webui-pip-cache`, `ssdv2-webui-npm-cache`,
+  image `ssdv2-webui:ci`).
+- Preuves : run GitHub-hosted vert en **2 min 42 s** (backend 55 s, frontend 34 s,
+  image amd64 58 s, arm64 87 s, fusion 13 s) ; manifeste multiarch publié
+  (`linux/amd64` + `linux/arm64` + attestations) ; pull anonyme et smoke test du
+  conteneur OK ; image locale reconstruite et testée (`ssdv2ctl --version`,
+  `docker --version`).
 
 
 **Confort d'exploitation : actions, stockage, déploiement, jobs et mises à jour**.
