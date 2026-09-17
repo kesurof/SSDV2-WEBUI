@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { useLogout, useMe } from '@/features/auth/useAuth'
 import { useNotifications } from '@/features/notifications/useNotifications'
+import { useSetupStatus } from '@/features/setup/useSetup'
 import { useHealth } from '@/features/system/useSystem'
 import { fr } from '@/i18n/fr'
 
@@ -30,9 +31,16 @@ export function Layout() {
   const me = useMe()
   const health = useHealth()
   const notifications = useNotifications()
+  const setup = useSetupStatus()
   const logout = useLogout()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+
+  const instanceName = setup.data?.instance_name ?? 'SSDV2 WebUI'
+
+  useEffect(() => {
+    document.title = instanceName
+  }, [instanceName])
 
   useEffect(() => {
     const source = new EventSource('/api/v1/notifications/events')
@@ -46,6 +54,10 @@ export function Layout() {
       source.close()
     }
   }, [queryClient])
+
+  if (setup.data?.required) {
+    return <Navigate to="/setup" replace />
+  }
 
   if (me.isPending) {
     return <div className="p-8 text-sm text-muted-foreground">{fr.common.loading}</div>
@@ -65,7 +77,7 @@ export function Layout() {
   return (
     <div className="flex min-h-svh">
       <aside className="flex w-56 flex-col border-r bg-muted/20 p-3">
-        <div className="px-2 py-3 text-sm font-semibold">SSDV2 WebUI</div>
+        <div className="px-2 py-3 text-sm font-semibold">{instanceName}</div>
         <nav className="flex-1 space-y-1">
           {NAV_ITEMS.map((item) => (
             <NavLink

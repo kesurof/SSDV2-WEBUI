@@ -13,8 +13,10 @@ import { JobDetailPage } from '@/features/jobs/JobDetailPage'
 import { JobsPage } from '@/features/jobs/JobsPage'
 import { NotificationsPage } from '@/features/notifications/NotificationsPage'
 import { SettingsPage } from '@/features/settings/SettingsPage'
+import { SetupPage } from '@/features/setup/SetupPage'
 
 export const router = createBrowserRouter([
+  { path: '/setup', element: <SetupPage /> },
   { path: '/login', element: <LoginPage /> },
   {
     path: '/',

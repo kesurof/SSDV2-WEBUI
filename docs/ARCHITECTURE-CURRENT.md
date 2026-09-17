@@ -25,11 +25,14 @@
   `POST /api/v1/apps/{app}/backup` (job `app_backup`, mécanisme `sauve_one_appli`) ;
   `GET /api/v1/auth/apps` (auth par application) et `POST /api/v1/auth/bulk`
   (job `auth_bulk`, `auth set-many`) ; `GET /api/v1/config` (clés non secrètes,
-  lecture seule) ; `GET`/`PATCH /api/v1/security` (authentification interne activable ou
-  désactivable, ADR-0018) ; le tout via l'adaptateur `ssdv2ctl` (`app/adapters/ssdv2_cli.py`,
-  commandes allowlistées, `shell=False`, `SSDV2CTL_PATH`/`SSDV2CTL_TIMEOUT`).
+  lecture seule) ;   `GET`/`PATCH /api/v1/security` (authentification interne activable ou
+  désactivable, ADR-0018) ; `GET /api/v1/setup/status` et `POST /api/v1/setup`
+  (assistant de premier démarrage protégé par jeton, ADR-0019) ; le tout via
+  l'adaptateur `ssdv2ctl` (`app/adapters/ssdv2_cli.py`, commandes allowlistées,
+  `shell=False`, `SSDV2CTL_PATH`/`SSDV2CTL_TIMEOUT`).
 - `frontend/` : React 19 + Vite 8 + TypeScript 5.9 + Tailwind 4 + shadcn/ui +
-  TanStack Query v5 + TanStack Table v9 + React Router v7 ; login, layout, dashboard,
+  TanStack Query v5 + TanStack Table v9 + React Router v7 ; assistant de premier
+  démarrage (`/setup`), login, layout (nom d'instance), dashboard,
   table des applications (recherche, filtres, badges d'état, alertes, bandeau mode
   dégradé), page de détail d'application (vue générale avec authentification, conteneurs,
   logs avec suivi SSE, volumes, réseau/DNS, actions installer/démarrer/arrêter/redémarrer/
@@ -47,7 +50,8 @@
 - `compose.yaml` : conteneur unique `ssdv2-webui` lié à `127.0.0.1:8800`, exposé via
   Traefik (`https://ssdv2.exemple.tld`, middleware `chain-oauth2-proxy@file`, réseau
   `traefik_proxy`, TLS via Cloudflare), exécuté avec l'UID/GID de l'utilisateur SSDV2
-  (`SSD_UID`/`SSD_GID`, ADR-0017), socket Docker,
+  (`SSD_UID`/`SSD_GID`, ADR-0017) ; `WEBUI_ADMIN_PASSWORD` optionnel (sinon assistant de
+  premier démarrage via le jeton `WEBUI_DATA/setup-token`, ADR-0019) ; socket Docker,
   binaire Docker de l'hôte monté, `SSDV2CTL_PATH` et `HOME` pointant vers l'utilisateur
   SSDV2, dossier `ssdv2ctl` de développement monté sur `/opt/ssdv2ctl`, fichiers
   `~/.config/ssd/env` et `~/.vault_pass` montés en lecture seule (nécessaires à

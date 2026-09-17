@@ -10,6 +10,7 @@ from app.adapters.ssdv2_cli import Ssdv2CtlError, Ssdv2CtlRunner
 from app.db.models import Job, JobEvent, utcnow
 from app.db.session import get_session_factory
 from app.services import audit, notifications
+from app.services import settings as webui_settings
 
 logger = logging.getLogger(__name__)
 
@@ -246,6 +247,9 @@ class JobManager:
                 link=f"/jobs/{job_id}",
             )
         elif status == "success" and job_type in NOTIFY_JOB_TYPES:
+            with get_session_factory()() as session:
+                if not webui_settings.notify_job_success_enabled(session):
+                    return
             notifications.create_notification(
                 severity="success",
                 title=f"{label} terminée : {target}",

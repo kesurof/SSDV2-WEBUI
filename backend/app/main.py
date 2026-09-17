@@ -20,6 +20,7 @@ from app.api import (
     jobs,
     notifications,
     security,
+    setup,
     system,
 )
 from app.core.config import get_settings
@@ -27,6 +28,8 @@ from app.core.logging import setup_logging
 from app.core.security import hash_password
 from app.db.models import User
 from app.db.session import get_session_factory, init_db
+from app.services import settings as webui_settings
+from app.services import setup as setup_service
 from app.services.jobs import job_manager
 
 logger = logging.getLogger(__name__)
@@ -38,9 +41,7 @@ def bootstrap_admin() -> None:
         if db.scalar(select(func.count()).select_from(User)):
             return
         if not settings.admin_password:
-            logger.warning(
-                "Aucun compte admin et WEBUI_ADMIN_PASSWORD absent : connexion impossible"
-            )
+            logger.warning("Aucun compte admin : assistant de premier démarrage disponible")
             return
         db.add(
             User(
@@ -48,7 +49,7 @@ def bootstrap_admin() -> None:
                 password_hash=hash_password(settings.admin_password),
             )
         )
-        db.commit()
+        webui_settings.mark_setup_completed(db)
         logger.info("Compte admin '%s' créé", settings.admin_user)
 
 
@@ -58,6 +59,9 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
         init_db()
         bootstrap_admin()
         settings = get_settings()
+        with get_session_factory()() as db:
+            if webui_settings.setup_required(db):
+                setup_service.ensure_setup_token(settings.webui_data)
         job_manager.configure(lambda: Ssdv2CtlRunner(settings))
         job_manager.reset_interrupted()
         job_manager.start()
@@ -82,6 +86,7 @@ def create_app() -> FastAPI:
     api_router.include_router(jobs.router)
     api_router.include_router(notifications.router)
     api_router.include_router(security.router)
+    api_router.include_router(setup.router)
     api_router.include_router(system.router)
     app.include_router(api_router)
     app.include_router(health.router)

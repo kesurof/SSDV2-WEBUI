@@ -1345,6 +1345,68 @@
         }
       }
     },
+    "/api/v1/setup/status": {
+      "get": {
+        "tags": [
+          "setup"
+        ],
+        "summary": "Setup Status",
+        "operationId": "setup_status_api_v1_setup_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupStatusOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/setup": {
+      "post": {
+        "tags": [
+          "setup"
+        ],
+        "summary": "Run Setup",
+        "operationId": "run_setup_api_v1_setup_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetupRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/system/summary": {
       "get": {
         "tags": [
@@ -2368,6 +2430,76 @@
           "internal_auth"
         ],
         "title": "SecurityUpdateRequest"
+      },
+      "SetupRequest": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 8,
+            "title": "Token"
+          },
+          "username": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 3,
+            "pattern": "^[a-z0-9][a-z0-9._-]*$",
+            "title": "Username"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 12,
+            "title": "Password"
+          },
+          "internal_auth": {
+            "type": "boolean",
+            "title": "Internal Auth",
+            "default": true
+          },
+          "instance_name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Instance Name",
+            "default": "SSDV2 WebUI"
+          },
+          "notify_job_success": {
+            "type": "boolean",
+            "title": "Notify Job Success",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "token",
+          "username",
+          "password"
+        ],
+        "title": "SetupRequest"
+      },
+      "SetupStatusOut": {
+        "properties": {
+          "required": {
+            "type": "boolean",
+            "title": "Required"
+          },
+          "token_required": {
+            "type": "boolean",
+            "title": "Token Required"
+          },
+          "instance_name": {
+            "type": "string",
+            "title": "Instance Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "required",
+          "token_required",
+          "instance_name"
+        ],
+        "title": "SetupStatusOut"
       },
       "SsddbAppOut": {
         "properties": {

@@ -342,6 +342,28 @@ pointe vers son remplaçant. Une décision non tranchée reste dans « Décision
   inutilisable en accès direct) ; coder en dur l'absence d'auth derrière un proxy.
 - **Références** : brief §12-§13, ADR-0004, ADR-0017.
 
+## ADR-0019 — Assistant de premier démarrage (wizard) protégé par jeton
+
+- **Statut** : acceptée — 2026-09-17
+- **Contexte** : en distribution (image GHCR), exiger le mot de passe admin par variable
+  d'environnement est peu sûr (visible dans `docker inspect`) et un setup ouvert tant
+  qu'aucun compte n'existe permettrait à un visiteur distant de s'approprier l'instance.
+- **Décision** : au premier démarrage sans compte, un assistant `/setup` (public) prend la
+  main, protégé par un **jeton d'installation** généré au démarrage (fichier
+  `WEBUI_DATA/setup-token` en 0600 + journalisé une fois, supprimé après succès). Le wizard
+  crée le compte admin (Argon2id, mot de passe ≥ 12 caractères et ≠ identifiant), règle
+  `internal_auth`, `instance_name` et `notify_job_success`, marque `setup_completed` puis
+  ferme définitivement `/setup` (409). La voie par variables d'environnement
+  (`WEBUI_ADMIN_PASSWORD`) reste supportée et marque aussi `setup_completed`.
+- **Conséquences** : `WEBUI_ADMIN_PASSWORD` devient optionnel dans le compose ; la
+  procédure d'installation dépend de la lecture du jeton (journaux ou fichier de données) ;
+  les installations existantes (compte présent) ne voient jamais le wizard ;
+  `setup_required` = aucun utilisateur **et** `setup_completed` ≠ true.
+- **Alternatives écartées** : setup non protégé (course à l'appropriation) ; wizard
+  uniquement accessible en local (faussé derrière un proxy) ; supprimer la voie env
+  (perte de l'automatisation).
+- **Références** : brief §13, §12 ; ADR-0018.
+
 ## Décisions ouvertes
 
 À trancher explicitement puis consigner en ADR (voir brief §72) :

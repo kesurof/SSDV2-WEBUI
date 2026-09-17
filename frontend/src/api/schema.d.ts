@@ -600,6 +600,40 @@ export interface paths {
         patch: operations["update_security_api_v1_security_patch"];
         trace?: never;
     };
+    "/api/v1/setup/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Setup Status */
+        get: operations["setup_status_api_v1_setup_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/setup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Run Setup */
+        post: operations["run_setup_api_v1_setup_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/system/summary": {
         parameters: {
             query?: never;
@@ -940,6 +974,39 @@ export interface components {
         SecurityUpdateRequest: {
             /** Internal Auth */
             internal_auth: boolean;
+        };
+        /** SetupRequest */
+        SetupRequest: {
+            /** Token */
+            token: string;
+            /** Username */
+            username: string;
+            /** Password */
+            password: string;
+            /**
+             * Internal Auth
+             * @default true
+             */
+            internal_auth: boolean;
+            /**
+             * Instance Name
+             * @default SSDV2 WebUI
+             */
+            instance_name: string;
+            /**
+             * Notify Job Success
+             * @default true
+             */
+            notify_job_success: boolean;
+        };
+        /** SetupStatusOut */
+        SetupStatusOut: {
+            /** Required */
+            required: boolean;
+            /** Token Required */
+            token_required: boolean;
+            /** Instance Name */
+            instance_name: string;
         };
         /** SsddbAppOut */
         SsddbAppOut: {
@@ -2012,6 +2079,59 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SecurityOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    setup_status_api_v1_setup_status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SetupStatusOut"];
+                };
+            };
+        };
+    };
+    run_setup_api_v1_setup_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetupRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserOut"];
                 };
             };
             /** @description Validation Error */
