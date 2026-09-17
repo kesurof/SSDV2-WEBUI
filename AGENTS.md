@@ -50,6 +50,8 @@ agent), §72 (décisions à trancher), §75 (stack).
 9. Actions destructrices : confirmation graduée (§53) ; pas de terminal shell web.
 10. `ssdv2ctl` (non interactif, JSON) est la frontière avec SSDV2 ; inspecter le mécanisme
     SSDV2 existant avant toute modification, ne pas réinventer depuis un nom de fonction.
+11. Ne jamais créer de branche ni de pull request sur `projetssd/ssdv2` tant que le projet
+    n'est pas finalisé (ADR-0010) : le développement lié à SSDV2 reste local.
 
 ## Stack retenue (ADR-0004, brief §75)
 

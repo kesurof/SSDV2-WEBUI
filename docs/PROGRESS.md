@@ -26,8 +26,10 @@ Preuves :
 
 ## Prochain chantier pressenti
 
-Phase 0 — contrat `ssdv2ctl` dans `projetssd/ssdv2` (non commencé ; obligatoire avant
-toute mutation). Voir [`ROADMAP.md`](ROADMAP.md).
+Phase 0 — contrat `ssdv2ctl` (non commencé ; obligatoire avant toute mutation).
+Contrainte : développement **local uniquement**, aucune branche ni PR sur
+`projetssd/ssdv2` tant que le projet n'est pas finalisé (ADR-0010). Voir
+[`ROADMAP.md`](ROADMAP.md).
 
 ## Points d'attention détectés
 
