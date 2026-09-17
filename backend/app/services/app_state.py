@@ -9,6 +9,8 @@ WARNING_MISSING_REGISTRY = "missing_registry"
 WARNING_CONTAINERS_WITHOUT_SSDDB = "containers_without_ssddb"
 WARNING_UNHEALTHY = "unhealthy"
 WARNING_DOCKER_UNAVAILABLE = "docker_unavailable"
+WARNING_CATALOGUE_UNAVAILABLE = "catalogue_unavailable"
+WARNING_SSDDB_UNAVAILABLE = "ssddb_unavailable"
 
 
 def _build_url(subdomain: str | None, domain: str | None) -> str | None:

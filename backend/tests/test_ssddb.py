@@ -9,7 +9,9 @@ def _create_db(path):
             "create table applications("
             "name varchar(50) primary key, status integer, subdomain varchar(50), port integer)"
         )
-        conn.execute("create table seedbox_params(name varchar(50) primary key, value varchar(50))")
+        conn.execute(
+            "create table seedbox_params(param varchar(50) primary key, value varchar(50))"
+        )
         conn.execute("insert into seedbox_params values ('domain', 'example.com')")
         conn.execute("insert into applications values ('sonarr', 2, 'sonarr', 8989)")
 

@@ -150,7 +150,7 @@ def write_ssddb(settings) -> Iterator[object]:
                 "subdomain varchar(50), port integer)"
             )
             conn.execute(
-                "create table seedbox_params(name varchar(50) primary key, value varchar(50))"
+                "create table seedbox_params(param varchar(50) primary key, value varchar(50))"
             )
             if domain:
                 conn.execute("insert into seedbox_params values ('domain', ?)", (domain,))
