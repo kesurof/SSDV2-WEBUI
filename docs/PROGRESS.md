@@ -158,6 +158,21 @@ aucun push — ADR-0010 ; dernière révision `444b9681`).
   `/auth/me` 401 puis reconnexion OK ; les deux changements audités. État final :
   authentification interne **activée**. 113 tests backend, 40 tests frontend.
 
+**Assistant de premier démarrage (ADR-0019)**.
+
+- Backend : `GET /api/v1/setup/status`, `POST /api/v1/setup` (jeton d'installation
+  `WEBUI_DATA/setup-token` en 0600, journalisé une fois, supprimé après succès) ;
+  compte admin (Argon2id, ≥ 12 caractères, ≠ identifiant), réglages `internal_auth`,
+  `instance_name`, `notify_job_success`, `setup_completed` ; voie env
+  (`WEBUI_ADMIN_PASSWORD`) conservée ; 119 tests pytest verts.
+- Frontend : assistant `/setup` en 4 étapes (compte, sécurité, instance, vérification),
+  gardes de redirection, nom d'instance dans la sidebar et le titre ; 43 tests Vitest.
+- Preuves : CI verte ; conteneur jetable à volume vide (port 8899, sans
+  `WEBUI_ADMIN_PASSWORD`) — statut `required:true`, jeton lu dans les journaux
+  (fichier en 0600), jeton invalide refusé, setup → compte créé + session auto +
+  `instance_name` appliqué, jeton supprimé, second setup → 409, login OK ; conteneur
+  et volume supprimés. Déploiement principal inchangé (`required:false`).
+
 ## Prochains chantiers pressentis
 
 1. Phase 5 : mise à jour SSDV2/Git, patches, Docker avancé, fonctions hôte (nécessite des
