@@ -88,9 +88,11 @@ export function Layout() {
         </nav>
         <div className="space-y-2 border-t p-2">
           <div className="truncate text-xs text-muted-foreground">{me.data.username}</div>
-          <Button variant="outline" size="sm" className="w-full" onClick={handleLogout}>
-            {fr.common.logout}
-          </Button>
+          {me.data.internal_auth && (
+            <Button variant="outline" size="sm" className="w-full" onClick={handleLogout}>
+              {fr.common.logout}
+            </Button>
+          )}
         </div>
       </aside>
       <div className="flex flex-1 flex-col">

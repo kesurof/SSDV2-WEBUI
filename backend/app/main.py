@@ -19,6 +19,7 @@ from app.api import (
     health,
     jobs,
     notifications,
+    security,
     system,
 )
 from app.core.config import get_settings
@@ -80,6 +81,7 @@ def create_app() -> FastAPI:
     api_router.include_router(health.router)
     api_router.include_router(jobs.router)
     api_router.include_router(notifications.router)
+    api_router.include_router(security.router)
     api_router.include_router(system.router)
     app.include_router(api_router)
     app.include_router(health.router)

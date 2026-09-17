@@ -1285,6 +1285,66 @@
         }
       }
     },
+    "/api/v1/security": {
+      "get": {
+        "tags": [
+          "security"
+        ],
+        "summary": "Get Security",
+        "operationId": "get_security_api_v1_security_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SecurityOut"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "security"
+        ],
+        "summary": "Update Security",
+        "operationId": "update_security_api_v1_security_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SecurityUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SecurityOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/system/summary": {
       "get": {
         "tags": [
@@ -2283,6 +2343,32 @@
         ],
         "title": "RegistriesOut"
       },
+      "SecurityOut": {
+        "properties": {
+          "internal_auth": {
+            "type": "boolean",
+            "title": "Internal Auth"
+          }
+        },
+        "type": "object",
+        "required": [
+          "internal_auth"
+        ],
+        "title": "SecurityOut"
+      },
+      "SecurityUpdateRequest": {
+        "properties": {
+          "internal_auth": {
+            "type": "boolean",
+            "title": "Internal Auth"
+          }
+        },
+        "type": "object",
+        "required": [
+          "internal_auth"
+        ],
+        "title": "SecurityUpdateRequest"
+      },
       "SsddbAppOut": {
         "properties": {
           "status": {
@@ -2423,6 +2509,11 @@
           "username": {
             "type": "string",
             "title": "Username"
+          },
+          "internal_auth": {
+            "type": "boolean",
+            "title": "Internal Auth",
+            "default": true
           }
         },
         "type": "object",

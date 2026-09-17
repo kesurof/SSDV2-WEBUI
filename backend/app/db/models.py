@@ -78,3 +78,10 @@ class AuditEvent(Base):
     target: Mapped[str | None] = mapped_column(String(100), nullable=True)
     status: Mapped[str] = mapped_column(String(20))
     detail: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+
+class WebuiSetting(Base):
+    __tablename__ = "webui_settings"
+
+    key: Mapped[str] = mapped_column(String(50), primary_key=True)
+    value: Mapped[str] = mapped_column(Text)

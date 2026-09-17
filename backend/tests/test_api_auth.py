@@ -13,8 +13,11 @@ def test_login_invalid_credentials(client):
 def test_login_logout_flow(client):
     response = client.post("/api/v1/auth/login", json=login_payload())
     assert response.status_code == 200
-    assert response.json() == {"username": "admin"}
-    assert client.get("/api/v1/auth/me").json() == {"username": "admin"}
+    assert response.json() == {"username": "admin", "internal_auth": True}
+    assert client.get("/api/v1/auth/me").json() == {
+        "username": "admin",
+        "internal_auth": True,
+    }
 
     csrf = client.cookies.get("ssdv2_webui_csrf")
     assert csrf

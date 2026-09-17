@@ -19,6 +19,7 @@ from app.deps import CurrentUser, DbDep, SettingsDep, Ssdv2CtlDep, require_csrf
 from app.schemas.auth import AppAuthSummary, AuthBulkRequest, LoginRequest, UserOut
 from app.schemas.job import JobOut
 from app.services import audit
+from app.services import settings as webui_settings
 from app.services.jobs import job_manager
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -32,6 +33,8 @@ def login_limiter() -> FixedWindowLimiter:
 
 @router.post("/login", response_model=UserOut)
 def login(payload: LoginRequest, response: Response, db: DbDep, settings: SettingsDep) -> UserOut:
+    if not webui_settings.internal_auth_enabled(db):
+        raise HTTPException(status.HTTP_409_CONFLICT, "l'authentification interne est désactivée")
     limiter = login_limiter()
     key = f"login:{payload.username}"
     if not limiter.allow(key):
@@ -69,7 +72,7 @@ def login(payload: LoginRequest, response: Response, db: DbDep, settings: Settin
         secure=settings.cookie_secure,
         path="/",
     )
-    return UserOut(username=user.username)
+    return UserOut(username=user.username, internal_auth=True)
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
@@ -80,6 +83,8 @@ def logout(
     _user: CurrentUser,
     _csrf: None = Depends(require_csrf),
 ) -> None:
+    if not _user.internal_auth:
+        raise HTTPException(status.HTTP_409_CONFLICT, "l'authentification interne est désactivée")
     token = request.cookies.get(SESSION_COOKIE)
     if token:
         session = db.get(UserSession, hash_token(token))
@@ -92,8 +97,18 @@ def logout(
 
 
 @router.get("/me", response_model=UserOut)
-def me(user: CurrentUser) -> UserOut:
-    return UserOut(username=user.username)
+def me(user: CurrentUser, response: Response, settings: SettingsDep) -> UserOut:
+    if not user.internal_auth:
+        response.set_cookie(
+            CSRF_COOKIE,
+            new_token(),
+            max_age=settings.session_ttl_hours * 3600,
+            httponly=False,
+            samesite="lax",
+            secure=settings.cookie_secure,
+            path="/",
+        )
+    return UserOut(username=user.username, internal_auth=user.internal_auth)
 
 
 @router.get("/apps", response_model=list[AppAuthSummary])

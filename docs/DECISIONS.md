@@ -322,6 +322,26 @@ pointe vers son remplaçant. Une décision non tranchée reste dans « Décision
   (modification invasive et durable de l'hôte) ; exécuter les mutations hors du conteneur.
 - **Références** : brief §10-§11, §72 ; ADR-0010, ADR-0015.
 
+## ADR-0018 — Authentification interne désactivable (auth déléguée au proxy amont)
+
+- **Statut** : acceptée — 2026-09-17
+- **Contexte** : la WebUI est exposée via Traefik derrière `chain-oauth2-proxy@file` ;
+  lorsque l'authentification est déjà assurée en amont, le login admin interne fait
+  doublon. Un réglage administrable est demandé.
+- **Décision** : réglage WebUI `internal_auth` (table `webui_settings`, **activé par
+  défaut**), modifiable via `PATCH /api/v1/security` par un admin authentifié. Désactivé :
+  les routes n'exigent plus de session (utilisateur synthétique `auth-externe`), `login`
+  et `logout` répondent 409, toutes les sessions existantes sont supprimées ; la
+  protection CSRF double-submit est conservée pour les mutations (cookie émis par
+  `/auth/me`). La désactivation exige une confirmation forte (saisie de « DESACTIVER »).
+- **Conséquences** : la sécurité repose alors sur le proxy amont et sur le fait que le port
+  local `127.0.0.1:8800` n'est pas exposé ; toute personne atteignant la WebUI dispose d'un
+  accès complet (socket Docker) ; réactiver l'authentification ferme les sessions et
+  impose une reconnexion.
+- **Alternatives écartées** : supprimer l'authentification interne (pas de retour arrière,
+  inutilisable en accès direct) ; coder en dur l'absence d'auth derrière un proxy.
+- **Références** : brief §12-§13, ADR-0004, ADR-0017.
+
 ## Décisions ouvertes
 
 À trancher explicitement puis consigner en ADR (voir brief §72) :

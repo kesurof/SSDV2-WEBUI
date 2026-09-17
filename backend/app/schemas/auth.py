@@ -12,6 +12,7 @@ class LoginRequest(BaseModel):
 
 class UserOut(BaseModel):
     username: str
+    internal_auth: bool = True
 
 
 class AppAuthSummary(BaseModel):

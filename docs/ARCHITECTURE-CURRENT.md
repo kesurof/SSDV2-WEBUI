@@ -25,7 +25,8 @@
   `POST /api/v1/apps/{app}/backup` (job `app_backup`, mécanisme `sauve_one_appli`) ;
   `GET /api/v1/auth/apps` (auth par application) et `POST /api/v1/auth/bulk`
   (job `auth_bulk`, `auth set-many`) ; `GET /api/v1/config` (clés non secrètes,
-  lecture seule) ; le tout via l'adaptateur `ssdv2ctl` (`app/adapters/ssdv2_cli.py`,
+  lecture seule) ; `GET`/`PATCH /api/v1/security` (authentification interne activable ou
+  désactivable, ADR-0018) ; le tout via l'adaptateur `ssdv2ctl` (`app/adapters/ssdv2_cli.py`,
   commandes allowlistées, `shell=False`, `SSDV2CTL_PATH`/`SSDV2CTL_TIMEOUT`).
 - `frontend/` : React 19 + Vite 8 + TypeScript 5.9 + Tailwind 4 + shadcn/ui +
   TanStack Query v5 + TanStack Table v9 + React Router v7 ; login, layout, dashboard,
@@ -35,8 +36,8 @@
   recréer/réinstaller/supprimer avec confirmations graduées), page Jobs (liste + détail
   avec événements SSE), page Notifications (badge non-lues, marquage lu, liens vers les
   jobs), page Audit, page Sauvegardes (archives SSDV2), page Authentification
-  (changement en masse), page Paramètres (lecture seule), page Diagnostics (contrôles +
-  actions de réparation avec confirmation forte).
+  (changement en masse), page Paramètres (lecture seule + sécurité),
+  page Diagnostics (contrôles + actions de réparation avec confirmation forte).
 - `Dockerfile` : multi-stage Node 22 → `python:3.13-slim`, entrypoint PUID/PGID
   (`setpriv --init-groups`, ADR-0017), frontend compilé servi par FastAPI, healthcheck
   `/health`, runtime SSDV2 : ansible (`ansible-core` 2.21.0, collections

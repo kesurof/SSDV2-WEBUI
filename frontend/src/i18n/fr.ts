@@ -186,6 +186,19 @@ export const fr = {
     selectAll: 'Tout sélectionner',
     confirm: 'Changer l’authentification de {count} application(s) vers « {auth} » ?',
   },
+  security: {
+    title: 'Authentification interne',
+    hint: 'À désactiver lorsque la WebUI est déjà protégée en amont (ex. oauth2-proxy via Traefik). Sans authentification interne, toute personne pouvant atteindre la WebUI dispose d’un accès complet.',
+    enabled: 'Activée',
+    disabled: 'Désactivée (auth externe)',
+    enable: 'Activer',
+    disable: 'Désactiver',
+    confirmDisable:
+      'L’authentification interne sera désactivée : la WebUI ne sera plus protégée que par le proxy en amont. Tapez « DESACTIVER » pour confirmer.',
+    confirmEnable:
+      'Réactiver l’authentification interne ? Les sessions en cours seront fermées et une connexion sera nécessaire.',
+    typeToConfirm: 'Tapez « DESACTIVER » pour confirmer',
+  },
   settings: {
     title: 'Paramètres',
     readOnly: 'Lecture seule',

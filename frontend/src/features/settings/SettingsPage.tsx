@@ -1,4 +1,5 @@
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { SecuritySettings } from '@/features/settings/SecuritySettings'
 import { SettingsView } from '@/features/settings/SettingsView'
 import { useConfig } from '@/features/settings/useSettings'
 import { fr } from '@/i18n/fr'
@@ -19,5 +20,10 @@ export function SettingsPage() {
     )
   }
 
-  return <SettingsView config={config.data.config} />
+  return (
+    <div className="space-y-4">
+      <SettingsView config={config.data.config} />
+      <SecuritySettings />
+    </div>
+  )
 }

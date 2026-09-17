@@ -168,6 +168,16 @@ def settings():
     return get_settings()
 
 
+@pytest.fixture(autouse=True)
+def _ensure_internal_auth() -> Iterator[None]:
+    yield
+    from app.db.session import get_session_factory
+    from app.services import settings as webui_settings
+
+    with get_session_factory()() as session:
+        webui_settings.set_internal_auth(session, True)
+
+
 @pytest.fixture
 def fake_containers() -> list[FakeContainer]:
     return []

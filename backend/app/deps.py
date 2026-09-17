@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import Annotated
 
 import docker
@@ -9,6 +10,14 @@ from app.core.config import Settings, get_settings
 from app.core.security import CSRF_COOKIE, CSRF_HEADER, SESSION_COOKIE, hash_token
 from app.db.models import User, UserSession, utcnow
 from app.db.session import get_db
+from app.services import settings as webui_settings
+
+
+@dataclass(frozen=True)
+class AuthenticatedUser:
+    username: str
+    internal_auth: bool
+
 
 SettingsDep = Annotated[Settings, Depends(get_settings)]
 DbDep = Annotated[Session, Depends(get_db)]
@@ -31,7 +40,9 @@ def get_docker_client() -> docker.DockerClient | None:
 DockerDep = Annotated[docker.DockerClient | None, Depends(get_docker_client)]
 
 
-def get_current_user(request: Request, db: DbDep) -> User:
+def get_current_user(request: Request, db: DbDep) -> AuthenticatedUser:
+    if not webui_settings.internal_auth_enabled(db):
+        return AuthenticatedUser(username="auth-externe", internal_auth=False)
     token = request.cookies.get(SESSION_COOKIE)
     if not token:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Non authentifié")
@@ -41,10 +52,10 @@ def get_current_user(request: Request, db: DbDep) -> User:
     user = db.get(User, session.user_id)
     if user is None:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Utilisateur inconnu")
-    return user
+    return AuthenticatedUser(username=user.username, internal_auth=True)
 
 
-CurrentUser = Annotated[User, Depends(get_current_user)]
+CurrentUser = Annotated[AuthenticatedUser, Depends(get_current_user)]
 
 
 def require_csrf(request: Request) -> None:
