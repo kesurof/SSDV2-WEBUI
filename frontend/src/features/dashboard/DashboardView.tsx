@@ -154,24 +154,32 @@ export function DashboardView({
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard icon={Boxes} value={summary.ssdv2.apps_total} label={fr.dashboard.appsTotal} />
+        <MetricCard
+          icon={Boxes}
+          value={summary.ssdv2.apps_total}
+          label={fr.dashboard.appsTotal}
+          to="/apps"
+        />
         <MetricCard
           icon={Download}
           value={summary.ssdv2.installed}
           label={fr.dashboard.installed}
           tone="ok"
+          to="/apps?status=installed"
         />
         <MetricCard
           icon={CirclePlay}
           value={summary.ssdv2.running}
           label={fr.dashboard.running}
           tone="ok"
+          to="/apps?status=running"
         />
         <MetricCard
           icon={CircleStop}
           value={summary.ssdv2.stopped}
           label={fr.dashboard.stopped}
           tone={summary.ssdv2.stopped > 0 ? 'err' : 'info'}
+          to="/apps?status=stopped"
         />
       </div>
 

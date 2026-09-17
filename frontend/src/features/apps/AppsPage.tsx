@@ -1,5 +1,6 @@
 import { Boxes, CirclePlay, CircleStop, Download, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 
 import { MetricCard } from '@/components/app/metric-card'
 import { PageHeader } from '@/components/app/page-header'
@@ -22,10 +23,18 @@ const FILTERS: { value: StatusFilter; label: string }[] = [
   { value: 'not_installed', label: fr.apps.filterNotInstalled },
 ]
 
+function isStatusFilter(value: string | null): value is StatusFilter {
+  return FILTERS.some((filter) => filter.value === value)
+}
+
 export function AppsPage() {
   const apps = useApps()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const initialStatus = searchParams.get('status')
   const [search, setSearch] = useState('')
-  const [status, setStatus] = useState<StatusFilter>('all')
+  const [status, setStatus] = useState<StatusFilter>(
+    isStatusFilter(initialStatus) ? initialStatus : 'all',
+  )
   const [page, setPage] = useState(0)
 
   const filtered = useMemo(
@@ -51,6 +60,7 @@ export function AppsPage() {
   function changeFilter(value: StatusFilter) {
     setStatus(value)
     setPage(0)
+    setSearchParams(value === 'all' ? {} : { status: value }, { replace: true })
   }
 
   return (
@@ -61,14 +71,36 @@ export function AppsPage() {
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard icon={Boxes} value={counts.all} label={fr.dashboard.appsTotal} />
-        <MetricCard icon={Download} value={counts.installed} label={fr.dashboard.installed} tone="ok" />
-        <MetricCard icon={CirclePlay} value={counts.running} label={fr.dashboard.running} tone="ok" />
+        <MetricCard
+          icon={Boxes}
+          value={counts.all}
+          label={fr.dashboard.appsTotal}
+          active={status === 'all'}
+          onClick={() => changeFilter('all')}
+        />
+        <MetricCard
+          icon={Download}
+          value={counts.installed}
+          label={fr.dashboard.installed}
+          tone="ok"
+          active={status === 'installed'}
+          onClick={() => changeFilter('installed')}
+        />
+        <MetricCard
+          icon={CirclePlay}
+          value={counts.running}
+          label={fr.dashboard.running}
+          tone="ok"
+          active={status === 'running'}
+          onClick={() => changeFilter('running')}
+        />
         <MetricCard
           icon={CircleStop}
           value={counts.stopped}
           label={fr.dashboard.stopped}
           tone={counts.stopped > 0 ? 'err' : 'info'}
+          active={status === 'stopped'}
+          onClick={() => changeFilter('stopped')}
         />
       </div>
 
