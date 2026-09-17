@@ -79,9 +79,22 @@ aucun push — ADR-0010 ; dernière révision `444b9681`).
   `success`) avec nettoyage vérifié (conteneur, registres, `ssddb`, dossier de données,
   DNS `dig @1.1.1.1` vide).
 
+**Phase 4a — diagnostics réparateurs**.
+
+- `ssdv2ctl` : `diagnostics rebuild-registries` (patch officiel de backfill),
+  `cleanup-orphan-containers`, `cleanup-dangling-volumes` (43 tests unittest verts).
+- Backend : `POST /api/v1/diagnostics/rebuild-registries|cleanup-orphan-containers|
+  cleanup-dangling-volumes` en jobs (allowlist adaptateur étendue) ; 87 tests pytest verts.
+- Frontend : actions de réparation sur la page Diagnostics, confirmation forte (saisie de
+  « SUPPRIMER ») pour les suppressions ; 25 tests Vitest verts.
+- Preuves : CI verte ; sur le serveur, `rebuild-registries` (job 19 `success`, 8 registres
+  présents) et `cleanup-orphan-containers` (job 20 `success`, aucun orphelin) ;
+  `cleanup-dangling-volumes` livré mais non exécuté (2 volumes anonymes à supprimer,
+  décision utilisateur).
+
 ## Prochains chantiers pressentis
 
-1. Phase 4 : notifications persistantes, audit, backups, diagnostics réparateurs,
+1. Phase 4b : notifications persistantes (+ SSE), audit des actions, backups,
    `ssdv2ctl config`.
 2. Polish : confort des logs (recherche, pause), exposition Traefik, multiarch/GHCR.
 
