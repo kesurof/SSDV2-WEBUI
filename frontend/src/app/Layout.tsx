@@ -1,14 +1,12 @@
 import {
   BellRing,
   Boxes,
-  ChevronDown,
   ClipboardList,
   DatabaseBackup,
   DownloadCloud,
   Gauge,
   HeartPulse,
   ListChecks,
-  LogOut,
   Menu,
   Search,
   Settings,
@@ -24,16 +22,9 @@ import { Navigate, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { ThemeToggle } from '@/components/app/theme-toggle'
+import { UserMenu } from '@/components/app/user-menu'
 import { useLogout, useMe } from '@/features/auth/useAuth'
 import { useNotifications } from '@/features/notifications/useNotifications'
 import { useSetupStatus } from '@/features/setup/useSetup'
@@ -322,27 +313,11 @@ export function Layout() {
 
           <div className="ml-auto flex items-center gap-2">
             <ThemeToggle />
-            <DropdownMenu>
-              <DropdownMenuTrigger render={<Button variant="ghost" className="gap-2 px-2" />}>
-                <span className="grid size-8 place-items-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
-                  {me.data.username.slice(0, 1).toUpperCase()}
-                </span>
-                <span className="hidden text-left sm:block">
-                  <span className="block text-sm font-medium">{me.data.username}</span>
-                  <span className="block text-[11px] text-muted-foreground">Administrateur</span>
-                </span>
-                <ChevronDown className="size-4 text-muted-foreground" aria-hidden />
-              </DropdownMenuTrigger>              <DropdownMenuContent align="end" className="w-52">
-                <DropdownMenuLabel>{me.data.username}</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {me.data.internal_auth && (
-                  <DropdownMenuItem onClick={handleLogout}>
-                    <LogOut className="size-4" aria-hidden />
-                    {fr.common.logout}
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <UserMenu
+              username={me.data.username}
+              internalAuth={me.data.internal_auth}
+              onLogout={handleLogout}
+            />
           </div>
         </header>
 
