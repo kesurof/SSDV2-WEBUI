@@ -364,6 +364,45 @@ pointe vers son remplaçant. Une décision non tranchée reste dans « Décision
   (perte de l'automatisation).
 - **Références** : brief §13, §12 ; ADR-0018.
 
+## ADR-0020 — Distribution comme application SSDV2 standard (`ssdv2webui`)
+
+- **Statut** : acceptée — 2026-09-17
+- **Contexte** : le déploiement de référence était un `compose.yaml` ad hoc, non géré par
+  SSDV2 (pas de registre, pas de suppression/relance standard). L'objectif est une
+  installation par le menu SSDV2 comme n'importe quelle application, sur n'importe quelle
+  instance, sans dépendance aux chemins de développement (`~/ssdv2-ctl-dev`) ni au binaire
+  Docker de l'hôte.
+- **Décision** :
+  - l'application SSDV2 s'appelle **`ssdv2webui`** (nom `webui` réservé au stub de
+    l'ancienne WebUI, conservé tel quel) : fichier `includes/dockerapps/vars/ssdv2webui.yml`
+    (image `ghcr.io/kesurof/ssdv2-webui:latest`, `intport: 8000`, aucun port hôte publié,
+    labels Traefik génériques et choix d'auth à l'installation) ;
+  - l'image est publiée **publique** sur GHCR (aucun secret embarqué) pour un pull
+    universel sans credentials ;
+  - l'image embarque le **CLI Docker** (binaire statique, par architecture) et
+    **`ssdv2ctl` vendored** dans `/usr/local/bin` (copie épinglée de
+    `~/Developer/ssdv2/ssdv2ctl`, resynchronisée via `scripts/sync-ssdv2ctl.sh`, hash
+    relevé à chaque synchronisation) ; les chemins par défaut du backend dérivent de
+    `HOME` ;
+  - conventions linuxserver adoptées : `PUID`/`PGID`/`TZ` (entrypoint existant,
+    ADR-0017), `tzdata` et montage `/etc/localtime`, données dans
+    `{{ settings.storage }}/docker/{{ USER }}/ssdv2webui/data` ;
+  - le compte admin est créé par l'assistant `/setup` (ADR-0019), aucun secret dans les
+    variables de l'application ; la surcharge `~/seedbox/vars/ssdv2webui.yml` permet
+    d'installer sans modifier le dépôt SSDV2 (ADR-0010) ;
+  - `compose.yaml` devient la voie de développement local.
+- **Conséquences** : l'application apparaît dans le catalogue SSDV2 et se gère via
+  `ssdv2ctl`/menu (install, remove, reinstall, restart, backup) ; la resynchronisation de
+  `ssdv2ctl` devient une étape de release ; l'image grossit d'environ 60 Mo ; la double
+  authentification (chaîne oauth2-proxy + login interne) reste en place et le défaut de
+  POST derrière `oauth2-proxy` reste ouvert.
+- **Alternatives écartées** : nom `webui` (collision avec le stub historique et son
+  entrée de menu) ; paquet GHCR privé (pull non universel) ; base `linuxserver/baseimage`
+  + s6 (aucun gain fonctionnel, Python 3.13 à réinstaller) ; montage d'un dossier hôte
+  pour `ssdv2ctl` (non universel).
+- **Références** : ADR-0010, ADR-0017, ADR-0018, ADR-0019 ; skill `add-app` SSDV2 ; brief
+  §10, §75.
+
 ## Décisions ouvertes
 
 À trancher explicitement puis consigner en ADR (voir brief §72) :

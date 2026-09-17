@@ -4,15 +4,17 @@ from pathlib import Path
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+HOME = Path.home()
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(extra="ignore")
 
-    ssdv2_source: Path = Path("/home/utilisateur/seedbox-compose")
-    ssdv2_storage: Path = Path("/home/utilisateur/seedbox")
-    ssdv2ctl_path: Path = Path("ssdv2ctl")
+    ssdv2_source: Path = HOME / "seedbox-compose"
+    ssdv2_storage: Path = HOME / "seedbox"
+    ssdv2ctl_path: Path = Path("/usr/local/bin/ssdv2ctl")
     ssdv2ctl_timeout: int = 60
-    backup_dir: Path = Path("/home/utilisateur/backup")
+    backup_dir: Path = HOME / "backup"
     webui_data: Path = Path("/data")
     static_dir: Path = Path("/app/static")
 

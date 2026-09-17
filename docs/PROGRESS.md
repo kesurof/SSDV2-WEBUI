@@ -6,7 +6,16 @@
 
 ## Chantier actif
 
-Aucun.
+**Distribution comme application SSDV2 (`ssdv2webui`, ADR-0020)**.
+
+- Image universelle : CLI Docker embarquée (binaire statique par architecture), `tzdata`,
+  `ssdv2ctl` vendored (`vendor/ssdv2ctl/ssdv2ctl`, resynchronisé par
+  `scripts/sync-ssdv2ctl.sh`), défauts backend dérivés de `HOME` ; smoke test en CI.
+- Intégration SSDV2 : `includes/dockerapps/vars/ssdv2webui.yml` + entrée catalogue dans le
+  clone local (`~/Developer/ssdv2`, branche `wip/ssdv2ctl`, aucun push — ADR-0010) ;
+  installation par le menu avec surcharge `~/seedbox/vars/ssdv2webui.yml` sur le serveur.
+- Preuves : à compléter (installation réelle par le menu, cycle `ssdv2ctl`, migration des
+  données depuis le volume `webui-data`).
 
 ## Derniers chantiers terminés (2026-09-17)
 

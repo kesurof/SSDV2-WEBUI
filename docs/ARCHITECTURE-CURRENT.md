@@ -46,20 +46,27 @@
   `/health`, runtime SSDV2 : ansible (`ansible-core` 2.21.0, collections
   `community.docker`/`community.general`/`ansible.posix`, rôles `kwoodson.yedit`/
   `geerlingguy.docker` dans `/opt/ansible`), outils CLI `jq`, `sqlite3`, `curl`,
-  `gettext`, `htpasswd`, `pigz`, `sudo` (image ~442 Mo).
-- `compose.yaml` : conteneur unique `ssdv2-webui` lié à `127.0.0.1:8800`, exposé via
-  Traefik (`https://ssdv2.exemple.tld`, middleware `chain-oauth2-proxy@file`, réseau
-  `traefik_proxy`, TLS via Cloudflare), exécuté avec l'UID/GID de l'utilisateur SSDV2
-  (`SSD_UID`/`SSD_GID`, ADR-0017) ; `WEBUI_ADMIN_PASSWORD` optionnel (sinon assistant de
-  premier démarrage via le jeton `WEBUI_DATA/setup-token`, ADR-0019) ; socket Docker,
-  binaire Docker de l'hôte monté, `SSDV2CTL_PATH` et `HOME` pointant vers l'utilisateur
+  `gettext`, `htpasswd`, `pigz`, `sudo`, `tzdata` (image ~505 Mo) ; CLI Docker
+  embarquée (binaire statique `download.docker.com`, par architecture) et `ssdv2ctl`
+  vendored dans `/usr/local/bin` (copie épinglée, resynchronisée par
+  `scripts/sync-ssdv2ctl.sh`) — plus aucune dépendance aux binaires ou chemins de
+  l'hôte (ADR-0020). Les chemins par défaut du backend dérivent de `HOME`
+  (`SSDV2_SOURCE`, `SSDV2_STORAGE`, `BACKUP_DIR`).
+- `compose.yaml` (voie de **développement**) : conteneur unique `ssdv2-webui` lié à
+  `127.0.0.1:8800`, exposé via Traefik (`https://ssdv2.exemple.tld`, middleware
+  `chain-oauth2-proxy@file`, réseau `traefik_proxy`, TLS via Cloudflare), exécuté avec
+  l'UID/GID de l'utilisateur SSDV2 (`SSD_UID`/`SSD_GID`, ADR-0017) ;
+  `WEBUI_ADMIN_PASSWORD` optionnel (sinon assistant de premier démarrage via le jeton
+  `WEBUI_DATA/setup-token`, ADR-0019) ; socket Docker, binaire Docker de l'hôte monté
+  (surcharge du binaire embarqué), `SSDV2CTL_PATH` et `HOME` pointant vers l'utilisateur
   SSDV2, dossier `ssdv2ctl` de développement monté sur `/opt/ssdv2ctl`, fichiers
   `~/.config/ssd/env` et `~/.vault_pass` montés en lecture seule (nécessaires à
   `get_from_account_yml`), `SSDV2_SOURCE` et `SSDV2_STORAGE` montés, volume nommé
-  `webui-data` pour `/data`. Ansible n'est pas disponible dans le conteneur.
+  `webui-data` pour `/data`. Le déploiement de référence devient l'application SSDV2
+  `ssdv2webui` (ADR-0020).
 - `.github/workflows/ci.yml` : runner `[self-hosted, SSDV2-WEBUI]` (ARM64) ; backend
   (ruff + pytest) et frontend (oxlint + tsc + Vitest + build) dans des conteneurs Docker,
-  puis `docker build`.
+  puis `docker build` et smoke test de l'image (`ssdv2ctl --version`, `docker --version`).
 - `.github/workflows/release.yml` : build multiarchitecture (buildx + QEMU,
   `linux/amd64` + `linux/arm64`) et publication `ghcr.io/kesurof/ssdv2-webui`
   (dispatch manuel ou tag `v*`).

@@ -8,6 +8,9 @@ RUN npm run build
 
 FROM python:3.13-slim
 
+ARG TARGETARCH
+ARG DOCKER_CLI_VERSION=29.6.1
+
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
@@ -35,10 +38,28 @@ COPY --from=frontend /build/dist ./static
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        sudo jq sqlite3 curl ca-certificates gettext-base apache2-utils pigz openssl \
+        sudo jq sqlite3 curl ca-certificates gettext-base apache2-utils pigz openssl tzdata \
     && rm -rf /var/lib/apt/lists/* \
     && mkdir -p /data \
     && chown 10001:10001 /data
+
+# CLI Docker embarquée : le conteneur n'a plus besoin du binaire de l'hôte.
+RUN set -eux; \
+    arch="${TARGETARCH:-$(dpkg --print-architecture)}"; \
+    case "$arch" in \
+        amd64) docker_arch=x86_64 ;; \
+        arm64) docker_arch=aarch64 ;; \
+        *) echo "architecture non supportée : $arch" >&2; exit 1 ;; \
+    esac; \
+    curl -fsSL "https://download.docker.com/linux/static/stable/${docker_arch}/docker-${DOCKER_CLI_VERSION}.tgz" -o /tmp/docker.tgz; \
+    tar -xzf /tmp/docker.tgz -C /tmp; \
+    install -m 0755 /tmp/docker/docker /usr/local/bin/docker; \
+    rm -rf /tmp/docker /tmp/docker.tgz; \
+    docker --version
+
+# ssdv2ctl vendored (copie épinglée, resynchroniser via scripts/sync-ssdv2ctl.sh)
+COPY vendor/ssdv2ctl/ssdv2ctl /usr/local/bin/ssdv2ctl
+RUN chmod 0755 /usr/local/bin/ssdv2ctl && ssdv2ctl --version
 
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
