@@ -1,0 +1,81 @@
+import logging
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+
+from fastapi import APIRouter, FastAPI, HTTPException
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+from sqlalchemy import func, select
+
+from app.api import apps, auth, health
+from app.core.config import get_settings
+from app.core.logging import setup_logging
+from app.core.security import hash_password
+from app.db.models import User
+from app.db.session import get_session_factory, init_db
+
+logger = logging.getLogger(__name__)
+
+
+def bootstrap_admin() -> None:
+    settings = get_settings()
+    with get_session_factory()() as db:
+        if db.scalar(select(func.count()).select_from(User)):
+            return
+        if not settings.admin_password:
+            logger.warning(
+                "Aucun compte admin et WEBUI_ADMIN_PASSWORD absent : connexion impossible"
+            )
+            return
+        db.add(
+            User(
+                username=settings.admin_user,
+                password_hash=hash_password(settings.admin_password),
+            )
+        )
+        db.commit()
+        logger.info("Compte admin '%s' créé", settings.admin_user)
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+    init_db()
+    bootstrap_admin()
+    yield
+
+
+def create_app() -> FastAPI:
+    setup_logging(get_settings().log_level)
+    app = FastAPI(title="SSDV2 WebUI", version="0.1.0", lifespan=lifespan)
+
+    api_router = APIRouter(prefix="/api/v1")
+    api_router.include_router(apps.router)
+    api_router.include_router(auth.router)
+    api_router.include_router(health.router)
+    app.include_router(api_router)
+    app.include_router(health.router)
+
+    _mount_frontend(app)
+    return app
+
+
+def _mount_frontend(app: FastAPI) -> None:
+    dist = get_settings().static_dir
+    if not dist.is_dir():
+        return
+
+    assets = dist / "assets"
+    if assets.is_dir():
+        app.mount("/assets", StaticFiles(directory=assets), name="assets")
+
+    @app.get("/{path:path}", include_in_schema=False)
+    async def spa(path: str) -> FileResponse:
+        if path.startswith(("api/", "health")):
+            raise HTTPException(status_code=404)
+        candidate = dist / path
+        if path and candidate.is_file():
+            return FileResponse(candidate)
+        return FileResponse(dist / "index.html")
+
+
+app = create_app()
