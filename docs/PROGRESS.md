@@ -44,7 +44,10 @@ aucun push — ADR-0010 ; dernière révision `444b9681`).
 - Frontend : `/dashboard` (index), `/apps/:app` (Vue générale avec authentification,
   Conteneurs, Logs avec choix du conteneur, nombre de lignes et suivi en direct SSE,
   Volumes, Réseau/DNS), `/diagnostics` ; 15 tests Vitest verts.
-- Preuves : CI verte, déploiement serveur validé (voir ci-dessous).
+- Preuves : CI verte, déploiement serveur validé — `GET /api/v1/apps/{app}/auth` répond
+  `auth: null` pour les applications sans clé `sub.<app>.auth` dans account.yml (aucune
+  n'en a aujourd'hui) ; le flux SSE renvoie `{"ready": true}` puis les lignes réelles de
+  `streamfusion` ; le dashboard affiche l'hôte et les compteurs réels.
 
 ## Prochains chantiers pressentis
 
@@ -66,6 +69,10 @@ aucun push — ADR-0010 ; dernière révision `444b9681`).
   `diagnostics run` (registres manquants), à traiter en Phase 4.
 - **Runtime des mutations** : le conteneur WebUI n'a ni ansible ni jq ; les mutations
   passeront par `ssdv2ctl` mais nécessiteront une décision d'exécution (ADR-0014).
+- **Logs bruts** : les journaux des applications peuvent contenir des secrets
+  applicatifs (observé : clés d'API dans des URLs de `streamfusion`) ; l'accès est réservé
+  à l'admin authentifié mais aucune redaction n'est appliquée. Une redaction best-effort
+  ou l'avertissement explicite dans l'UI reste à décider (Phase 4, sécurité).
 - `ssdv2ctl` n'est versionné nulle part en ligne tant que l'ADR-0010 s'applique : le clone
   local est la seule copie (sauvegarde ponctuelle conseillée, ex. `git bundle`).
 - Le montage `SSDV2CTL_DIR` pointe vers `~/ssdv2-ctl-dev` (chemin de développement) :
