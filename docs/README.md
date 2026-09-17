@@ -13,7 +13,8 @@ recopie aucun contenu ; il oriente vers le document de référence.
 | Décisions architecturales (ADR) | [`DECISIONS.md`](DECISIONS.md) |
 | Roadmap et phases | [`ROADMAP.md`](ROADMAP.md) |
 | Chantier en cours | [`PROGRESS.md`](PROGRESS.md) |
-| Règles permanentes : réutilisation, limitation du code maison, dépendances, sources de vérité | [`../AGENTS.md`](../AGENTS.md) (règles 1-10) et brief §62/§71 ; document dédié prévu dans une étape ultérieure |
+| Règles permanentes de conception et de développement (réutilisation, code maison, dépendances, sources de vérité, preuve, synchronisation) | [`DEVELOPMENT-PRINCIPLES.md`](DEVELOPMENT-PRINCIPLES.md) |
+| Rappels opérationnels spécifiques au dépôt | [`../AGENTS.md`](../AGENTS.md) (règles 1-10) |
 | Instructions agents IA | [`../AGENTS.md`](../AGENTS.md) |
 | Historique détaillé | Git (commits) |
 
@@ -26,5 +27,6 @@ recopie aucun contenu ; il oriente vers le document de référence.
    `PROGRESS.md`.
 3. **Décision durable → ADR**, selon le processus décrit dans `DECISIONS.md`.
 4. **Histoire → Git.** `PROGRESS.md` et `ROADMAP.md` ne servent pas de journal de commits.
-5. **Synchronisation obligatoire** : voir « Documentation et synchronisation » dans
+5. **Synchronisation obligatoire** : voir principes §18 dans
+   [`DEVELOPMENT-PRINCIPLES.md`](DEVELOPMENT-PRINCIPLES.md) ; rappel dans
    [`../AGENTS.md`](../AGENTS.md).

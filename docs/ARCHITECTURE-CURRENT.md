@@ -7,8 +7,8 @@
 ## Contenu réel du dépôt
 
 - `README.md`, `AGENTS.md`, `.gitignore` : documentation et instructions.
-- `docs/` : système documentaire (routeur, architecture, décisions, roadmap, suivi) et
-  brief de conception.
+- `docs/` : système documentaire (routeur, architecture, décisions, principes de
+  développement, roadmap, suivi) et brief de conception.
 
 ## Ce qui n'existe pas (à ce jour)
 

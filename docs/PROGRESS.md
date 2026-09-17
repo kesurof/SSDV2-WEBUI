@@ -6,7 +6,8 @@
 
 ## Chantier actif
 
-Aucun. Dernier chantier terminé : initialisation du système documentaire (2026-09-17).
+Aucun. Dernier chantier terminé : formalisation des principes de conception et de
+développement (2026-09-17).
 
 ## Prochain chantier pressenti
 

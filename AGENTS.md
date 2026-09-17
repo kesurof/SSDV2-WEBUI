@@ -10,7 +10,8 @@ réelles et mettre à jour `docs/ARCHITECTURE-CURRENT.md`.
 ## Documentation
 
 `docs/README.md` est le routeur documentaire : état actuel, cible, décisions, roadmap,
-chantier en cours, historique. `docs/SSDV2_WEBUI_PROJECT_BRIEF.md` reste la conception
+chantier en cours, historique. Les règles permanentes de conception sont dans
+`docs/DEVELOPMENT-PRINCIPLES.md`. `docs/SSDV2_WEBUI_PROJECT_BRIEF.md` reste la conception
 détaillée de référence ; sections les plus contraignantes : §62 (interdits), §71 (règles
 agent), §72 (décisions à trancher), §75 (stack).
 
@@ -39,7 +40,7 @@ agent), §72 (décisions à trancher), §75 (stack).
 10. `ssdv2ctl` (non interactif, JSON) est la frontière avec SSDV2 ; inspecter le mécanisme
     SSDV2 existant avant toute modification, ne pas réinventer depuis un nom de fonction.
 
-## Stack imposée (§75)
+## Stack retenue (ADR-0004, brief §75)
 
 - Frontend : React, TypeScript, Vite, shadcn/ui, Tailwind, TanStack Table/Query,
   React Router, React Hook Form, Zod, Sonner, Lucide.
@@ -50,8 +51,8 @@ agent), §72 (décisions à trancher), §75 (stack).
 
 ## Conventions
 
-- Tranches verticales (backend → API → frontend → tests), pas d'abstractions avant le
-  premier écran fonctionnel.
+- Tranches verticales, pas d'abstraction anticipée : voir `docs/DEVELOPMENT-PRINCIPLES.md`
+  §8 et §11.
 - API préfixée `/api/v1` ; générer les types TypeScript depuis l'OpenAPI FastAPI.
 - État Docker récupéré de façon groupée (endpoint agrégé pour la table, pas d'appel
   Docker par ligne).
@@ -62,18 +63,14 @@ agent), §72 (décisions à trancher), §75 (stack).
 
 ## Documentation et synchronisation
 
-Code, tests et documentation doivent rester alignés :
-
 - Lire `docs/README.md` et le document de référence du domaine avant toute modification.
-- Une modification fonctionnelle met à jour, dans le même changement : les tests,
-  `docs/ARCHITECTURE-CURRENT.md` si l'architecture réelle change, `docs/ROADMAP.md` et
-  `docs/PROGRESS.md` si un statut change.
-- Une décision durable (source de vérité, framework, dépendance majeure, abstraction
-  interne, composants runtime, modèle client/serveur) devient un ADR dans
-  `docs/DECISIONS.md`.
-- Une information n'a qu'un seul emplacement de référence ; les autres documents la
-  référencent au lieu de la recopier.
+- Toute modification fonctionnelle aligne code, tests et documentation dans le même
+  changement (checklist : `docs/DEVELOPMENT-PRINCIPLES.md` §18) ; une décision durable
+  devient un ADR dans `docs/DECISIONS.md`.
 - Ne jamais présenter comme existant ce qui est cible, recommandé ou prévu : ces
   informations vivent dans `docs/ARCHITECTURE-TARGET.md`, `docs/ROADMAP.md` ou
   `docs/PROGRESS.md`.
-- Ne jamais laisser un document décrire l'ancien comportement après un changement.
+- Une information n'a qu'un seul emplacement de référence ; les autres documents la
+  référencent au lieu de la recopier.
+- `AGENTS.md` reste compact : uniquement des rappels opérationnels, pas d'explications
+  détaillées (celles-ci vivent dans la documentation permanente).
