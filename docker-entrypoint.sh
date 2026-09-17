@@ -12,7 +12,7 @@ if [ "$(id -u)" = "0" ] && [ -n "${PUID:-}" ] && [ -n "${PGID:-}" ]; then
   chmod 0440 /etc/sudoers.d/ssdv2
   mkdir -p /data
   chown "$PUID:$PGID" /data
-  exec gosu "$PUID:$PGID" "$@"
+  exec setpriv --reuid "$PUID" --regid "$PGID" --init-groups "$@"
 fi
 
 exec "$@"
