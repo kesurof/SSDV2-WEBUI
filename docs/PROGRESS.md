@@ -58,7 +58,9 @@ aucun push — ADR-0010 ; dernière révision `444b9681`).
 - Frontend : page Jobs (liste + détail avec événements en direct), boutons
   Démarrer/Arrêter/Redémarrer dans le détail d'application avec confirmation et toast
   (Sonner) puis navigation vers le job ; 21 tests Vitest verts.
-- Preuves : CI verte, déploiement serveur validé (voir ci-dessous).
+- Preuves : CI verte ; sur le serveur, `POST /api/v1/apps/dozzle/restart` → job 1
+  `app_restart` `queued` puis `success` (code 0) ; événements SSE réels ; `dozzle`
+  effectivement redémarré (`Up 3 seconds`) ; `GET /api/v1/jobs` renvoie l'historique.
 
 ## Prochains chantiers pressentis
 
