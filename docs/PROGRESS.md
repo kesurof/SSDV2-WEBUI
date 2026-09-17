@@ -6,28 +6,41 @@
 
 ## Chantier actif
 
-**Phase 0 — `ssdv2ctl`** (démarré 2026-09-17).
+Aucun.
 
-- Code : clone local `~/Developer/ssdv2`, branche `wip/ssdv2ctl` (aucun push — ADR-0010),
-  dernière révision `18e82c17`.
-- Livré :
-  - lecture seule : `apps list`, `app status` (ADR-0011) ;
-  - actions : `app start|stop|restart` sur les conteneurs existants (ADR-0012).
+## Derniers chantiers terminés (2026-09-17)
+
+**Phase 0 — `ssdv2ctl` complet** (clone local `~/Developer/ssdv2`, branche `wip/ssdv2ctl`,
+aucun push — ADR-0010 ; dernière révision `444b9681`).
+
+- Livré : `apps list`, `app status`, `app start|stop|restart`, `app install|remove|
+  reinstall|recreate`, `auth get|set`, `diagnostics run` — JSON par défaut, erreurs
+  structurées, codes 0/1/2 (ADR-0011 à ADR-0013).
 - Preuves :
-  - 16 tests unittest verts (local en `python:3.13-slim` et serveur en python 3.12) ;
-  - validation serveur : 183 entrées de catalogue ; `streamfusion` → 7 conteneurs ;
-    cycle réel sur `dozzle` : `stop` → `Exited (0)`, `start` → `Up`, `restart` → `Up`,
-    status final `running` ;
-  - erreurs structurées vérifiées : `unknown_app`, `no_containers`,
-    `docker_unavailable` (code 1, stdout vide).
+  - 39 tests unittest verts (local `python:3.13-slim` et serveur python 3.12) ;
+  - cycle réel complet sur `wallos` : install (23 s) → status → reinstall (auth conservé)
+    → `auth set oauth2-proxy` → `recreate` (middleware `chain-oauth2-proxy@file`) →
+    `remove --delete-data` ; nettoyage vérifié : conteneur, registres, ligne `ssddb`,
+    dossier de données et enregistrement DNS (`dig @1.1.1.1` vide) ;
+  - diagnostics réels : registres manquants `appname`/`boostsuitev2`, 0 conteneur
+    orphelin, volumes anonymes.
 
-### Suite de la Phase 0 (non commencée)
+**Branchement WebUI de `ssdv2ctl`** (commit `a91643b`, déployé sur le serveur de test).
 
-- Actions restantes : install, remove, reinstall/recréer (« relance » SSDV2), auth,
-  diagnostics — validation uniquement sur une application dédiée.
-- Décider si la WebUI consomme `ssdv2ctl` pour certaines lectures (réduirait la
-  duplication temporaire du parsing catalogue) ; branchement de l'adaptateur
-  (`SSDV2CTL_PATH`) pour la Phase 3.
+- Adaptateur `Ssdv2CtlRunner` (allowlist, `shell=False`, erreurs structurées),
+  `SSDV2CTL_PATH`/`SSDV2CTL_TIMEOUT`, health enrichi (`ssdv2ctl: true`), endpoint
+  `GET /api/v1/diagnostics` (ADR-0014), compose avec montages Docker CLI + `ssdv2ctl`.
+- Preuves : CI verte (`backend`, `frontend`, `docker-build`) ; sur le serveur,
+  `{"status":"ok","docker":true,"ssdv2":true,"ssdv2ctl":true,"database":true}` et
+  `GET /api/v1/diagnostics` renvoie les contrôles réels ; `GET /api/v1/apps` inchangé
+  (183 applications, 8 installées).
+
+## Prochains chantiers pressentis
+
+1. Phase 2 : page UI Diagnostics (les données sont déjà exposées par l'API), dashboard,
+   page de détail d'application, logs.
+2. Phase 3 : jobs + SSE, puis mutations WebUI — dépend de la décision ouverte sur
+   l'exécution des mutations depuis le conteneur (runtime ansible/jq, ADR-0014).
 
 ## Points d'attention détectés
 
@@ -35,13 +48,16 @@
   (identifiants de test). Motif supprimé ensuite, occurrence toujours dans l'historique →
   incident `37391944` à ignorer dans le dashboard (exclusion `backend/tests/**` suggérée).
 - **Duplication temporaire** : le parsing du catalogue existe dans le backend WebUI et dans
-  `ssdv2ctl` (implémentations volontairement alignées) ; à résorber par une décision
-  (suite de la Phase 0).
+  `ssdv2ctl` ; résorption à trancher (ADR-0011, décision ouverte).
 - **Entrées `ssddb` hors catalogue** : `traefik`, `boostsuitev2` et `appname` (donnée de
-  test) ne sont pas listées par la WebUI, pilotée par le catalogue ; à traiter en
-  diagnostics (Phase 4).
+  test) ne sont pas listées par la WebUI, pilotée par le catalogue ; exposées par
+  `diagnostics run` (registres manquants), à traiter en Phase 4.
+- **Runtime des mutations** : le conteneur WebUI n'a ni ansible ni jq ; les mutations
+  passeront par `ssdv2ctl` mais nécessiteront une décision d'exécution (ADR-0014).
 - `ssdv2ctl` n'est versionné nulle part en ligne tant que l'ADR-0010 s'applique : le clone
   local est la seule copie (sauvegarde ponctuelle conseillée, ex. `git bundle`).
+- Le montage `SSDV2CTL_DIR` pointe vers `~/ssdv2-ctl-dev` (chemin de développement) :
+  à remplacer par un emplacement stable avant toute distribution de l'image.
 - `~/ssdv2-webui/data/` (vide, appartient à root) est un résidu du premier déploiement en
   bind-mount ; remplacé par le volume nommé `webui-data`.
 - Aucune LICENSE dans le dépôt WebUI.

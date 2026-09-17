@@ -211,11 +211,70 @@ pointe vers son remplaçant. Une décision non tranchée reste dans « Décision
   précis).
 - **Références** : brief §8, §21, §53, ADR-0010, ADR-0011.
 
+## ADR-0013 — Cycle de vie, auth et diagnostics dans `ssdv2ctl`
+
+- **Statut** : acceptée — 2026-09-17
+- **Contexte** : la Phase 0 du brief demande install/remove/reinstall/start/stop/restart,
+  auth et diagnostics non interactifs. Or `launch_service` devient interactif si
+  `sub.<app>.<app>` ou `sub.<app>.auth` manquent, et `menu_reinit_container` (réinstall)
+  est interactif (lecture finale) et réinitialise l'auth dans `account.yml`.
+- **Décision** :
+  - `app install` : exige que `sub.<app>.<app>` et `sub.<app>.auth` existent dans
+    `account.yml` ou soient fournis par `--subdomain`/`--auth` (allowlist) ; sinon
+    `interactive_required`. Les clés manquantes sont écrites avant `launch_service`.
+  - `app remove` : `suppression_appli <app> 0|1` ; les données ne sont supprimées
+    qu'avec `--delete-data` (défaut : conservation).
+  - `app reinstall` : séquence non interactive reproduisant `menu_reinit_container`
+    (suppression avec données conservées, suppression des surcharges `conf|vars/<app>.yml`,
+    restauration de sub/auth, `launch_service`) — le wrapper menu n'est pas appelé car
+    interactif et destructeur pour l'auth.
+  - `app recreate` : `relance_container` (suppression + recréation avec mise à jour de
+    l'image, volumes et configuration conservés).
+  - `auth get` lit `sub.<app>.auth` ; `auth set` écrit uniquement (`applied: false`) — un
+    `recreate` applique le changement.
+  - `diagnostics run` : lecture seule (registres manquants, conteneurs orphelins, volumes
+    anonymes).
+  - Environnement Bash : `PATH` enrichi du venv SSDV2 (`$SETTINGS_SOURCE/venv/bin`),
+    stdin fermé (aucune invite ne peut aboutir), timeouts dédiés (install 1800 s).
+- **Conséquences** : aucune commande n'attend d'entrée ; une valeur manquante produit une
+  erreur explicite ; `recreate` et `reinstall` restent deux opérations distinctes.
+- **Alternatives écartées** : appeler les wrappers de menu interactifs ; alimenter stdin
+  avec des retours à la ligne (répond silencieusement aux invites — constaté : auth remise
+  à `basique` par défaut lors d'une réinstallation).
+- **Références** : brief §8, §9, §21, §53 ; ADR-0011, ADR-0012.
+
+## ADR-0014 — Adaptateur WebUI pour `ssdv2ctl`
+
+- **Statut** : acceptée — 2026-09-17
+- **Contexte** : la WebUI doit consommer `ssdv2ctl` sans shell ni logique SSDV2 dupliquée
+  (brief §4/§9), alors que le conteneur n'embarque ni CLI Docker ni runtime SSDV2.
+- **Décision** :
+  - réglages `SSDV2CTL_PATH` (défaut `ssdv2ctl`) et `SSDV2CTL_TIMEOUT` ;
+  - `Ssdv2CtlRunner` : allowlist de commandes, arguments filtrés, `shell=False`,
+    `Ssdv2CtlError` structurée, sortie JSON validée ;
+  - `GET /api/v1/diagnostics` (auth requise) exécute `ssdv2ctl diagnostics run` et renvoie
+    le modèle `DiagnosticsOut` ; 503 si `ssdv2ctl` est indisponible, 502 si la commande
+    échoue ;
+  - le health expose un champ `ssdv2ctl` ;
+  - compose (déploiement de test) : dossier `ssdv2ctl` de développement monté sur
+    `/opt/ssdv2ctl` et binaire Docker de l'hôte monté sur `/usr/local/bin/docker` (le
+    socket Docker reste nécessaire).
+- **Conséquences** : l'adaptateur est testable avec des doublures ; les mutations WebUI
+  (Phase 3) exigeront en plus le runtime SSDV2 complet (ansible + collections, jq) dans le
+  conteneur — décision ouverte ci-dessous.
+- **Alternatives écartées** : monter des scripts Bash ad hoc dans le conteneur ; appeler
+  les fonctions SSDV2 directement depuis FastAPI (hors périmètre, brief §9).
+- **Références** : brief §4, §9, §50-§52 ; ADR-0011, ADR-0013.
+
 ## Décisions ouvertes
 
 À trancher explicitement puis consigner en ADR (voir brief §72) :
 
-- format d'implémentation de `ssdv2ctl` : Python, Bash robuste ou hybride ;
+- format d'implémentation de `ssdv2ctl` : tranché (Python stdlib + dispatcher Bash
+  existant) — reste la levée de l'ADR-0010 à la finalisation ;
 - liste des commandes container-compatibles vs host-only ;
 - emplacement de maintenance des métadonnées de présentation du catalogue (catégories,
-  icônes, tags).
+  icônes, tags) ;
+- exécution des mutations SSDV2 depuis le conteneur WebUI : image enrichie (ansible,
+  jq, bash) ou autre stratégie — à trancher avant la Phase 3 ;
+- résorption de la duplication du parsing catalogue entre la WebUI et `ssdv2ctl`.
