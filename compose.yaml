@@ -37,8 +37,26 @@ services:
     ports:
       - "127.0.0.1:8800:8000"
 
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: traefik_proxy
+      traefik.http.routers.ssdv2-webui-rtr.entrypoints: http,https
+      traefik.http.routers.ssdv2-webui-rtr.middlewares: chain-oauth2-proxy@file
+      traefik.http.routers.ssdv2-webui-rtr.rule: Host(`ssdv2.exemple.tld`)
+      traefik.http.routers.ssdv2-webui-rtr.service: ssdv2-webui-svc
+      traefik.http.routers.ssdv2-webui-rtr.tls: "true"
+      traefik.http.routers.ssdv2-webui-rtr.tls.certresolver: letsencrypt
+      traefik.http.services.ssdv2-webui-svc.loadbalancer.server.port: "8000"
+
+    networks:
+      - traefik_proxy
+
     group_add:
       - "${DOCKER_GID:-999}"
 
 volumes:
   webui-data:
+
+networks:
+  traefik_proxy:
+    external: true
