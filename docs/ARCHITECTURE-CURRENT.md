@@ -43,8 +43,10 @@
   `community.docker`/`community.general`/`ansible.posix`, rôles `kwoodson.yedit`/
   `geerlingguy.docker` dans `/opt/ansible`), outils CLI `jq`, `sqlite3`, `curl`,
   `gettext`, `htpasswd`, `pigz`, `sudo` (image ~442 Mo).
-- `compose.yaml` : conteneur unique `ssdv2-webui` lié à `127.0.0.1:8800`, exécuté avec
-  l'UID/GID de l'utilisateur SSDV2 (`SSD_UID`/`SSD_GID`, ADR-0017), socket Docker,
+- `compose.yaml` : conteneur unique `ssdv2-webui` lié à `127.0.0.1:8800`, exposé via
+  Traefik (`https://ssdv2.exemple.tld`, middleware `chain-oauth2-proxy@file`, réseau
+  `traefik_proxy`, TLS via Cloudflare), exécuté avec l'UID/GID de l'utilisateur SSDV2
+  (`SSD_UID`/`SSD_GID`, ADR-0017), socket Docker,
   binaire Docker de l'hôte monté, `SSDV2CTL_PATH` et `HOME` pointant vers l'utilisateur
   SSDV2, dossier `ssdv2ctl` de développement monté sur `/opt/ssdv2ctl`, fichiers
   `~/.config/ssd/env` et `~/.vault_pass` montés en lecture seule (nécessaires à
@@ -59,11 +61,14 @@
 ## Exécution constatée
 
 - Serveur de test `exemple.tld` : clone `~/ssdv2-webui`, conteneur `ssdv2-webui` démarré,
-  `/health` → `{"status":"ok","docker":true,"ssdv2":true,"database":true}`,
+  `/health` → `{"status":"ok","docker":true,"ssdv2":true,"ssdv2ctl":true,"database":true}`,
   `GET /api/v1/apps` → 183 entrées dont 8 installées et 8 en marche, 0 alerte.
+  UI publique : `https://ssdv2.exemple.tld` (oauth2-proxy puis auth admin), tunnel SSH
+  `127.0.0.1:8800` toujours disponible.
 - Données lues : catalogue `services-available` (183), `ssddb` (11 entrées, dont 3 hors
   catalogue), registres `~/seedbox/conf` (8 applications), 19 conteneurs Docker.
-- L'application reste accessible derrière un tunnel SSH uniquement (pas de route Traefik).
+- L'application reste accessible directement en local (`127.0.0.1:8800`) et publiquement
+  via Traefik/Cloudflare avec double authentification (oauth2-proxy + compte admin WebUI).
 
 ## Ce qui n'existe pas (à ce jour)
 
@@ -72,9 +77,8 @@
   SSDV2, ce projet se limite à lister et créer des sauvegardes.
 - Aucune écriture de configuration depuis la WebUI : les paramètres sont en lecture seule
   (les modifications passent par les procédures SSDV2, ex. `menu_change_domaine`).
-- Aucune page Docker/réseau, command palette, thème, aucun confort de logs
-  (recherche, pause).
-- Aucune exposition publique (Traefik), aucune image publiée sur GHCR, aucun multiarch.
+- Aucune exposition multiarch ni image publiée sur GHCR (workflow de release à faire).
+- Aucune page Docker/réseau, command palette, thème.
 - Aucune migration de schéma hors micro-migrations additives (ADR-0016).
 
 ## Contexte externe (non vérifié par ce dépôt)
