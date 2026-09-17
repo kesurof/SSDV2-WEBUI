@@ -143,6 +143,23 @@ pointe vers son remplaçant. Une décision non tranchée reste dans « Décision
   depuis un serveur éphémère (plus complexe pour un bénéfice identique).
 - **Références** : brief §68, ADR-0004.
 
+## ADR-0010 — Aucune branche ni PR sur projetssd/ssdv2 avant finalisation du projet
+
+- **Statut** : acceptée — 2026-09-17 (décision du propriétaire du projet)
+- **Contexte** : le développement de la WebUI s'appuie sur le clone SSDV2 du serveur de
+  test et la Phase 0 prévoit d'y introduire `ssdv2ctl`. Le dépôt amont `projetssd/ssdv2`
+  ne doit pas recevoir de contributions tant que la WebUI n'est pas finalisée.
+- **Décision** : aucune branche ni pull request sur `projetssd/ssdv2` pendant toute la
+  durée du projet ; tout développement lié à SSDV2 reste local (non poussé). La contrainte
+  ne pourra être levée que par une décision explicite ultérieure.
+- **Conséquences** : la Phase 0 (`ssdv2ctl`) est développée localement et ne peut pas être
+  proposée en amont ; le clone local peut diverger de l'amont et devra être revérifié
+  avant toute contribution finale ; les évolutions SSDV2 nécessaires sont regroupées puis
+  proposées en une seule fois à la fin.
+- **Alternatives écartées** : branche + PR immédiate sur `projetssd/ssdv2` ; fork public
+  pendant le développement.
+- **Références** : brief §9 et §63 (Phase 0), [`PROGRESS.md`](PROGRESS.md).
+
 ## Décisions ouvertes
 
 À trancher explicitement puis consigner en ADR (voir brief §72) :
