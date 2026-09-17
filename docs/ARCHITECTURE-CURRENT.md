@@ -55,6 +55,9 @@
 - `.github/workflows/ci.yml` : runner `[self-hosted, SSDV2-WEBUI]` (ARM64) ; backend
   (ruff + pytest) et frontend (oxlint + tsc + Vitest + build) dans des conteneurs Docker,
   puis `docker build`.
+- `.github/workflows/release.yml` : build multiarchitecture (buildx + QEMU,
+  `linux/amd64` + `linux/arm64`) et publication `ghcr.io/kesurof/ssdv2-webui`
+  (dispatch manuel ou tag `v*`).
 - `backend/openapi.json` et `frontend/src/api/schema.d.ts` : générés et versionnés
   (ADR-0009).
 
@@ -77,7 +80,9 @@
   SSDV2, ce projet se limite à lister et créer des sauvegardes.
 - Aucune écriture de configuration depuis la WebUI : les paramètres sont en lecture seule
   (les modifications passent par les procédures SSDV2, ex. `menu_change_domaine`).
-- Aucune exposition multiarch ni image publiée sur GHCR (workflow de release à faire).
+- `ghcr.io/kesurof/ssdv2-webui` publiée en multiarchitecture (tags `:latest` et `:dev`,
+  manifeste `sha256:65476cb4…`) ; le workflow doit être relancé à chaque évolution de
+  l'image.
 - Aucune page Docker/réseau, command palette, thème.
 - Aucune migration de schéma hors micro-migrations additives (ADR-0016).
 

@@ -133,10 +133,24 @@ aucun push — ADR-0010 ; dernière révision `444b9681`).
 - **Écriture de configuration non exposée** : les modifications restent dans les
   procédures SSDV2 (ex. `menu_change_domaine`) ; à trancher avant toute UI d'écriture.
 
+**Polish — confort des logs, exposition Traefik, release multiarch**.
+
+- Logs : recherche, pause/reprise, téléchargement, auto-scroll (client) ; 38 tests Vitest.
+- Exposition : `https://ssdv2.exemple.tld` via Traefik (réseau `traefik_proxy`) avec
+  `chain-oauth2-proxy@file` + auth admin WebUI ; DNS Cloudflare existant (A → serveur,
+  proxifié) ; tunnel `127.0.0.1:8800` conservé. Preuve : HTTPS public renvoie 401 aux
+  requêtes non authentifiées (oauth2-proxy), `/health` local inchangé.
+- Release : `.github/workflows/release.yml` (buildx + QEMU, `linux/amd64` + `linux/arm64`,
+  publication `ghcr.io/kesurof/ssdv2-webui`, dispatch manuel ou tag `v*`). Preuve :
+  première publication réussie (runs `35233247887`, ~9 min, manifeste multiarch
+  `sha256:65476cb4…`, tags `:dev` et `:latest`).
+- Restauration : hors périmètre de ce projet (mécanisme SSDV2 à réparer côté SSDV2).
+
 ## Prochains chantiers pressentis
 
-1. Phase 4e : restauration de sauvegarde (après réparation côté SSDV2), config en écriture.
-2. Polish : confort des logs (recherche, pause), exposition Traefik, multiarch/GHCR.
+1. Phase 5 : mise à jour SSDV2/Git, patches, Docker avancé, fonctions hôte (nécessite des
+   décisions Type B — brief §10).
+2. Config en écriture (après décision sur les procédures SSDV2 correspondantes).
 
 ## Points d'attention détectés
 
