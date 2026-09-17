@@ -18,10 +18,13 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - /home/${SSD_USER:-utilisateur}/seedbox-compose:/home/${SSD_USER:-utilisateur}/seedbox-compose
       - /home/${SSD_USER:-utilisateur}/seedbox:/home/${SSD_USER:-utilisateur}/seedbox
-      - ./data:/data
+      - webui-data:/data
 
     ports:
       - "127.0.0.1:8800:8000"
 
     group_add:
       - "${DOCKER_GID:-999}"
+
+volumes:
+  webui-data:

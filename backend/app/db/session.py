@@ -1,7 +1,9 @@
 from collections.abc import Iterator
 from functools import lru_cache
 
+from fastapi import HTTPException, status
 from sqlalchemy import Engine, create_engine
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.core.config import get_settings
@@ -28,5 +30,10 @@ def init_db() -> None:
 
 
 def get_db() -> Iterator[Session]:
-    with get_session_factory()() as session:
-        yield session
+    try:
+        with get_session_factory()() as session:
+            yield session
+    except (SQLAlchemyError, OSError) as exc:
+        raise HTTPException(
+            status.HTTP_503_SERVICE_UNAVAILABLE, "Base de données indisponible"
+        ) from exc
