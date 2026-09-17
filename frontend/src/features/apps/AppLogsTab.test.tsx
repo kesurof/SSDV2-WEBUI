@@ -107,4 +107,71 @@ describe('AppLogsTab', () => {
     await user.click(screen.getByRole('button', { name: 'Arrêter le suivi' }))
     expect(source.closed).toBe(true)
   })
+
+  it('filters displayed logs with the search field', async () => {
+    const user = userEvent.setup()
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        jsonResponse({
+          app: 'sonarr',
+          container: 'sonarr',
+          lines: ['ligne alpha', 'ligne beta'],
+        }),
+      ),
+    )
+
+    renderTab('sonarr', ['sonarr'])
+    await waitFor(() => expect(screen.getByText(/ligne alpha/)).toBeInTheDocument())
+
+    await user.type(screen.getByLabelText('Rechercher dans les logs…'), 'beta')
+
+    expect(screen.queryByText(/ligne alpha/)).not.toBeInTheDocument()
+    expect(screen.getByText(/ligne beta/)).toBeInTheDocument()
+  })
+
+  it('pauses the live display and resumes with buffered lines', async () => {
+    const user = userEvent.setup()
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => jsonResponse({ app: 'sonarr', container: 'sonarr', lines: [] })),
+    )
+    vi.stubGlobal('EventSource', FakeEventSource)
+
+    renderTab('sonarr', ['sonarr'])
+    await user.click(screen.getByRole('button', { name: 'Suivre en direct' }))
+    const source = FakeEventSource.instances[0]
+
+    act(() => source.emit({ line: 'avant pause' }))
+    expect(screen.getByText(/avant pause/)).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Pause' }))
+    act(() => source.emit({ line: 'après pause' }))
+    expect(screen.queryByText(/après pause/)).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Reprendre' }))
+    expect(screen.getByText(/après pause/)).toBeInTheDocument()
+  })
+
+  it('downloads the displayed logs', async () => {
+    const user = userEvent.setup()
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        jsonResponse({ app: 'sonarr', container: 'sonarr', lines: ['ligne à exporter'] }),
+      ),
+    )
+    const createObjectURL = vi.fn(() => 'blob:logs')
+    const revokeObjectURL = vi.fn()
+    Object.defineProperty(URL, 'createObjectURL', { value: createObjectURL, configurable: true })
+    Object.defineProperty(URL, 'revokeObjectURL', { value: revokeObjectURL, configurable: true })
+
+    renderTab('sonarr', ['sonarr'])
+    await waitFor(() => expect(screen.getByText(/ligne à exporter/)).toBeInTheDocument())
+
+    await user.click(screen.getByRole('button', { name: 'Télécharger' }))
+
+    expect(createObjectURL).toHaveBeenCalled()
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:logs')
+  })
 })

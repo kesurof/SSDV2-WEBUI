@@ -68,7 +68,8 @@
 ## Ce qui n'existe pas (à ce jour)
 
 - Aucune restauration de sauvegarde : le mécanisme SSDV2 est inopérant (entrée de menu
-  retirée par le patch `20260916_remove_restore_menu`) — à reprendre côté SSDV2.
+  retirée par le patch `20260916_remove_restore_menu`) ; la réparation appartient à
+  SSDV2, ce projet se limite à lister et créer des sauvegardes.
 - Aucune écriture de configuration depuis la WebUI : les paramètres sont en lecture seule
   (les modifications passent par les procédures SSDV2, ex. `menu_change_domaine`).
 - Aucune page Docker/réseau, command palette, thème, aucun confort de logs

@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAppLogs } from '@/features/apps/useAppLogs'
 import { fr } from '@/i18n/fr'
@@ -23,6 +24,10 @@ export function AppLogsTab({ app, containers }: { app: string; containers: strin
   const [follow, setFollow] = useState(false)
   const [streamLines, setStreamLines] = useState<string[]>([])
   const [streamError, setStreamError] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
+  const [paused, setPaused] = useState(false)
+  const [frozen, setFrozen] = useState<string[] | null>(null)
+  const preRef = useRef<HTMLPreElement>(null)
   const logs = useAppLogs(app, container, lines, !follow)
 
   useEffect(() => {
@@ -53,11 +58,50 @@ export function AppLogsTab({ app, containers }: { app: string; containers: strin
     }
   }, [app, container, lines, follow])
 
+  const displayed = follow ? streamLines : (logs.data?.lines ?? [])
+  const source = paused && frozen !== null ? frozen : displayed
+
+  const visible = useMemo(() => {
+    const term = search.trim().toLowerCase()
+    if (!term) {
+      return source
+    }
+    return source.filter((line) => line.toLowerCase().includes(term))
+  }, [source, search])
+
+  useEffect(() => {
+    if (paused) {
+      return
+    }
+    const element = preRef.current
+    if (element) {
+      element.scrollTop = element.scrollHeight
+    }
+  }, [visible, paused])
+
+  function togglePause() {
+    if (paused) {
+      setPaused(false)
+      setFrozen(null)
+    } else {
+      setFrozen(displayed)
+      setPaused(true)
+    }
+  }
+
+  function download() {
+    const blob = new Blob([`${visible.join('\n')}\n`], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = `${app}-${container}.log`
+    anchor.click()
+    URL.revokeObjectURL(url)
+  }
+
   if (containers.length === 0) {
     return <p className="text-sm text-muted-foreground">{fr.apps.emptyList}</p>
   }
-
-  const displayed = follow ? streamLines : (logs.data?.lines ?? [])
 
   return (
     <div className="space-y-3">
@@ -92,8 +136,25 @@ export function AppLogsTab({ app, containers }: { app: string; containers: strin
             ))}
           </select>
         </div>
+        <div className="min-w-56 flex-1 space-y-1">
+          <Label htmlFor="logs-search">{fr.apps.logs.search}</Label>
+          <Input
+            id="logs-search"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder={fr.apps.logs.search}
+          />
+        </div>
         <Button variant={follow ? 'default' : 'outline'} onClick={() => setFollow(!follow)}>
           {follow ? fr.apps.logs.stopFollowing : fr.apps.logs.follow}
+        </Button>
+        {follow && (
+          <Button variant="outline" onClick={togglePause}>
+            {paused ? fr.apps.logs.resume : fr.apps.logs.pause}
+          </Button>
+        )}
+        <Button variant="outline" disabled={visible.length === 0} onClick={download}>
+          {fr.apps.logs.download}
         </Button>
       </div>
 
@@ -115,11 +176,14 @@ export function AppLogsTab({ app, containers }: { app: string; containers: strin
         </Alert>
       )}
 
-      {displayed.length === 0 ? (
+      {visible.length === 0 ? (
         <p className="text-sm text-muted-foreground">{fr.apps.logs.empty}</p>
       ) : (
-        <pre className="max-h-96 overflow-auto rounded-md border bg-muted/30 p-3 font-mono text-xs">
-          {displayed.join('\n')}
+        <pre
+          ref={preRef}
+          className="max-h-96 overflow-auto rounded-md border bg-muted/30 p-3 font-mono text-xs"
+        >
+          {visible.join('\n')}
         </pre>
       )}
     </div>

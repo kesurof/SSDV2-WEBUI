@@ -66,6 +66,10 @@ export const fr = {
       follow: 'Suivre en direct',
       stopFollowing: 'Arrêter le suivi',
       streamError: 'Connexion au flux interrompue.',
+      search: 'Rechercher dans les logs…',
+      pause: 'Pause',
+      resume: 'Reprendre',
+      download: 'Télécharger',
     },
     columns: {
       name: 'Application',
