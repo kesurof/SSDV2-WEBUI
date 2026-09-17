@@ -42,6 +42,7 @@ class Job(Base):
     finished_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     exit_code: Mapped[int | None] = mapped_column(nullable=True)
     message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    params: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_by: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
 

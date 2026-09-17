@@ -112,3 +112,79 @@ def test_list_jobs(auth_client, write_catalogue):
     assert jobs
     assert json.dumps(jobs[0])  # sérialisable
     assert jobs[0]["target"] == "sonarr"
+
+
+def test_install_job_args(auth_client, write_catalogue):
+    write_catalogue("wallos - Budget\n")
+    runner = FakeStreamingRunner()
+    job_manager.configure(lambda: runner)
+
+    response = auth_client.post("/api/v1/apps/wallos/install", json={"auth": "aucune"})
+
+    assert response.status_code == 202
+    job_id = response.json()["id"]
+    assert response.json()["type"] == "app_install"
+    finished = wait_for_job(auth_client, job_id)
+    assert finished["status"] == "success"
+    assert runner.calls == [
+        ["app", "install", "wallos", "--subdomain", "wallos", "--auth", "aucune"]
+    ]
+
+
+def test_install_with_subdomain(auth_client, write_catalogue):
+    write_catalogue("wallos - Budget\n")
+    runner = FakeStreamingRunner()
+    job_manager.configure(lambda: runner)
+
+    response = auth_client.post(
+        "/api/v1/apps/wallos/install",
+        json={"auth": "authelia", "subdomain": "budget"},
+    )
+    wait_for_job(auth_client, response.json()["id"])
+
+    assert runner.calls == [
+        ["app", "install", "wallos", "--subdomain", "budget", "--auth", "authelia"]
+    ]
+
+
+def test_install_rejects_invalid_auth(auth_client, write_catalogue):
+    write_catalogue("wallos - Budget\n")
+
+    response = auth_client.post("/api/v1/apps/wallos/install", json={"auth": "bidon"})
+
+    assert response.status_code == 422
+
+
+def test_install_rejects_invalid_subdomain(auth_client, write_catalogue):
+    write_catalogue("wallos - Budget\n")
+
+    response = auth_client.post(
+        "/api/v1/apps/wallos/install", json={"auth": "aucune", "subdomain": "Bad Sub"}
+    )
+
+    assert response.status_code == 422
+
+
+def test_remove_job_args(auth_client, write_catalogue):
+    write_catalogue("wallos - Budget\n")
+    runner = FakeStreamingRunner()
+    job_manager.configure(lambda: runner)
+
+    response = auth_client.post("/api/v1/apps/wallos/remove", json={"delete_data": True})
+    job_id = response.json()["id"]
+    wait_for_job(auth_client, job_id)
+
+    assert runner.calls == [["app", "remove", "wallos", "--delete-data"]]
+
+
+def test_reinstall_and_recreate_jobs(auth_client, write_catalogue):
+    write_catalogue("wallos - Budget\n")
+    runner = FakeStreamingRunner()
+    job_manager.configure(lambda: runner)
+
+    reinstall = auth_client.post("/api/v1/apps/wallos/reinstall").json()
+    wait_for_job(auth_client, reinstall["id"])
+    recreate = auth_client.post("/api/v1/apps/wallos/recreate").json()
+    wait_for_job(auth_client, recreate["id"])
+
+    assert runner.calls == [["app", "reinstall", "wallos"], ["app", "recreate", "wallos"]]

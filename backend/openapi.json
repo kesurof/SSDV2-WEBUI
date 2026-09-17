@@ -336,6 +336,194 @@
         }
       }
     },
+    "/api/v1/apps/{app}/install": {
+      "post": {
+        "tags": [
+          "apps"
+        ],
+        "summary": "Install App",
+        "operationId": "install_app_api_v1_apps__app__install_post",
+        "parameters": [
+          {
+            "name": "app",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "App"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AppInstallRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/apps/{app}/remove": {
+      "post": {
+        "tags": [
+          "apps"
+        ],
+        "summary": "Remove App",
+        "operationId": "remove_app_api_v1_apps__app__remove_post",
+        "parameters": [
+          {
+            "name": "app",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "App"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AppRemoveRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/apps/{app}/reinstall": {
+      "post": {
+        "tags": [
+          "apps"
+        ],
+        "summary": "Reinstall App",
+        "operationId": "reinstall_app_api_v1_apps__app__reinstall_post",
+        "parameters": [
+          {
+            "name": "app",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "App"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/apps/{app}/recreate": {
+      "post": {
+        "tags": [
+          "apps"
+        ],
+        "summary": "Recreate App",
+        "operationId": "recreate_app_api_v1_apps__app__recreate_post",
+        "parameters": [
+          {
+            "name": "app",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "App"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/apps/{app}/auth": {
       "get": {
         "tags": [
@@ -855,6 +1043,49 @@
           "registries"
         ],
         "title": "AppDetailOut"
+      },
+      "AppInstallRequest": {
+        "properties": {
+          "auth": {
+            "type": "string",
+            "enum": [
+              "aucune",
+              "basique",
+              "authelia",
+              "oauth",
+              "oauth2-proxy"
+            ],
+            "title": "Auth"
+          },
+          "subdomain": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subdomain"
+          }
+        },
+        "type": "object",
+        "required": [
+          "auth"
+        ],
+        "title": "AppInstallRequest"
+      },
+      "AppRemoveRequest": {
+        "properties": {
+          "delete_data": {
+            "type": "boolean",
+            "title": "Delete Data",
+            "default": false
+          }
+        },
+        "type": "object",
+        "title": "AppRemoveRequest"
       },
       "AppStateOut": {
         "properties": {

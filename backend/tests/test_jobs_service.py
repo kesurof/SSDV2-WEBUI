@@ -1,10 +1,51 @@
+import pytest
 from sqlalchemy import select
 
 from app.adapters.ssdv2_cli import Ssdv2CtlError
 from app.db.models import Job, JobEvent, utcnow
 from app.db.session import get_session_factory, init_db
-from app.services.jobs import JobManager
+from app.services.jobs import JobManager, build_job_args
 from tests.conftest import FakeStreamingRunner
+
+
+def test_build_job_args_install() -> None:
+    assert build_job_args("app_install", "wallos", {"subdomain": "wallos", "auth": "aucune"}) == [
+        "app",
+        "install",
+        "wallos",
+        "--subdomain",
+        "wallos",
+        "--auth",
+        "aucune",
+    ]
+    assert build_job_args("app_install", "wallos", {}) == [
+        "app",
+        "install",
+        "wallos",
+        "--subdomain",
+        "wallos",
+    ]
+
+
+def test_build_job_args_remove() -> None:
+    assert build_job_args("app_remove", "wallos", {"delete_data": True}) == [
+        "app",
+        "remove",
+        "wallos",
+        "--delete-data",
+    ]
+    assert build_job_args("app_remove", "wallos", {}) == ["app", "remove", "wallos"]
+
+
+def test_build_job_args_actions() -> None:
+    assert build_job_args("app_reinstall", "wallos", {}) == ["app", "reinstall", "wallos"]
+    assert build_job_args("app_recreate", "wallos", {}) == ["app", "recreate", "wallos"]
+
+
+def test_build_job_args_unknown() -> None:
+    with pytest.raises(Ssdv2CtlError) as error:
+        build_job_args("app_unknown", "wallos", {})
+    assert error.value.code == "unknown_job_type"
 
 
 def make_manager(**runner_kwargs: object) -> tuple[JobManager, FakeStreamingRunner]:

@@ -37,16 +37,21 @@ function renderActions(app: AppDetail) {
   )
 }
 
-const JOB_RESPONSE = {
-  id: 7,
-  type: 'app_restart',
-  target: 'sonarr',
-  status: 'queued',
-  created_at: '2026-09-17T10:00:00',
-  started_at: null,
-  finished_at: null,
-  exit_code: null,
-  message: null,
+function jobResponse() {
+  return new Response(
+    JSON.stringify({
+      id: 7,
+      type: 'app_restart',
+      target: 'sonarr',
+      status: 'queued',
+      created_at: '2026-09-17T10:00:00',
+      started_at: null,
+      finished_at: null,
+      exit_code: null,
+      message: null,
+    }),
+    { status: 202, headers: { 'content-type': 'application/json' } },
+  )
 }
 
 describe('AppActions', () => {
@@ -62,33 +67,77 @@ describe('AppActions', () => {
     expect(screen.getByRole('button', { name: 'Redémarrer' })).toBeEnabled()
   })
 
-  it('disables all actions for a non-installed application', () => {
+  it('offers only install for a non-installed application', () => {
     renderActions(makeApp({ installed: false, runtime_status: 'not_installed' }))
 
-    expect(screen.getByRole('button', { name: 'Démarrer' })).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Redémarrer' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Installer' })).toBeEnabled()
+    expect(screen.queryByRole('button', { name: 'Redémarrer' })).not.toBeInTheDocument()
   })
 
   it('confirms before restarting and posts the action', async () => {
     const user = userEvent.setup()
-    const fetchMock = vi.fn(async () =>
-      new Response(JSON.stringify(JOB_RESPONSE), {
-        status: 202,
-        headers: { 'content-type': 'application/json' },
-      }),
-    )
+    const fetchMock = vi.fn(async () => jobResponse())
     vi.stubGlobal('fetch', fetchMock)
 
     renderActions(makeApp())
     await user.click(screen.getByRole('button', { name: 'Redémarrer' }))
 
-    expect(screen.getByText(/Voulez-vous vraiment effectuer « redémarrer » sur sonarr/)).toBeInTheDocument()
+    expect(
+      screen.getByText(/Voulez-vous vraiment effectuer « redémarrer » sur sonarr/),
+    ).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Confirmer' }))
 
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/v1/apps/sonarr/restart',
       expect.objectContaining({ method: 'POST' }),
+    )
+  })
+
+  it('installs with the chosen subdomain and auth', async () => {
+    const user = userEvent.setup()
+    const fetchMock = vi.fn(async () => jobResponse())
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderActions(makeApp({ installed: false, runtime_status: 'not_installed' }))
+    await user.click(screen.getByRole('button', { name: 'Installer' }))
+
+    expect(screen.getByLabelText('Sous-domaine')).toHaveValue('sonarr')
+    await user.selectOptions(screen.getByLabelText('Authentification'), 'authelia')
+    await user.click(screen.getByRole('button', { name: 'Confirmer' }))
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/v1/apps/sonarr/install',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ auth: 'authelia', subdomain: 'sonarr' }),
+      }),
+    )
+  })
+
+  it('requires typing the application name before deleting data', async () => {
+    const user = userEvent.setup()
+    const fetchMock = vi.fn(async () => jobResponse())
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderActions(makeApp())
+    await user.click(screen.getByRole('button', { name: 'Plus d’actions' }))
+    await user.click(await screen.findByRole('menuitem', { name: 'Supprimer' }))
+
+    await user.selectOptions(screen.getByRole('combobox'), 'delete')
+    const confirmButton = screen.getByRole('button', { name: 'Confirmer' })
+    expect(confirmButton).toBeDisabled()
+
+    await user.type(screen.getByLabelText(/Tapez « sonarr » pour confirmer/), 'sonarr')
+    expect(confirmButton).toBeEnabled()
+    await user.click(confirmButton)
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/v1/apps/sonarr/remove',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ delete_data: true }),
+      }),
     )
   })
 })

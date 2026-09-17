@@ -7,7 +7,14 @@ from fastapi.responses import StreamingResponse
 
 from app.adapters.ssdv2_cli import Ssdv2CtlError
 from app.deps import CurrentUser, DockerDep, SettingsDep, Ssdv2CtlDep
-from app.schemas.app import AppAuthOut, AppDetailOut, AppStateOut, LogsOut
+from app.schemas.app import (
+    AppAuthOut,
+    AppDetailOut,
+    AppInstallRequest,
+    AppRemoveRequest,
+    AppStateOut,
+    LogsOut,
+)
 from app.schemas.job import JobOut
 from app.services.app_overview import load_app_states
 from app.services.app_state import WARNING_SSDDB_UNAVAILABLE, build_app_detail
@@ -134,14 +141,24 @@ def stream_app_logs(
     )
 
 
-def _submit_app_action(app: str, action: str, settings: SettingsDep, user: CurrentUser) -> JobOut:
+def _submit_job(
+    app: str,
+    job_type: str,
+    settings: SettingsDep,
+    user: CurrentUser,
+    params: dict | None = None,
+) -> JobOut:
     entries, catalogue_error = read_catalogue(settings.catalogue_file)
     if catalogue_error:
         raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, catalogue_error)
     if not any(item.name == app for item in entries):
         raise HTTPException(status.HTTP_404_NOT_FOUND, f"application inconnue: {app}")
-    job = job_manager.submit(f"app_{action}", app, user.username)
+    job = job_manager.submit(job_type, app, user.username, params)
     return JobOut.model_validate(job)
+
+
+def _submit_app_action(app: str, action: str, settings: SettingsDep, user: CurrentUser) -> JobOut:
+    return _submit_job(app, f"app_{action}", settings, user)
 
 
 @router.post("/{app}/start", response_model=JobOut, status_code=status.HTTP_202_ACCEPTED)
@@ -169,6 +186,50 @@ def restart_app(
     _user: CurrentUser,
 ) -> JobOut:
     return _submit_app_action(app, "restart", settings, _user)
+
+
+@router.post("/{app}/install", response_model=JobOut, status_code=status.HTTP_202_ACCEPTED)
+def install_app(
+    app: str,
+    payload: AppInstallRequest,
+    settings: SettingsDep,
+    _user: CurrentUser,
+) -> JobOut:
+    return _submit_job(
+        app,
+        "app_install",
+        settings,
+        _user,
+        {"subdomain": payload.subdomain, "auth": payload.auth},
+    )
+
+
+@router.post("/{app}/remove", response_model=JobOut, status_code=status.HTTP_202_ACCEPTED)
+def remove_app(
+    app: str,
+    payload: AppRemoveRequest,
+    settings: SettingsDep,
+    _user: CurrentUser,
+) -> JobOut:
+    return _submit_job(app, "app_remove", settings, _user, {"delete_data": payload.delete_data})
+
+
+@router.post("/{app}/reinstall", response_model=JobOut, status_code=status.HTTP_202_ACCEPTED)
+def reinstall_app(
+    app: str,
+    settings: SettingsDep,
+    _user: CurrentUser,
+) -> JobOut:
+    return _submit_job(app, "app_reinstall", settings, _user)
+
+
+@router.post("/{app}/recreate", response_model=JobOut, status_code=status.HTTP_202_ACCEPTED)
+def recreate_app(
+    app: str,
+    settings: SettingsDep,
+    _user: CurrentUser,
+) -> JobOut:
+    return _submit_job(app, "app_recreate", settings, _user)
 
 
 @router.get("/{app}/auth", response_model=AppAuthOut)

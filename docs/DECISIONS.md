@@ -266,6 +266,42 @@ pointe vers son remplaçant. Une décision non tranchée reste dans « Décision
   les fonctions SSDV2 directement depuis FastAPI (hors périmètre, brief §9).
 - **Références** : brief §4, §9, §50-§52 ; ADR-0011, ADR-0013.
 
+## ADR-0015 — Enrichissement de l'image avec ansible
+
+- **Statut** : acceptée — 2026-09-17 (résout la décision ouverte de l'ADR-0014)
+- **Contexte** : `install`/`remove`/`reinstall`/`recreate` passent par les playbooks SSDV2
+  (`launch_service`, `suppression_appli`) ; le venv SSDV2 monté n'est pas exécutable dans
+  le conteneur (`venv/bin/python` pointe vers `/usr/bin/python3`, absent de l'image).
+- **Décision** : installer dans l'image `ansible-core==2.21.0`, les collections
+  `community.docker:5.2.0`, `community.general:13.0.1`, `ansible.posix:2.2.0` et les rôles
+  `kwoodson.yedit`, `geerlingguy.docker,8.0.0` (versions alignées sur le serveur), dans
+  `/opt/ansible` (`ANSIBLE_COLLECTIONS_PATH`, `ANSIBLE_ROLES_PATH`, `ANSIBLE_INVENTORY`
+  avec un inventaire local, `ANSIBLE_HOME`/`ANSIBLE_LOCAL_TEMP` dans `/tmp`). Le mot de
+  passe Vault est fourni au déploiement via `ANSIBLE_VAULT_PASSWORD_FILE`.
+- **Conséquences** : image plus lourde (mesurée après build) ; l'interpréteur des modules
+  est celui de l'image (Python 3.13), pas le venv hôte ; toute nouvelle collection utilisée
+  par SSDV2 devra être ajoutée à l'image ; les versions doivent être réalignées lors des
+  mises à jour SSDV2.
+- **Alternatives écartées** : installer `python3.12` dans l'image pour exécuter le venv
+  hôte (couplage à l'hôte, fragile) ; exécuter les mutations hors du conteneur (contraire
+  au choix d'une image unique) ; reporter les mutations.
+- **Références** : brief §10, §54, §72 ; ADR-0014.
+
+## ADR-0016 — Micro-migrations SQL idempotentes au démarrage
+
+- **Statut** : acceptée — 2026-09-17
+- **Contexte** : ADR-0008 exclut Alembic au MVP mais le schéma a évolué (`jobs.params`),
+  et `create_all` n'ajoute pas de colonne à une table existante.
+- **Décision** : `init_db` applique une liste explicite de migrations idempotentes
+  (`PRAGMA table_info` puis `ALTER TABLE ... ADD COLUMN` si absent), sans outil externe ;
+  chaque nouvelle évolution du schéma ajoute une entrée à cette liste.
+- **Conséquences** : les migrations restent manuelles et additives (pas de suppression de
+  colonne, pas de transformation de données) ; une complexification future (renommage,
+  données) exigera de reconsidérer Alembic.
+- **Alternatives écartées** : Alembic dès maintenant ; recréer la base à chaque évolution ;
+  stocker les paramètres hors schéma.
+- **Références** : ADR-0008, brief §45-§46.
+
 ## Décisions ouvertes
 
 À trancher explicitement puis consigner en ADR (voir brief §72) :
@@ -275,12 +311,4 @@ pointe vers son remplaçant. Une décision non tranchée reste dans « Décision
 - liste des commandes container-compatibles vs host-only ;
 - emplacement de maintenance des métadonnées de présentation du catalogue (catégories,
   icônes, tags) ;
-- exécution des mutations SSDV2 depuis le conteneur WebUI : `start`/`stop`/`restart` et
-  `diagnostics` sont déjà exécutables dans le conteneur (bash + CLI Docker montés) ;
-  `install`/`remove`/`reinstall`/`recreate` exigent ansible (playbooks
-  `community.docker`, `kwoodson.yedit`, `ansible-vault`). Constat : le venv SSDV2 monté
-  n'est pas exécutable dans le conteneur (`venv/bin/python` pointe vers
-  `/usr/bin/python3`, absent de l'image). Options : enrichir l'image (`pip install
-  ansible-core` + collections nécessaires, ~50 Mo) ou renoncer aux mutations côté WebUI —
-  à trancher avant la Phase 3 ;
 - résorption de la duplication du parsing catalogue entre la WebUI et `ssdv2ctl`.

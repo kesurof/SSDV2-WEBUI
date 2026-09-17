@@ -25,8 +25,17 @@ def get_session_factory() -> sessionmaker[Session]:
     return sessionmaker(bind=get_engine(), expire_on_commit=False)
 
 
+def _apply_migrations(engine: Engine) -> None:
+    with engine.begin() as connection:
+        columns = {row[1] for row in connection.exec_driver_sql("PRAGMA table_info(jobs)")}
+        if "params" not in columns:
+            connection.exec_driver_sql("ALTER TABLE jobs ADD COLUMN params TEXT")
+
+
 def init_db() -> None:
-    Base.metadata.create_all(get_engine())
+    engine = get_engine()
+    Base.metadata.create_all(engine)
+    _apply_migrations(engine)
 
 
 def get_db() -> Iterator[Session]:

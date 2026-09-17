@@ -16,6 +16,21 @@ COPY backend/pyproject.toml ./
 COPY backend/app ./app
 RUN pip install --no-cache-dir .
 
+RUN pip install --no-cache-dir "ansible-core==2.21.0" \
+    && mkdir -p /opt/ansible/collections /opt/ansible/roles \
+    && ansible-galaxy collection install -p /opt/ansible/collections \
+        community.docker:5.2.0 community.general:13.0.1 ansible.posix:2.2.0 \
+    && ansible-galaxy role install -p /opt/ansible/roles \
+        kwoodson.yedit geerlingguy.docker,8.0.0 \
+    && printf '[local]\n127.0.0.1 ansible_connection=local\n' > /opt/ansible/inventory
+
+ENV ANSIBLE_COLLECTIONS_PATH=/opt/ansible/collections \
+    ANSIBLE_ROLES_PATH=/opt/ansible/roles \
+    ANSIBLE_INVENTORY=/opt/ansible/inventory \
+    ANSIBLE_HOME=/tmp/ansible \
+    ANSIBLE_LOCAL_TEMP=/tmp/ansible \
+    ANSIBLE_REMOTE_TEMP=/tmp/ansible
+
 COPY --from=frontend /build/dist ./static
 
 RUN useradd --system --uid 10001 webui \

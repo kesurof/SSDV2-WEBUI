@@ -1,3 +1,4 @@
+import json
 import logging
 import queue
 import threading
@@ -17,9 +18,38 @@ JOB_TYPE_ACTIONS = {
     "app_start": "start",
     "app_stop": "stop",
     "app_restart": "restart",
+    "app_reinstall": "reinstall",
+    "app_recreate": "recreate",
 }
 
-ACTION_TIMEOUT = 600
+ACTION_TIMEOUTS = {
+    "app_start": 600,
+    "app_stop": 600,
+    "app_restart": 600,
+    "app_install": 1800,
+    "app_remove": 900,
+    "app_reinstall": 1800,
+    "app_recreate": 1800,
+}
+
+DEFAULT_TIMEOUT = 600
+
+
+def build_job_args(job_type: str, target: str, params: dict) -> list[str]:
+    if job_type == "app_install":
+        args = ["app", "install", target, "--subdomain", str(params.get("subdomain") or target)]
+        if params.get("auth"):
+            args += ["--auth", str(params["auth"])]
+        return args
+    if job_type == "app_remove":
+        args = ["app", "remove", target]
+        if params.get("delete_data"):
+            args.append("--delete-data")
+        return args
+    action = JOB_TYPE_ACTIONS.get(job_type)
+    if action is None:
+        raise Ssdv2CtlError("unknown_job_type", f"type de job inconnu: {job_type}")
+    return ["app", action, target]
 
 
 class JobManager:
@@ -54,9 +84,16 @@ class JobManager:
             self._thread.join(timeout=5)
             self._thread = None
 
-    def submit(self, job_type: str, target: str, created_by: str | None) -> Job:
+    def submit(
+        self, job_type: str, target: str, created_by: str | None, params: dict | None = None
+    ) -> Job:
         with get_session_factory()() as session:
-            job = Job(type=job_type, target=target, created_by=created_by)
+            job = Job(
+                type=job_type,
+                target=target,
+                created_by=created_by,
+                params=json.dumps(params, ensure_ascii=False) if params else None,
+            )
             session.add(job)
             session.commit()
             session.refresh(job)
@@ -90,19 +127,19 @@ class JobManager:
             session.commit()
             job_type = job.type
             target = job.target
+            params = json.loads(job.params) if job.params else {}
 
         exit_code: int | None = None
         message: str | None = None
         try:
-            action = JOB_TYPE_ACTIONS.get(job_type)
-            if action is None:
-                raise Ssdv2CtlError("unknown_job_type", f"type de job inconnu: {job_type}")
             if self._runner_provider is None:
                 raise Ssdv2CtlError("jobs_unavailable", "gestionnaire de jobs non configuré")
+            args = build_job_args(job_type, target, params)
+            timeout = ACTION_TIMEOUTS.get(job_type, DEFAULT_TIMEOUT)
             self._add_event(job_id, f"Job {job_type} sur {target} démarré")
             runner = self._runner_provider()
             exit_code = runner.run_streaming(
-                ["app", action, target], lambda line: self._add_event(job_id, line), ACTION_TIMEOUT
+                args, lambda line: self._add_event(job_id, line), timeout
             )
             if exit_code == 0:
                 status = "success"

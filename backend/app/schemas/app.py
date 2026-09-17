@@ -3,6 +3,9 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 RuntimeStatus = Literal["running", "partial", "stopped", "unknown", "not_installed"]
+AuthType = Literal["aucune", "basique", "authelia", "oauth", "oauth2-proxy"]
+
+SUBDOMAIN_PATTERN = r"^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$"
 
 
 class AppStateOut(BaseModel):
@@ -55,3 +58,12 @@ class AppAuthOut(BaseModel):
     schema_version: int = Field(alias="schema")
     app: str
     auth: str | None
+
+
+class AppInstallRequest(BaseModel):
+    auth: AuthType
+    subdomain: str | None = Field(default=None, pattern=SUBDOMAIN_PATTERN)
+
+
+class AppRemoveRequest(BaseModel):
+    delete_data: bool = False
