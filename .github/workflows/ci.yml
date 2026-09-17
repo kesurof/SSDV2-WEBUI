@@ -175,4 +175,5 @@ jobs:
             digests+=("${IMAGE}@sha256:$(basename "$file")")
           done
           docker buildx imagetools create "${args[@]}" "${digests[@]}"
-          docker buildx imagetools inspect "${IMAGE}:latest" | head -20
+          docker buildx imagetools inspect "${IMAGE}:latest" >/dev/null
+          echo "Manifeste multiarchitecture publié : ${IMAGE}:latest"
