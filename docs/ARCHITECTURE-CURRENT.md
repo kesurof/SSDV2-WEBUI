@@ -25,9 +25,11 @@
 - `Dockerfile` : multi-stage Node 22 → `python:3.13-slim`, utilisateur non root
   (`uid 10001`), frontend compilé servi par FastAPI, healthcheck `/health`.
 - `compose.yaml` : conteneur unique `ssdv2-webui` lié à `127.0.0.1:8800`, socket Docker,
-  binaire Docker de l'hôte monté, dossier `ssdv2ctl` de développement monté sur
-  `/opt/ssdv2ctl`, `SSDV2_SOURCE` et `SSDV2_STORAGE` montés, volume nommé `webui-data`
-  pour `/data`.
+  binaire Docker de l'hôte monté, `SSDV2CTL_PATH` et `HOME` pointant vers l'utilisateur
+  SSDV2, dossier `ssdv2ctl` de développement monté sur `/opt/ssdv2ctl`, fichiers
+  `~/.config/ssd/env` et `~/.vault_pass` montés en lecture seule (nécessaires à
+  `get_from_account_yml`), `SSDV2_SOURCE` et `SSDV2_STORAGE` montés, volume nommé
+  `webui-data` pour `/data`. Ansible n'est pas disponible dans le conteneur.
 - `.github/workflows/ci.yml` : runner `[self-hosted, SSDV2-WEBUI]` (ARM64) ; backend
   (ruff + pytest) et frontend (oxlint + tsc + Vitest + build) dans des conteneurs Docker,
   puis `docker build`.

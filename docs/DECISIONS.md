@@ -275,6 +275,12 @@ pointe vers son remplaçant. Une décision non tranchée reste dans « Décision
 - liste des commandes container-compatibles vs host-only ;
 - emplacement de maintenance des métadonnées de présentation du catalogue (catégories,
   icônes, tags) ;
-- exécution des mutations SSDV2 depuis le conteneur WebUI : image enrichie (ansible,
-  jq, bash) ou autre stratégie — à trancher avant la Phase 3 ;
+- exécution des mutations SSDV2 depuis le conteneur WebUI : `start`/`stop`/`restart` et
+  `diagnostics` sont déjà exécutables dans le conteneur (bash + CLI Docker montés) ;
+  `install`/`remove`/`reinstall`/`recreate` exigent ansible (playbooks
+  `community.docker`, `kwoodson.yedit`, `ansible-vault`). Constat : le venv SSDV2 monté
+  n'est pas exécutable dans le conteneur (`venv/bin/python` pointe vers
+  `/usr/bin/python3`, absent de l'image). Options : enrichir l'image (`pip install
+  ansible-core` + collections nécessaires, ~50 Mo) ou renoncer aux mutations côté WebUI —
+  à trancher avant la Phase 3 ;
 - résorption de la duplication du parsing catalogue entre la WebUI et `ssdv2ctl`.

@@ -67,8 +67,12 @@ aucun push — ADR-0010 ; dernière révision `444b9681`).
 - **Entrées `ssddb` hors catalogue** : `traefik`, `boostsuitev2` et `appname` (donnée de
   test) ne sont pas listées par la WebUI, pilotée par le catalogue ; exposées par
   `diagnostics run` (registres manquants), à traiter en Phase 4.
-- **Runtime des mutations** : le conteneur WebUI n'a ni ansible ni jq ; les mutations
-  passeront par `ssdv2ctl` mais nécessiteront une décision d'exécution (ADR-0014).
+- **Runtime des mutations** : `start`/`stop`/`restart` et `diagnostics` fonctionnent dans
+  le conteneur (vérifié : `app status dozzle` → conteneur détecté, `auth get` correct).
+  `install`/`remove`/`reinstall`/`recreate` exigent ansible ; le venv SSDV2 monté n'est
+  pas exécutable dans le conteneur (`venv/bin/python` → `/usr/bin/python3` absent).
+  Options : enrichir l'image (`ansible-core` + `community.docker` + `kwoodson.yedit`,
+  ~50 Mo) ou reporter les mutations. Décision ouverte (ADR-0014).
 - **Logs bruts** : les journaux des applications peuvent contenir des secrets
   applicatifs (observé : clés d'API dans des URLs de `streamfusion`) ; l'accès est réservé
   à l'admin authentifié mais aucune redaction n'est appliquée. Une redaction best-effort
