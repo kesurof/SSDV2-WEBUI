@@ -34,7 +34,8 @@ ENV ANSIBLE_COLLECTIONS_PATH=/opt/ansible/collections \
 COPY --from=frontend /build/dist ./static
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends sudo \
+    && apt-get install -y --no-install-recommends \
+        sudo jq sqlite3 curl ca-certificates gettext-base apache2-utils pigz openssl \
     && rm -rf /var/lib/apt/lists/* \
     && mkdir -p /data \
     && chown 10001:10001 /data
