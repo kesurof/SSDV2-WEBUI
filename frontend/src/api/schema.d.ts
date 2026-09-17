@@ -293,6 +293,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/apps": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List App Auth */
+        get: operations["list_app_auth_api_v1_auth_apps_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/bulk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Bulk Auth */
+        post: operations["bulk_auth_api_v1_auth_bulk_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/backups": {
         parameters: {
             query?: never;
@@ -302,6 +336,23 @@ export interface paths {
         };
         /** Get Backups */
         get: operations["get_backups_api_v1_backups_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Config */
+        get: operations["get_config_api_v1_config_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -578,6 +629,13 @@ export interface components {
             /** Auth */
             auth: string | null;
         };
+        /** AppAuthSummary */
+        AppAuthSummary: {
+            /** App */
+            app: string;
+            /** Auth */
+            auth: string | null;
+        };
         /** AppDetailOut */
         AppDetailOut: {
             /** Name */
@@ -672,6 +730,16 @@ export interface components {
             /** Detail */
             detail: string | null;
         };
+        /** AuthBulkRequest */
+        AuthBulkRequest: {
+            /** Apps */
+            apps: string[];
+            /**
+             * Auth
+             * @enum {string}
+             */
+            auth: "aucune" | "basique" | "authelia" | "oauth" | "oauth2-proxy";
+        };
         /** BackupOut */
         BackupOut: {
             /** App */
@@ -685,6 +753,15 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+        };
+        /** ConfigOut */
+        ConfigOut: {
+            /** Schema */
+            schema: number;
+            /** Config */
+            config: {
+                [key: string]: string | null;
+            };
         };
         /** ContainerOut */
         ContainerOut: {
@@ -1429,6 +1506,59 @@ export interface operations {
             };
         };
     };
+    list_app_auth_api_v1_auth_apps_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppAuthSummary"][];
+                };
+            };
+        };
+    };
+    bulk_auth_api_v1_auth_bulk_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AuthBulkRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_backups_api_v1_backups_get: {
         parameters: {
             query?: never;
@@ -1445,6 +1575,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BackupOut"][];
+                };
+            };
+        };
+    };
+    get_config_api_v1_config_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConfigOut"];
                 };
             };
         };

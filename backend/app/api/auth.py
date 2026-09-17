@@ -4,6 +4,7 @@ from functools import lru_cache
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy import select
 
+from app.adapters.ssdv2_cli import Ssdv2CtlError
 from app.core.config import get_settings
 from app.core.ratelimit import FixedWindowLimiter
 from app.core.security import (
@@ -14,9 +15,11 @@ from app.core.security import (
     verify_password,
 )
 from app.db.models import User, UserSession, utcnow
-from app.deps import CurrentUser, DbDep, SettingsDep, require_csrf
-from app.schemas.auth import LoginRequest, UserOut
+from app.deps import CurrentUser, DbDep, SettingsDep, Ssdv2CtlDep, require_csrf
+from app.schemas.auth import AppAuthSummary, AuthBulkRequest, LoginRequest, UserOut
+from app.schemas.job import JobOut
 from app.services import audit
+from app.services.jobs import job_manager
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -91,3 +94,28 @@ def logout(
 @router.get("/me", response_model=UserOut)
 def me(user: CurrentUser) -> UserOut:
     return UserOut(username=user.username)
+
+
+@router.get("/apps", response_model=list[AppAuthSummary])
+def list_app_auth(runner: Ssdv2CtlDep, _user: CurrentUser) -> list[AppAuthSummary]:
+    try:
+        payload = runner.run(["auth", "list"])
+    except Ssdv2CtlError as exc:
+        code = (
+            status.HTTP_503_SERVICE_UNAVAILABLE
+            if exc.code == "ssdv2ctl_unavailable"
+            else status.HTTP_502_BAD_GATEWAY
+        )
+        raise HTTPException(code, exc.message) from exc
+    return [AppAuthSummary.model_validate(item) for item in payload.get("apps", [])]
+
+
+@router.post("/bulk", response_model=JobOut, status_code=status.HTTP_202_ACCEPTED)
+def bulk_auth(payload: AuthBulkRequest, _user: CurrentUser) -> JobOut:
+    job = job_manager.submit(
+        "auth_bulk",
+        payload.auth,
+        _user.username,
+        {"apps": payload.apps, "auth": payload.auth},
+    )
+    return JobOut.model_validate(job)

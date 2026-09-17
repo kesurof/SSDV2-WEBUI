@@ -1,6 +1,8 @@
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+from app.schemas.app import AuthType
 
 
 class LoginRequest(BaseModel):
@@ -10,6 +12,16 @@ class LoginRequest(BaseModel):
 
 class UserOut(BaseModel):
     username: str
+
+
+class AppAuthSummary(BaseModel):
+    app: str
+    auth: str | None
+
+
+class AuthBulkRequest(BaseModel):
+    apps: list[str] = Field(min_length=1, max_length=100)
+    auth: AuthType
 
 
 class HealthOut(BaseModel):

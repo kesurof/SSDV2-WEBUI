@@ -43,6 +43,12 @@ def test_build_job_args_actions() -> None:
     assert build_job_args("app_backup", "wallos", {}) == ["app", "backup", "wallos"]
 
 
+def test_build_job_args_auth_bulk() -> None:
+    assert build_job_args(
+        "auth_bulk", "authelia", {"apps": ["sonarr", "radarr"], "auth": "authelia"}
+    ) == ["auth", "set-many", "authelia", "sonarr", "radarr"]
+
+
 def test_build_job_args_diagnostics() -> None:
     assert build_job_args("diagnostics_rebuild_registries", "diagnostics", {}) == [
         "diagnostics",

@@ -17,6 +17,8 @@ const NAV_ITEMS = [
   { to: '/notifications', label: fr.nav.notifications },
   { to: '/audit', label: fr.nav.audit },
   { to: '/backups', label: fr.nav.backups },
+  { to: '/auth', label: fr.nav.auth },
+  { to: '/settings', label: fr.nav.settings },
   { to: '/diagnostics', label: fr.nav.diagnostics },
 ]
 

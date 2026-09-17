@@ -1,10 +1,12 @@
 import type { components } from '@/api/schema'
 
 export type AppAuth = components['schemas']['AppAuthOut']
+export type AppAuthSummary = components['schemas']['AppAuthSummary']
 export type AppDetail = components['schemas']['AppDetailOut']
 export type AppState = components['schemas']['AppStateOut']
 export type AuditEvent = components['schemas']['AuditEventOut']
 export type Backup = components['schemas']['BackupOut']
+export type Config = components['schemas']['ConfigOut']
 export type Container = components['schemas']['ContainerOut']
 export type Diagnostics = components['schemas']['DiagnosticsOut']
 export type Health = components['schemas']['HealthOut']

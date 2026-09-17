@@ -733,6 +733,72 @@
         }
       }
     },
+    "/api/v1/auth/apps": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "List App Auth",
+        "operationId": "list_app_auth_api_v1_auth_apps_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AppAuthSummary"
+                  },
+                  "type": "array",
+                  "title": "Response List App Auth Api V1 Auth Apps Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/bulk": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Bulk Auth",
+        "operationId": "bulk_auth_api_v1_auth_bulk_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthBulkRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/backups": {
       "get": {
         "tags": [
@@ -751,6 +817,27 @@
                   },
                   "type": "array",
                   "title": "Response Get Backups Api V1 Backups Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/config": {
+      "get": {
+        "tags": [
+          "config"
+        ],
+        "summary": "Get Config",
+        "operationId": "get_config_api_v1_config_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigOut"
                 }
               }
             }
@@ -1273,6 +1360,31 @@
         ],
         "title": "AppAuthOut"
       },
+      "AppAuthSummary": {
+        "properties": {
+          "app": {
+            "type": "string",
+            "title": "App"
+          },
+          "auth": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Auth"
+          }
+        },
+        "type": "object",
+        "required": [
+          "app",
+          "auth"
+        ],
+        "title": "AppAuthSummary"
+      },
       "AppDetailOut": {
         "properties": {
           "name": {
@@ -1582,6 +1694,36 @@
         ],
         "title": "AuditEventOut"
       },
+      "AuthBulkRequest": {
+        "properties": {
+          "apps": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Apps"
+          },
+          "auth": {
+            "type": "string",
+            "enum": [
+              "aucune",
+              "basique",
+              "authelia",
+              "oauth",
+              "oauth2-proxy"
+            ],
+            "title": "Auth"
+          }
+        },
+        "type": "object",
+        "required": [
+          "apps",
+          "auth"
+        ],
+        "title": "AuthBulkRequest"
+      },
       "BackupOut": {
         "properties": {
           "app": {
@@ -1610,6 +1752,34 @@
           "created_at"
         ],
         "title": "BackupOut"
+      },
+      "ConfigOut": {
+        "properties": {
+          "schema": {
+            "type": "integer",
+            "title": "Schema"
+          },
+          "config": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object",
+            "title": "Config"
+          }
+        },
+        "type": "object",
+        "required": [
+          "schema",
+          "config"
+        ],
+        "title": "ConfigOut"
       },
       "ContainerOut": {
         "properties": {

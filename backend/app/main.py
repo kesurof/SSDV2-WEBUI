@@ -9,7 +9,18 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.adapters.ssdv2_cli import Ssdv2CtlRunner
-from app.api import apps, audit, auth, backups, diagnostics, health, jobs, notifications, system
+from app.api import (
+    apps,
+    audit,
+    auth,
+    backups,
+    config,
+    diagnostics,
+    health,
+    jobs,
+    notifications,
+    system,
+)
 from app.core.config import get_settings
 from app.core.logging import setup_logging
 from app.core.security import hash_password
@@ -64,6 +75,7 @@ def create_app() -> FastAPI:
     api_router.include_router(audit.router)
     api_router.include_router(auth.router)
     api_router.include_router(backups.router)
+    api_router.include_router(config.router)
     api_router.include_router(diagnostics.router)
     api_router.include_router(health.router)
     api_router.include_router(jobs.router)

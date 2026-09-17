@@ -111,6 +111,35 @@ class FakeDockerClient:
         }
 
 
+class FakeRunner:
+    def __init__(
+        self,
+        payload: dict | None = None,
+        error: Exception | None = None,
+        exit_code: int = 0,
+        lines: tuple[str, ...] = ("ligne 1",),
+    ) -> None:
+        self.payload = payload
+        self.error = error
+        self.exit_code = exit_code
+        self.lines = lines
+        self.calls: list[list[str]] = []
+
+    def run(self, args, timeout=None) -> dict:
+        self.calls.append(args)
+        if self.error is not None:
+            raise self.error
+        return self.payload or {}
+
+    def run_streaming(self, args, on_line, timeout=None) -> int:
+        self.calls.append(args)
+        if self.error is not None:
+            raise self.error
+        for line in self.lines:
+            on_line(line)
+        return self.exit_code
+
+
 class FakeStreamingRunner:
     def __init__(
         self,

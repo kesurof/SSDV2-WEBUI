@@ -21,6 +21,7 @@ JOB_LABELS = {
     "app_reinstall": "Réinstallation",
     "app_recreate": "Recréation",
     "app_backup": "Sauvegarde",
+    "auth_bulk": "Changement d'authentification",
     "app_start": "Démarrage",
     "app_stop": "Arrêt",
     "app_restart": "Redémarrage",
@@ -35,6 +36,7 @@ NOTIFY_JOB_TYPES = (
     "app_reinstall",
     "app_recreate",
     "app_backup",
+    "auth_bulk",
 )
 
 JOB_TYPE_ACTIONS = {
@@ -61,6 +63,7 @@ ACTION_TIMEOUTS = {
     "app_reinstall": 1800,
     "app_recreate": 1800,
     "app_backup": 1800,
+    "auth_bulk": 900,
     "diagnostics_rebuild_registries": 900,
     "diagnostics_cleanup_containers": 600,
     "diagnostics_cleanup_volumes": 600,
@@ -72,6 +75,9 @@ DEFAULT_TIMEOUT = 600
 def build_job_args(job_type: str, target: str, params: dict) -> list[str]:
     if job_type in DIAGNOSTICS_JOBS:
         return ["diagnostics", DIAGNOSTICS_JOBS[job_type]]
+    if job_type == "auth_bulk":
+        apps = [str(app) for app in params.get("apps", [])]
+        return ["auth", "set-many", str(params.get("auth", "")), *apps]
     if job_type == "app_install":
         args = ["app", "install", target, "--subdomain", str(params.get("subdomain") or target)]
         if params.get("auth"):

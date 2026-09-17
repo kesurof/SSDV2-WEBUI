@@ -4,6 +4,7 @@ import { Layout } from '@/app/Layout'
 import { AppDetailPage } from '@/features/apps/AppDetailPage'
 import { AppsPage } from '@/features/apps/AppsPage'
 import { AuditPage } from '@/features/audit/AuditPage'
+import { AuthAppsPage } from '@/features/auth/AuthAppsPage'
 import { BackupsPage } from '@/features/backups/BackupsPage'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
@@ -11,6 +12,7 @@ import { DiagnosticsPage } from '@/features/diagnostics/DiagnosticsPage'
 import { JobDetailPage } from '@/features/jobs/JobDetailPage'
 import { JobsPage } from '@/features/jobs/JobsPage'
 import { NotificationsPage } from '@/features/notifications/NotificationsPage'
+import { SettingsPage } from '@/features/settings/SettingsPage'
 
 export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
@@ -27,6 +29,8 @@ export const router = createBrowserRouter([
       { path: 'notifications', element: <NotificationsPage /> },
       { path: 'audit', element: <AuditPage /> },
       { path: 'backups', element: <BackupsPage /> },
+      { path: 'auth', element: <AuthAppsPage /> },
+      { path: 'settings', element: <SettingsPage /> },
       { path: 'diagnostics', element: <DiagnosticsPage /> },
     ],
   },
