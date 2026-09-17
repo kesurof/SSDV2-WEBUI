@@ -11,6 +11,7 @@ services:
       SSDV2_STORAGE: /home/${SSD_USER:-utilisateur}/seedbox
       SSDV2CTL_PATH: /opt/ssdv2ctl/ssdv2ctl
       HOME: /home/${SSD_USER:-utilisateur}
+      ANSIBLE_INVENTORY: /home/${SSD_USER:-utilisateur}/.ansible/inventories/local
       ANSIBLE_VAULT_PASSWORD_FILE: /home/${SSD_USER:-utilisateur}/.vault_pass
       WEBUI_DATA: /data
       WEBUI_ADMIN_USER: ${WEBUI_ADMIN_USER:-admin}
