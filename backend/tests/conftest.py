@@ -13,6 +13,13 @@ _SOURCE = _TMP / "ssdv2-source"
 _STORAGE = _TMP / "ssdv2-storage"
 _DATA = _TMP / "webui-data"
 
+TEST_ADMIN_USER = "admin"
+TEST_ADMIN_PASSWORD = "test-password"
+
+
+def login_payload(password: str = TEST_ADMIN_PASSWORD) -> dict[str, str]:
+    return {"username": TEST_ADMIN_USER, "password": password}
+
 
 def pytest_configure(config: pytest.Config) -> None:
     (_SOURCE / "includes" / "config").mkdir(parents=True, exist_ok=True)
@@ -96,10 +103,7 @@ def client(fake_containers: list[FakeContainer]) -> Iterator[TestClient]:
 
 @pytest.fixture
 def auth_client(client: TestClient) -> TestClient:
-    response = client.post(
-        "/api/v1/auth/login",
-        json={"username": "admin", "password": "test-password"},
-    )
+    response = client.post("/api/v1/auth/login", json=login_payload())
     assert response.status_code == 200
     return client
 
