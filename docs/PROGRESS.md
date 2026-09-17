@@ -181,6 +181,13 @@ aucun push — ADR-0010 ; dernière révision `444b9681`).
 
 ## Points d'attention détectés
 
+- **Incident 2026-09-17 (résolu)** : le fichier Traefik historique
+  `~/seedbox/docker/traefik/rules/ssdv2.toml` routait `ssdv2.exemple.tld/api/v1` vers un
+  service mort (504 après 30 s) ; le front affichait alors « Identifiants invalides ».
+  Fichier renommé `ssdv2.toml.disabled`, messages d'erreur du login rendus explicites
+  (statut + détail, message réseau dédié). À supprimer ou adapter si un autre service
+  réutilise ce sous-domaine.
+
 - **GitGuardian** : faux positif « Username Password » sur le commit `a51257c`
   (identifiants de test). Motif supprimé ensuite, occurrence toujours dans l'historique →
   incident `37391944` à ignorer dans le dashboard (exclusion `backend/tests/**` suggérée).

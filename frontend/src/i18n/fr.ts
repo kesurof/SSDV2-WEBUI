@@ -24,6 +24,8 @@ export const fr = {
     submitting: 'Connexion…',
     invalid: 'Identifiants invalides.',
     rateLimited: 'Trop de tentatives. Réessayez dans une minute.',
+    error: 'Erreur de connexion',
+    unreachable: 'Impossible de contacter le serveur (réseau ou proxy interrompu).',
   },
   apps: {
     title: 'Applications',

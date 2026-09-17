@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 
+import { ApiError } from '@/api/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -9,6 +10,22 @@ import { Label } from '@/components/ui/label'
 import { useLogin, useMe } from '@/features/auth/useAuth'
 import { useSetupStatus } from '@/features/setup/useSetup'
 import { fr } from '@/i18n/fr'
+
+function loginErrorMessage(error: unknown): string | null {
+  if (!error) {
+    return null
+  }
+  if (error instanceof ApiError) {
+    if (error.status === 429) {
+      return fr.login.rateLimited
+    }
+    if (error.status === 401) {
+      return fr.login.invalid
+    }
+    return `${fr.login.error} (${error.status}) : ${error.message}`
+  }
+  return fr.login.unreachable
+}
 
 export function LoginPage() {
   const me = useMe()
@@ -34,12 +51,7 @@ export function LoginPage() {
     )
   }
 
-  const errorMessage =
-    login.error?.message === 'Trop de tentatives, réessayez plus tard'
-      ? fr.login.rateLimited
-      : login.isError
-        ? fr.login.invalid
-        : null
+  const errorMessage = loginErrorMessage(login.error)
 
   return (
     <div className="flex min-h-svh items-center justify-center bg-muted/40 p-4">

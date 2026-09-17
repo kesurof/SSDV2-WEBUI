@@ -77,6 +77,10 @@
   catalogue), registres `~/seedbox/conf` (8 applications), 19 conteneurs Docker.
 - L'application reste accessible directement en local (`127.0.0.1:8800`) et publiquement
   via Traefik/Cloudflare avec double authentification (oauth2-proxy + compte admin WebUI).
+- Traefik : les routeurs historiques du fichier `~/seedbox/docker/traefik/rules/ssdv2.toml`
+  (services morts sur les ports 3000/8080) ont été neutralisés (`.disabled`) car ils
+  capturaient `/api/v1` et provoquaient des 504 ; l'exposition de la WebUI est décrite par
+  les labels Docker du compose.
 
 ## Ce qui n'existe pas (à ce jour)
 
