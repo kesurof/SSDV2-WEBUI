@@ -11,7 +11,8 @@ Aucun.
 ## Dernier chantier terminé
 
 **M1 — socle et lecture seule** (2026-09-17, commit `950dd5b`, branche
-`feat/m1-lecture-seule`, PR #1).
+`feat/m1-lecture-seule`, PR #1 **fusionnée dans `main`** le 2026-09-17 — commit de merge
+`1d638d1`, CI verte sur `main`).
 
 Preuves :
 
