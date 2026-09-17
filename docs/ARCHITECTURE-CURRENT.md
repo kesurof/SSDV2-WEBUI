@@ -76,12 +76,13 @@
   `PGID` et `DOCKER_GID` suivent l'utilisateur hôte (ADR-0017). L'exposition Traefik et
   l'authentification relèvent du déploiement de référence, l'application SSDV2
   `ssdv2webui` (ADR-0020).
-- `.github/workflows/ci.yml` : runner `[self-hosted, SSDV2-WEBUI]` (ARM64) ; backend
-  (ruff + pytest) et frontend (oxlint + tsc + Vitest + build) dans des conteneurs Docker,
-  puis `docker build` et smoke test de l'image (`ssdv2ctl --version`, `docker --version`).
-- `.github/workflows/release.yml` : build multiarchitecture (buildx + QEMU,
-  `linux/amd64` + `linux/arm64`) et publication `ghcr.io/kesurof/ssdv2-webui` — `:dev` +
-  `:latest` sur push `main`, `:<tag>` + `:latest` sur tag `v*`, dispatch manuel conservé.
+- `.github/workflows/ci.yml` : runners GitHub-hosted (`ubuntu-latest` + `ubuntu-24.04-arm`) ;
+  backend (setup-python 3.13 + cache pip : ruff + pytest) et frontend (setup-node 22 +
+  cache npm : lint, tsc, Vitest, build) en parallèle ; puis build de l'image par plateforme
+  en matrice native (cache BuildKit `type=gha,mode=max`, métadonnées OCI, provenance et
+  SBOM) et fusion du manifeste multiarchitecture (`docker buildx imagetools create`) ;
+  publication `:dev` + `:latest` sur `main`, `:<tag>` + `:latest` sur tag `v*`, uniquement
+  si les tests passent (ADR-0023) ; les runs de PR construisent sans publier.
 - `backend/openapi.json` et `frontend/src/api/schema.d.ts` : générés et versionnés
   (ADR-0009).
 

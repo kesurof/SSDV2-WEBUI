@@ -1,8 +1,8 @@
-FROM node:22-alpine AS frontend
+FROM --platform=$BUILDPLATFORM node:22-alpine AS frontend
 
 WORKDIR /build
 COPY frontend/package.json frontend/package-lock.json ./
-RUN npm ci --no-audit --no-fund
+RUN --mount=type=cache,target=/root/.npm npm ci --no-audit --no-fund
 COPY frontend/ ./
 RUN npm run build
 
@@ -17,9 +17,9 @@ ENV PYTHONUNBUFFERED=1 \
 WORKDIR /app
 COPY backend/pyproject.toml ./
 COPY backend/app ./app
-RUN pip install --no-cache-dir .
+RUN --mount=type=cache,target=/root/.cache/pip pip install .
 
-RUN pip install --no-cache-dir "ansible-core==2.21.0" \
+RUN --mount=type=cache,target=/root/.cache/pip pip install "ansible-core==2.21.0" \
     && mkdir -p /opt/ansible/collections /opt/ansible/roles \
     && ansible-galaxy collection install -p /opt/ansible/collections \
         community.docker:5.2.0 community.general:13.0.1 ansible.posix:2.2.0 \

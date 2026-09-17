@@ -466,6 +466,34 @@ pointe vers son remplaçant. Une décision non tranchée reste dans « Décision
   (risque de fuite de secret, règle 6) ; mises à jour système depuis la WebUI (règle 7).
 - **Références** : ADR-0004, ADR-0020 ; brief §62, §75 ; règles 6 et 7 (`AGENTS.md`).
 
+## ADR-0023 — CI/CD sur runners GitHub-hosted (build multiarch natif)
+
+- **Statut** : acceptée — 2026-09-17
+- **Contexte** : la CI et la release tournaient sur un runner self-hosted ARM64 avec QEMU
+  pour la branche amd64 ; le build complet durait ~9 min (mesuré : 201 s `pip install .`,
+  186 s ansible, 151 s vite, 121 s npm ci en émulation) et reconstruisait toutes les
+  couches à chaque exécution, deux fois (CI puis release).
+- **Décision** :
+  - dépôt public → runners GitHub-hosted gratuits et illimités : `ubuntu-latest` (x64) et
+    `ubuntu-24.04-arm` (arm64) ; **fin de QEMU** ;
+  - **pipeline unique** : tests backend/frontend, puis build de l'image par plateforme en
+    matrice native, push par digest et fusion du manifeste multiarchitecture
+    (`docker buildx imagetools create`) ; publication `:dev` + `:latest` sur `main`,
+    `:<tag>` + `:latest` sur tag `v*`, uniquement si les tests passent ;
+  - cache BuildKit `type=gha,mode=max` par plateforme (couches npm/pip/apt/galaxy/CLI
+    réutilisées entre les exécutions) et caches pip/npm des jobs de tests ;
+  - métadonnées OCI (`docker/metadata-action`) et attestations de provenance + SBOM à la
+    publication ;
+  - le runner self-hosted est retiré (dépôt et serveur) et les caches Docker associés
+    sont supprimés.
+- **Conséquences** : plus de charge de build sur le serveur de test ; un seul build par
+  push ; `:latest` ne peut plus provenir d'un commit aux tests rouges ; les runs de PR
+  construisent l'image sans publier.
+- **Alternatives écartées** : conserver QEMU sur le runner self-hosted (lent) ; deux
+  workflows avec gating `workflow_run` (plus de pièces mobiles) ; runners payants (le
+  dépôt est public).
+- **Références** : ADR-0021 ; `AGENTS.md`.
+
 ## Décisions ouvertes
 
 À trancher explicitement puis consigner en ADR (voir brief §72) :

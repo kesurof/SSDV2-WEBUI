@@ -5,22 +5,24 @@
 Déployé sur le serveur de test comme application SSDV2 `ssdv2webui` (ADR-0020). Backend
 `backend/` (FastAPI + pytest), frontend `frontend/` (React/Vite/shadcn/TanStack),
 `Dockerfile` multi-stage (CLI Docker et `ssdv2ctl` embarqués), `compose.yaml` (voie de
-développement), CI/release self-hosted. Détails : `docs/ARCHITECTURE-CURRENT.md`.
+développement), CI/CD sur runners GitHub-hosted (tests puis build multiarch natif et
+publication GHCR si vert — ADR-0023). Détails : `docs/ARCHITECTURE-CURRENT.md`.
 
 ## Commandes
 
-- Tests backend (Python 3.13, identique à la CI, depuis la racine) :
-  `docker run --rm -v "$PWD/backend:/src:ro" -v ssdv2-webui-pip-cache:/root/.cache/pip -w / python:3.13-slim sh -c "cp -r /src /work && cd /work && pip install -q -e '.[dev]' && ruff check . && ruff format --check . && pytest"`
+- Tests backend (Python 3.13, identique à la CI) : depuis `backend/`,
+  `python3 -m venv .venv && .venv/bin/pip install -e '.[dev]' && .venv/bin/ruff check . && .venv/bin/ruff format --check . && .venv/bin/pytest`
+  (repli hors Python local : `docker run --rm -v "$PWD/backend:/src:ro" -w / python:3.13-slim sh -c "cp -r /src /work && cd /work && pip install -q -e '.[dev]' && ruff check . && ruff format --check . && pytest"`)
 - Frontend (depuis `frontend/`) : `npm ci && npm run lint && npm run typecheck && npm run test && npm run build`
-- Types API : régénérer `backend/openapi.json` (`python -m app.export_openapi`, même
-  conteneur que les tests) puis `npm run gen:api` — les deux fichiers sont versionnés.
+- Types API : régénérer `backend/openapi.json` (`python -m app.export_openapi`) puis
+  `npm run gen:api` — les deux fichiers sont versionnés.
 - Image : `docker build -t ssdv2-webui:local .`
 - Serveur de test privé (détails hors dépôt) : application SSDV2 `ssdv2webui`
   (image `ghcr.io/kesurof/ssdv2-webui:latest`, définition
   `includes/dockerapps/vars/ssdv2webui.yml` côté SSDV2, données sous
   `~/seedbox/docker/<utilisateur>/ssdv2webui/data`). Mise à jour : pousser sur `main`
-  (release automatique), puis `docker pull ghcr.io/kesurof/ssdv2-webui:latest` et
-  `ssdv2ctl app recreate ssdv2webui`. Le compose local reste la voie de développement
+  (publication automatique si la CI est verte), puis
+  `docker pull ghcr.io/kesurof/ssdv2-webui:latest` et `ssdv2ctl app recreate ssdv2webui`. Le compose local reste la voie de développement
   (voir `.env.example`).
 - `ssdv2ctl` (Phase 0 complète, clone local `~/Developer/ssdv2`, branche `wip/ssdv2ctl`,
   jamais de push — ADR-0010) : tests

@@ -10,6 +10,21 @@ Aucun.
 
 ## Derniers chantiers terminés (2026-09-17)
 
+**CI/CD sur runners GitHub-hosted (ADR-0023)**.
+
+- Pipeline unique (`ci.yml`) : tests backend/frontend (setup-python 3.13 + cache pip,
+  setup-node 22 + cache npm) puis build de l'image par plateforme en matrice native
+  (`ubuntu-latest` + `ubuntu-24.04-arm`), push par digest et fusion du manifeste
+  multiarchitecture ; publication `:dev`/`:latest` (ou `:<tag>`) uniquement si les tests
+  passent ; cache BuildKit `type=gha,mode=max`, métadonnées OCI, provenance et SBOM.
+- Dockerfile : stage frontend sur `$BUILDPLATFORM`, cache mounts npm/pip.
+- `release.yml` supprimé (fusionné) ; runner self-hosted et caches Docker du serveur à
+  retirer après validation.
+- Preuves : image locale reconstruite et smoke testée (`ssdv2ctl --version`,
+  `docker --version`) ; durées du premier run GitHub-hosted et manifeste multiarch à
+  relever.
+
+
 **Confort d'exploitation : actions, stockage, déploiement, jobs et mises à jour**.
 
 - Détail d'application : actions en en-tête (plus grosses, colorées, « Ouvrir ↗ »
