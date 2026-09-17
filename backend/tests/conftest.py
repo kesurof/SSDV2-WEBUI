@@ -63,11 +63,19 @@ class FakeContainer:
             state["Health"] = {"Status": self.health}
         return {"State": state, "Config": {"Image": self.image, "Labels": self.labels}}
 
-    def logs(self, tail: int = 200, timestamps: bool = False) -> bytes:
+    def logs(
+        self,
+        tail: int = 200,
+        timestamps: bool = False,
+        stream: bool = False,
+        follow: bool = False,
+    ):
         lines = [
             f"2026-09-17T10:00:0{index}Z ligne {index} de {self.name}" for index in range(1, 3)
-        ]
-        return ("\n".join(lines[:tail]) + "\n").encode("utf-8")
+        ][:tail]
+        if stream:
+            return iter([f"{line}\n".encode() for line in lines])
+        return ("\n".join(lines) + "\n").encode("utf-8")
 
 
 class FakeContainers:

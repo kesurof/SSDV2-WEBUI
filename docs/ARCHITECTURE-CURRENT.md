@@ -11,15 +11,17 @@
   CSRF double-submit, rate limiting en mémoire), `GET /api/v1/apps` agrégeant catalogue,
   `ssddb`, registres `.containers/.volumes/.dns` et Docker SDK (un appel groupé),
   `GET /api/v1/apps/{app}` (détail : conteneurs, registres, entrée `ssddb`),
-  `GET /api/v1/apps/{app}/logs` (conteneur rattaché à l'application, lignes, horodatage),
+  `GET /api/v1/apps/{app}/auth` (type d'authentification via `ssdv2ctl auth get`),
+  `GET /api/v1/apps/{app}/logs` (conteneur rattaché à l'application, lignes, horodatage)
+  et `GET /api/v1/apps/{app}/logs/stream` (SSE, suivi en direct),
   `GET /api/v1/system/summary` (hôte via Docker info, branche/commit SSDV2, compteurs),
   `GET /api/v1/diagnostics` via l'adaptateur `ssdv2ctl` (`app/adapters/ssdv2_cli.py`,
   commandes allowlistées, `shell=False`, `SSDV2CTL_PATH`/`SSDV2CTL_TIMEOUT`).
 - `frontend/` : React 19 + Vite 8 + TypeScript 5.9 + Tailwind 4 + shadcn/ui +
   TanStack Query v5 + TanStack Table v9 + React Router v7 ; login, layout, dashboard,
   table des applications (recherche, filtres, badges d'état, alertes, bandeau mode
-  dégradé), page de détail d'application (vue générale, conteneurs, logs, volumes,
-  réseau/DNS), page Diagnostics.
+  dégradé), page de détail d'application (vue générale avec authentification, conteneurs,
+  logs avec suivi SSE, volumes, réseau/DNS), page Diagnostics.
 - `Dockerfile` : multi-stage Node 22 → `python:3.13-slim`, utilisateur non root
   (`uid 10001`), frontend compilé servi par FastAPI, healthcheck `/health`.
 - `compose.yaml` : conteneur unique `ssdv2-webui` lié à `127.0.0.1:8800`, socket Docker,

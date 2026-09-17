@@ -142,6 +142,48 @@
         }
       }
     },
+    "/api/v1/apps/{app}/auth": {
+      "get": {
+        "tags": [
+          "apps"
+        ],
+        "summary": "Get App Auth",
+        "operationId": "get_app_auth_api_v1_apps__app__auth_get",
+        "parameters": [
+          {
+            "name": "app",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "App"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppAuthOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/auth/login": {
       "post": {
         "tags": [
@@ -305,6 +347,36 @@
   },
   "components": {
     "schemas": {
+      "AppAuthOut": {
+        "properties": {
+          "schema": {
+            "type": "integer",
+            "title": "Schema"
+          },
+          "app": {
+            "type": "string",
+            "title": "App"
+          },
+          "auth": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Auth"
+          }
+        },
+        "type": "object",
+        "required": [
+          "schema",
+          "app",
+          "auth"
+        ],
+        "title": "AppAuthOut"
+      },
       "AppDetailOut": {
         "properties": {
           "name": {

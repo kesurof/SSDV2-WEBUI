@@ -41,6 +41,7 @@ export const fr = {
       url: 'URL',
       image: 'Image',
       runtime: 'Exécution',
+      auth: 'Authentification',
       subdomain: 'Sous-domaine',
       port: 'Port',
       status: 'Statut ssddb',
@@ -56,6 +57,9 @@ export const fr = {
       container: 'Conteneur',
       lines: 'Lignes',
       empty: 'Aucune ligne de log.',
+      follow: 'Suivre en direct',
+      stopFollowing: 'Arrêter le suivi',
+      streamError: 'Connexion au flux interrompue.',
     },
     columns: {
       name: 'Application',

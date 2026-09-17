@@ -1,9 +1,31 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { AppLogsTab } from '@/features/apps/AppLogsTab'
+
+class FakeEventSource {
+  static instances: FakeEventSource[] = []
+
+  url: string
+  onmessage: ((event: MessageEvent) => void) | null = null
+  onerror: ((event: Event) => void) | null = null
+  closed = false
+
+  constructor(url: string) {
+    this.url = url
+    FakeEventSource.instances.push(this)
+  }
+
+  close() {
+    this.closed = true
+  }
+
+  emit(payload: unknown) {
+    this.onmessage?.(new MessageEvent('message', { data: JSON.stringify(payload) }))
+  }
+}
 
 function renderTab(app: string, containers: string[]) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -24,6 +46,7 @@ function jsonResponse(body: unknown): Response {
 describe('AppLogsTab', () => {
   afterEach(() => {
     vi.unstubAllGlobals()
+    FakeEventSource.instances = []
   })
 
   it('renders logs of the default container', async () => {
@@ -61,5 +84,27 @@ describe('AppLogsTab', () => {
       expect.stringContaining('container=db-sonarr'),
       expect.anything(),
     )
+  })
+
+  it('streams logs while following', async () => {
+    const user = userEvent.setup()
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => jsonResponse({ app: 'sonarr', container: 'sonarr', lines: [] })),
+    )
+    vi.stubGlobal('EventSource', FakeEventSource)
+
+    renderTab('sonarr', ['sonarr'])
+    await user.click(screen.getByRole('button', { name: 'Suivre en direct' }))
+
+    const source = FakeEventSource.instances[0]
+    expect(source.url).toContain('/api/v1/apps/sonarr/logs/stream?container=sonarr&lines=200')
+
+    act(() => source.emit({ line: 'ligne directe 1' }))
+    act(() => source.emit({ line: 'ligne directe 2' }))
+    expect(screen.getByText(/ligne directe 1/)).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Arrêter le suivi' }))
+    expect(source.closed).toBe(true)
   })
 })

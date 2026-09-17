@@ -34,10 +34,10 @@ const APP: AppDetail = {
   },
 }
 
-function renderDetail() {
+function renderDetail(auth: string | null = 'authelia') {
   return render(
     <MemoryRouter>
-      <AppDetailView app={APP} />
+      <AppDetailView app={APP} auth={auth} />
     </MemoryRouter>,
   )
 }
@@ -51,6 +51,7 @@ describe('AppDetailView', () => {
     expect(screen.getByRole('link', { name: 'https://sonarr.example.com' })).toBeInTheDocument()
     expect(screen.getByText('Conteneur en mauvaise santé')).toBeInTheDocument()
     expect(screen.getByText('8989')).toBeInTheDocument()
+    expect(screen.getByText('authelia')).toBeInTheDocument()
   })
 
   it('renders containers, volumes and dns tabs', async () => {

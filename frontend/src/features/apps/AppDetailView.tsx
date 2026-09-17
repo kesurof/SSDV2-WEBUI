@@ -86,7 +86,7 @@ function List({ values }: { values: string[] }) {
   )
 }
 
-export function AppDetailView({ app }: { app: AppDetail }) {
+export function AppDetailView({ app, auth }: { app: AppDetail; auth: string | null }) {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -151,6 +151,7 @@ export function AppDetailView({ app }: { app: AppDetail }) {
               )}
             </Field>
             <Field label={fr.apps.fields.image}>{app.image ?? '—'}</Field>
+            <Field label={fr.apps.fields.auth}>{auth ?? '—'}</Field>
             <Field label={fr.apps.fields.subdomain}>{app.ssddb?.subdomain ?? '—'}</Field>
             <Field label={fr.apps.fields.port}>{app.ssddb?.port ?? '—'}</Field>
           </div>

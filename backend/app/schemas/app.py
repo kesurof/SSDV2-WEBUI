@@ -1,6 +1,6 @@
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
 
 RuntimeStatus = Literal["running", "partial", "stopped", "unknown", "not_installed"]
 
@@ -47,3 +47,11 @@ class LogsOut(BaseModel):
     app: str
     container: str
     lines: list[str]
+
+
+class AppAuthOut(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    schema_version: int = Field(alias="schema")
+    app: str
+    auth: str | None

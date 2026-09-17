@@ -1,5 +1,6 @@
 import type { components } from '@/api/schema'
 
+export type AppAuth = components['schemas']['AppAuthOut']
 export type AppDetail = components['schemas']['AppDetailOut']
 export type AppState = components['schemas']['AppStateOut']
 export type Container = components['schemas']['ContainerOut']

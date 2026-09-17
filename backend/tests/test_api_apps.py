@@ -183,3 +183,106 @@ def test_app_logs_without_docker(auth_client, write_catalogue):
     app.dependency_overrides[get_docker_client] = lambda: None
 
     assert auth_client.get("/api/v1/apps/sonarr/logs").status_code == 503
+
+
+def test_app_logs_stream_requires_authentication(client):
+    assert client.get("/api/v1/apps/sonarr/logs/stream").status_code == 401
+
+
+def test_app_logs_stream(auth_client, write_catalogue, write_registry, fake_containers):
+    write_catalogue("sonarr - Gestion Séries\n")
+    write_registry("sonarr", "containers", ["sonarr"])
+
+    from tests.conftest import FakeContainer
+
+    fake_containers.append(FakeContainer(name="sonarr"))
+
+    with auth_client.stream("GET", "/api/v1/apps/sonarr/logs/stream") as response:
+        assert response.status_code == 200
+        assert response.headers["content-type"].startswith("text/event-stream")
+        body = "".join(response.iter_text())
+
+    assert 'data: {"ready": true}' in body
+    assert '{"line": "2026-09-17T10:00:01Z ligne 1 de sonarr"}' in body
+    assert '{"line": "2026-09-17T10:00:02Z ligne 2 de sonarr"}' in body
+
+
+def test_app_logs_stream_rejects_foreign_container(
+    auth_client, write_catalogue, write_registry, fake_containers
+):
+    write_catalogue("sonarr - Gestion Séries\n")
+    write_registry("sonarr", "containers", ["sonarr"])
+
+    from tests.conftest import FakeContainer
+
+    fake_containers.append(FakeContainer(name="sonarr"))
+
+    response = auth_client.get("/api/v1/apps/sonarr/logs/stream?container=traefik")
+
+    assert response.status_code == 404
+
+
+class FakeAuthRunner:
+    def __init__(self, payload=None, error=None) -> None:
+        self.payload = payload
+        self.error = error
+        self.calls: list[list[str]] = []
+
+    def run(self, args, timeout=None):
+        self.calls.append(args)
+        if self.error is not None:
+            raise self.error
+        return self.payload
+
+
+def test_app_auth_requires_authentication(client):
+    assert client.get("/api/v1/apps/sonarr/auth").status_code == 401
+
+
+def test_app_auth_returns_value(auth_client, write_catalogue):
+    from app.deps import get_ssdv2ctl
+    from app.main import app
+
+    write_catalogue("sonarr - Gestion Séries\n")
+    runner = FakeAuthRunner(payload={"schema": 1, "app": "sonarr", "auth": "authelia"})
+    app.dependency_overrides[get_ssdv2ctl] = lambda: runner
+
+    response = auth_client.get("/api/v1/apps/sonarr/auth")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["schema"] == 1
+    assert body["auth"] == "authelia"
+    assert runner.calls == [["auth", "get", "sonarr"]]
+
+
+def test_app_auth_unknown_app(auth_client, write_catalogue):
+    write_catalogue("wallos - Budget\n")
+
+    assert auth_client.get("/api/v1/apps/sonarr/auth").status_code == 404
+
+
+def test_app_auth_when_adapter_unavailable(auth_client, write_catalogue):
+    from app.adapters.ssdv2_cli import Ssdv2CtlError
+    from app.deps import get_ssdv2ctl
+    from app.main import app
+
+    write_catalogue("sonarr - Gestion Séries\n")
+    app.dependency_overrides[get_ssdv2ctl] = lambda: FakeAuthRunner(
+        error=Ssdv2CtlError("ssdv2ctl_unavailable", "ssdv2ctl introuvable")
+    )
+
+    assert auth_client.get("/api/v1/apps/sonarr/auth").status_code == 503
+
+
+def test_app_auth_when_command_fails(auth_client, write_catalogue):
+    from app.adapters.ssdv2_cli import Ssdv2CtlError
+    from app.deps import get_ssdv2ctl
+    from app.main import app
+
+    write_catalogue("sonarr - Gestion Séries\n")
+    app.dependency_overrides[get_ssdv2ctl] = lambda: FakeAuthRunner(
+        error=Ssdv2CtlError("account_read_failed", "lecture account.yml impossible")
+    )
+
+    assert auth_client.get("/api/v1/apps/sonarr/auth").status_code == 502

@@ -35,24 +35,24 @@ aucun push — ADR-0010 ; dernière révision `444b9681`).
   `GET /api/v1/diagnostics` renvoie les contrôles réels ; `GET /api/v1/apps` inchangé
   (183 applications, 8 installées).
 
-**Phase 2 — détail d'application, Diagnostics et dashboard**.
+**Phase 2 — lecture seule complète (dashboard, détail, logs, diagnostics)**.
 
-- Backend : `GET /api/v1/apps/{app}` (détail : `container_list`, `ssddb`, registres,
-  alertes ; 404 si app inconnue du catalogue), `GET /api/v1/apps/{app}/logs` (conteneur
-  rattaché uniquement, 1-1000 lignes, horodatage) et `GET /api/v1/system/summary` (hôte
-  via Docker info, branche/commit SSDV2 lus dans `.git`, compteurs d'applications) ;
-  54 tests pytest verts.
-- Frontend : route `/dashboard` (index), `/apps/:app` (onglets Vue générale, Conteneurs,
-  Logs avec choix du conteneur et du nombre de lignes, Volumes, Réseau/DNS, lien depuis la
-  table), `/diagnostics` (API ssdv2ctl), navigation étendue ; 14 tests Vitest verts.
+- Backend : `GET /api/v1/apps/{app}` (détail), `GET /api/v1/apps/{app}/auth` (via
+  `ssdv2ctl auth get`), `GET /api/v1/apps/{app}/logs` (conteneur rattaché, 1-1000 lignes)
+  et `/logs/stream` (SSE, suivi en direct), `GET /api/v1/system/summary` (hôte via Docker
+  info, branche/commit SSDV2 lus dans `.git`, compteurs) ; 62 tests pytest verts.
+- Frontend : `/dashboard` (index), `/apps/:app` (Vue générale avec authentification,
+  Conteneurs, Logs avec choix du conteneur, nombre de lignes et suivi en direct SSE,
+  Volumes, Réseau/DNS), `/diagnostics` ; 15 tests Vitest verts.
 - Preuves : CI verte, déploiement serveur validé (voir ci-dessous).
 
 ## Prochains chantiers pressentis
 
-1. Phase 2 : auth affichée dans le détail (via `ssdv2ctl auth get`), confort des logs
-   (recherche, pause, auto-scroll) — dépendra du SSE de la Phase 3.
-2. Phase 3 : jobs + SSE, puis mutations WebUI — dépend de la décision ouverte sur
+1. Phase 3 : jobs + SSE, puis mutations WebUI — dépend de la décision ouverte sur
    l'exécution des mutations depuis le conteneur (runtime ansible/jq, ADR-0014).
+   Les actions `start`/`stop`/`restart` et `diagnostics` sont déjà exécutables dans le
+   conteneur ; `install`/`remove`/`reinstall`/`recreate` attendent la décision (vault,
+   ansible).
 
 ## Points d'attention détectés
 
