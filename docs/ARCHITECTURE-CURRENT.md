@@ -18,15 +18,18 @@
   (crée un job, 202), `GET /api/v1/jobs` et `/api/v1/jobs/{id}` (file de jobs, état en
   SQLite), `GET /api/v1/jobs/{id}/events` (SSE) et `POST /api/v1/jobs/{id}/cancel`,
   `GET /api/v1/system/summary` (hôte via Docker info, branche/commit SSDV2, compteurs),
-  `GET /api/v1/diagnostics` via l'adaptateur `ssdv2ctl` (`app/adapters/ssdv2_cli.py`,
-  commandes allowlistées, `shell=False`, `SSDV2CTL_PATH`/`SSDV2CTL_TIMEOUT`).
+  `GET /api/v1/diagnostics` et `POST /api/v1/diagnostics/rebuild-registries|
+  cleanup-orphan-containers|cleanup-dangling-volumes` (jobs de réparation) ; le tout via
+  l'adaptateur `ssdv2ctl` (`app/adapters/ssdv2_cli.py`, commandes allowlistées,
+  `shell=False`, `SSDV2CTL_PATH`/`SSDV2CTL_TIMEOUT`).
 - `frontend/` : React 19 + Vite 8 + TypeScript 5.9 + Tailwind 4 + shadcn/ui +
   TanStack Query v5 + TanStack Table v9 + React Router v7 ; login, layout, dashboard,
   table des applications (recherche, filtres, badges d'état, alertes, bandeau mode
   dégradé), page de détail d'application (vue générale avec authentification, conteneurs,
   logs avec suivi SSE, volumes, réseau/DNS, actions installer/démarrer/arrêter/redémarrer/
   recréer/réinstaller/supprimer avec confirmations graduées), page Jobs (liste + détail
-  avec événements SSE), page Diagnostics.
+  avec événements SSE), page Diagnostics (contrôles + actions de réparation avec
+  confirmation forte).
 - `Dockerfile` : multi-stage Node 22 → `python:3.13-slim`, entrypoint PUID/PGID
   (`setpriv --init-groups`, ADR-0017), frontend compilé servi par FastAPI, healthcheck
   `/health`, runtime SSDV2 : ansible (`ansible-core` 2.21.0, collections
@@ -62,7 +65,7 @@
 - Aucune sauvegarde, page Docker/réseau, command palette, thème, aucun confort de logs
   (recherche, pause).
 - Aucune exposition publique (Traefik), aucune image publiée sur GHCR, aucun multiarch.
-- Aucune migration de schéma (SQLAlchemy `create_all` uniquement — ADR-0008).
+- Aucune migration de schéma hors micro-migrations additives (ADR-0016).
 
 ## Contexte externe (non vérifié par ce dépôt)
 

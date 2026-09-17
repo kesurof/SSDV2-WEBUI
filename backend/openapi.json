@@ -663,6 +663,69 @@
         }
       }
     },
+    "/api/v1/diagnostics/rebuild-registries": {
+      "post": {
+        "tags": [
+          "diagnostics"
+        ],
+        "summary": "Rebuild Registries",
+        "operationId": "rebuild_registries_api_v1_diagnostics_rebuild_registries_post",
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/diagnostics/cleanup-orphan-containers": {
+      "post": {
+        "tags": [
+          "diagnostics"
+        ],
+        "summary": "Cleanup Orphan Containers",
+        "operationId": "cleanup_orphan_containers_api_v1_diagnostics_cleanup_orphan_containers_post",
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/diagnostics/cleanup-dangling-volumes": {
+      "post": {
+        "tags": [
+          "diagnostics"
+        ],
+        "summary": "Cleanup Dangling Volumes",
+        "operationId": "cleanup_dangling_volumes_api_v1_diagnostics_cleanup_dangling_volumes_post",
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/health": {
       "get": {
         "tags": [

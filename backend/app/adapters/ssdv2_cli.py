@@ -20,6 +20,9 @@ ALLOWED_COMMANDS = {
     ("auth", "get"),
     ("auth", "set"),
     ("diagnostics", "run"),
+    ("diagnostics", "rebuild-registries"),
+    ("diagnostics", "cleanup-orphan-containers"),
+    ("diagnostics", "cleanup-dangling-volumes"),
 }
 ARGUMENT_PATTERN = re.compile(r"^[a-z0-9][a-z0-9._-]*$")
 

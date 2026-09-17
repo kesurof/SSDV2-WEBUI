@@ -1,5 +1,6 @@
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { DiagnosticsActions } from '@/features/diagnostics/DiagnosticsActions'
 import { useDiagnostics } from '@/features/system/useSystem'
 import { fr } from '@/i18n/fr'
 import type { Diagnostics } from '@/api/types'
@@ -84,5 +85,10 @@ export function DiagnosticsPage() {
     )
   }
 
-  return <DiagnosticsView checks={diagnostics.data.checks} warnings={diagnostics.data.warnings} />
+  return (
+    <div className="space-y-4">
+      <DiagnosticsView checks={diagnostics.data.checks} warnings={diagnostics.data.warnings} />
+      <DiagnosticsActions />
+    </div>
+  )
 }

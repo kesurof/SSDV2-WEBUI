@@ -22,6 +22,12 @@ JOB_TYPE_ACTIONS = {
     "app_recreate": "recreate",
 }
 
+DIAGNOSTICS_JOBS = {
+    "diagnostics_rebuild_registries": "rebuild-registries",
+    "diagnostics_cleanup_containers": "cleanup-orphan-containers",
+    "diagnostics_cleanup_volumes": "cleanup-dangling-volumes",
+}
+
 ACTION_TIMEOUTS = {
     "app_start": 600,
     "app_stop": 600,
@@ -30,12 +36,17 @@ ACTION_TIMEOUTS = {
     "app_remove": 900,
     "app_reinstall": 1800,
     "app_recreate": 1800,
+    "diagnostics_rebuild_registries": 900,
+    "diagnostics_cleanup_containers": 600,
+    "diagnostics_cleanup_volumes": 600,
 }
 
 DEFAULT_TIMEOUT = 600
 
 
 def build_job_args(job_type: str, target: str, params: dict) -> list[str]:
+    if job_type in DIAGNOSTICS_JOBS:
+        return ["diagnostics", DIAGNOSTICS_JOBS[job_type]]
     if job_type == "app_install":
         args = ["app", "install", target, "--subdomain", str(params.get("subdomain") or target)]
         if params.get("auth"):
@@ -50,6 +61,13 @@ def build_job_args(job_type: str, target: str, params: dict) -> list[str]:
     if action is None:
         raise Ssdv2CtlError("unknown_job_type", f"type de job inconnu: {job_type}")
     return ["app", action, target]
+
+
+DIAGNOSTICS_JOB_TYPES = {
+    "rebuild-registries": "diagnostics_rebuild_registries",
+    "cleanup-orphan-containers": "diagnostics_cleanup_containers",
+    "cleanup-dangling-volumes": "diagnostics_cleanup_volumes",
+}
 
 
 class JobManager:

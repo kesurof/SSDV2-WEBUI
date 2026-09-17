@@ -42,6 +42,21 @@ def test_build_job_args_actions() -> None:
     assert build_job_args("app_recreate", "wallos", {}) == ["app", "recreate", "wallos"]
 
 
+def test_build_job_args_diagnostics() -> None:
+    assert build_job_args("diagnostics_rebuild_registries", "diagnostics", {}) == [
+        "diagnostics",
+        "rebuild-registries",
+    ]
+    assert build_job_args("diagnostics_cleanup_containers", "diagnostics", {}) == [
+        "diagnostics",
+        "cleanup-orphan-containers",
+    ]
+    assert build_job_args("diagnostics_cleanup_volumes", "diagnostics", {}) == [
+        "diagnostics",
+        "cleanup-dangling-volumes",
+    ]
+
+
 def test_build_job_args_unknown() -> None:
     with pytest.raises(Ssdv2CtlError) as error:
         build_job_args("app_unknown", "wallos", {})

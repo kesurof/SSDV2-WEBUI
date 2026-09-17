@@ -97,6 +97,17 @@ export const fr = {
     orphanContainers: 'Conteneurs orphelins (label sans application en base)',
     danglingVolumes: 'Volumes anonymes orphelins',
     none: 'Aucun',
+    actions: 'Actions de réparation',
+    rebuildRegistries: 'Régénérer les registres',
+    cleanupContainers: 'Supprimer les conteneurs orphelins',
+    cleanupVolumes: 'Supprimer les volumes orphelins',
+    rebuildConfirm:
+      'Régénérer les registres de conteneurs manquants à partir du label ssdv2.app ?',
+    cleanupConfirm:
+      'Cette action supprime définitivement {resource}. Tapez « SUPPRIMER » pour confirmer.',
+    resourceContainers: 'les conteneurs orphelins détectés',
+    resourceVolumes: 'les volumes anonymes orphelins détectés',
+    typeToConfirm: 'Tapez « SUPPRIMER » pour confirmer',
   },
   jobs: {
     title: 'Jobs',
