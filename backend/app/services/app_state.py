@@ -125,6 +125,9 @@ def build_app_detail(
                 image=container.image or None,
                 state=container.state,
                 health=container.health,
+                started_at=container.started_at,
+                created_at=container.created_at,
+                image_id=container.image_id,
             )
             for container in sorted(containers, key=lambda item: item.name)
         ],

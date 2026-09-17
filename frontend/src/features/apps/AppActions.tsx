@@ -1,4 +1,13 @@
 import { useState } from 'react'
+import {
+  ExternalLink,
+  MoreVertical,
+  Play,
+  RotateCw,
+  Save,
+  Square,
+  Download,
+} from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
@@ -12,7 +21,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -83,7 +92,8 @@ export function AppActions({ app }: { app: AppDetail }) {
     return (
       <>
         <div className="flex items-center gap-2">
-          <Button size="sm" disabled={busy} onClick={() => setPending('install')}>
+          <Button size="lg" disabled={busy} onClick={() => setPending('install')}>
+            <Download className="size-4" aria-hidden />
             {fr.actions.install}
           </Button>
         </div>
@@ -132,39 +142,62 @@ export function AppActions({ app }: { app: AppDetail }) {
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <Button
-        size="sm"
-        variant="outline"
-        disabled={running || busy}
-        onClick={() => setPending('start')}
-      >
-        {fr.actions.start}
-      </Button>
-      <Button
-        size="sm"
-        variant="outline"
-        disabled={!running || busy}
-        onClick={() => setPending('stop')}
-      >
-        {fr.actions.stop}
-      </Button>
-      <Button size="sm" variant="outline" disabled={busy} onClick={() => setPending('restart')}>
+    <div className="flex flex-wrap items-center gap-2">
+      {app.url && (
+        <a
+          href={app.url}
+          target="_blank"
+          rel="noreferrer"
+          className={buttonVariants({ variant: running ? 'default' : 'outline', size: 'lg' })}
+        >
+          <ExternalLink className="size-4" aria-hidden />
+          {fr.apps.detail.openApp}
+        </a>
+      )}
+      {running ? (
+        <Button
+          size="lg"
+          variant="destructive"
+          disabled={busy}
+          onClick={() => setPending('stop')}
+        >
+          <Square className="size-4" aria-hidden />
+          {fr.actions.stop}
+        </Button>
+      ) : (
+        <Button size="lg" disabled={busy} onClick={() => setPending('start')}>
+          <Play className="size-4" aria-hidden />
+          {fr.actions.start}
+        </Button>
+      )}
+      <Button size="lg" variant="outline" disabled={busy} onClick={() => setPending('restart')}>
+        <RotateCw className="size-4" aria-hidden />
         {fr.actions.restart}
       </Button>
+      <Button size="lg" variant="outline" disabled={busy} onClick={() => setPending('backup')}>
+        <Save className="size-4" aria-hidden />
+        {fr.actions.backup}
+      </Button>
       <DropdownMenu>
-        <DropdownMenuTrigger render={<Button size="sm" variant="outline" disabled={busy} />}>
-          {fr.actions.more}
+        <DropdownMenuTrigger
+          render={
+            <Button
+              size="lg"
+              variant="outline"
+              disabled={busy}
+              aria-label={fr.actions.more}
+              title={fr.actions.more}
+            />
+          }
+        >
+          <MoreVertical className="size-4" aria-hidden />
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start">
+        <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={() => setPending('recreate')}>
             {fr.actions.recreate}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setPending('reinstall')}>
             {fr.actions.reinstall}
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setPending('backup')}>
-            {fr.actions.backup}
           </DropdownMenuItem>
           <DropdownMenuItem
             variant="destructive"

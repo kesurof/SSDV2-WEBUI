@@ -259,6 +259,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/apps/{app}/storage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get App Storage */
+        get: operations["get_app_storage_api_v1_apps__app__storage_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/apps/{app}/auth": {
         parameters: {
             query?: never;
@@ -941,6 +958,25 @@ export interface components {
             /** Containers */
             containers: components["schemas"]["ContainerStatsOut"][];
         };
+        /** AppStorageOut */
+        AppStorageOut: {
+            /**
+             * Schema Version
+             * @default 1
+             */
+            schema_version: number;
+            /** App */
+            app: string;
+            /** Volumes */
+            volumes: components["schemas"]["VolumeUsageOut"][];
+            /** Total Size Bytes */
+            total_size_bytes?: number | null;
+            /**
+             * Warnings
+             * @default []
+             */
+            warnings: string[];
+        };
         /** AuditEventOut */
         AuditEventOut: {
             /** Id */
@@ -1047,6 +1083,12 @@ export interface components {
             state: string;
             /** Health */
             health: string | null;
+            /** Started At */
+            started_at?: string | null;
+            /** Created At */
+            created_at?: string | null;
+            /** Image Id */
+            image_id?: string | null;
         };
         /** ContainerStatsOut */
         ContainerStatsOut: {
@@ -1493,6 +1535,15 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /** VolumeUsageOut */
+        VolumeUsageOut: {
+            /** Name */
+            name: string;
+            /** Size Bytes */
+            size_bytes?: number | null;
+            /** Ref Count */
+            ref_count?: number | null;
         };
     };
     responses: never;
@@ -1961,6 +2012,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AppEnvOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_app_storage_api_v1_apps__app__storage_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                app: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppStorageOut"];
                 };
             };
             /** @description Validation Error */
@@ -2708,7 +2790,9 @@ export interface operations {
     };
     get_updates_api_v1_updates_get: {
         parameters: {
-            query?: never;
+            query?: {
+                refresh?: boolean;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -2722,6 +2806,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["UpdatesOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

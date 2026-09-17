@@ -7,6 +7,7 @@ import type {
   AppHistory,
   AppState,
   AppStats,
+  AppStorage,
   Diagnostics,
   Health,
   HostMetrics,
@@ -55,6 +56,14 @@ export function useAppEnv(app: string) {
   })
 }
 
+export function useAppStorage(app: string) {
+  return useQuery<AppStorage>({
+    queryKey: ['apps', app, 'storage'],
+    queryFn: () => apiFetch<AppStorage>(`/apps/${app}/storage`),
+    refetchInterval: 120_000,
+  })
+}
+
 export function useHealth() {
   return useQuery<Health>({
     queryKey: ['health'],
@@ -82,7 +91,7 @@ export function useMetrics() {
 export function useUpdates() {
   return useQuery<Updates>({
     queryKey: ['updates'],
-    queryFn: () => apiFetch<Updates>('/updates'),
+    queryFn: () => apiFetch<Updates>('/updates?refresh=true'),
     refetchInterval: 15 * 60_000,
   })
 }

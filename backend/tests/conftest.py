@@ -127,6 +127,13 @@ class FakeDockerClient:
         self.containers = FakeContainers(containers)
         self.images = FakeImages()
 
+    def df(self) -> dict:
+        return {
+            "Volumes": [
+                {"Name": "sonarr-config", "UsageData": {"Size": 22 * 1024 * 1024, "RefCount": 1}},
+            ]
+        }
+
     def info(self) -> dict:
         return {
             "Name": "test-host",

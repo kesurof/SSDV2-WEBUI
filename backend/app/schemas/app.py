@@ -28,6 +28,9 @@ class ContainerOut(BaseModel):
     image: str | None
     state: str
     health: str | None
+    started_at: str | None = None
+    created_at: str | None = None
+    image_id: str | None = None
 
 
 class SsddbAppOut(BaseModel):
@@ -109,3 +112,17 @@ class AppEnvOut(BaseModel):
     schema_version: int = 1
     app: str
     variables: list[AppEnvVarOut]
+
+
+class VolumeUsageOut(BaseModel):
+    name: str
+    size_bytes: int | None = None
+    ref_count: int | None = None
+
+
+class AppStorageOut(BaseModel):
+    schema_version: int = 1
+    app: str
+    volumes: list[VolumeUsageOut]
+    total_size_bytes: int | None = None
+    warnings: list[str] = []

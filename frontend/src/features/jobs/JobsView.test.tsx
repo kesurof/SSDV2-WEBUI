@@ -25,10 +25,10 @@ describe('JobsView', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByRole('link', { name: '#3' })).toHaveAttribute('href', '/jobs/3')
-    expect(screen.getByText('Redémarrage')).toBeInTheDocument()
-    expect(screen.getByText('sonarr')).toBeInTheDocument()
-    expect(screen.getByText('Succès')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /#3/ })).toHaveAttribute('href', '/jobs/3')
+    expect(screen.getByText(/Redémarrage/)).toBeInTheDocument()
+    expect(screen.getByText(/sonarr/)).toBeInTheDocument()
+    expect(screen.getAllByText('Succès').length).toBeGreaterThan(0)
   })
 
   it('renders an empty message', () => {

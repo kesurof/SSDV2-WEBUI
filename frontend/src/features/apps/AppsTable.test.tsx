@@ -1,9 +1,10 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
 
 import { AppsTable } from '@/features/apps/AppsTable'
-import type { AppState } from '@/api/types'
+import type { AppState, UpdateEntry } from '@/api/types'
 
 const APPS: AppState[] = [
   {
@@ -33,11 +34,14 @@ const APPS: AppState[] = [
 ]
 
 describe('AppsTable', () => {
-  function renderTable(apps: AppState[]) {
+  function renderTable(apps: AppState[], updatesByApp?: Record<string, UpdateEntry>) {
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     return render(
-      <MemoryRouter>
-        <AppsTable apps={apps} />
-      </MemoryRouter>,
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <AppsTable apps={apps} updatesByApp={updatesByApp} />
+        </MemoryRouter>
+      </QueryClientProvider>,
     )
   }
 
@@ -60,5 +64,22 @@ describe('AppsTable', () => {
   it('shows an empty message', () => {
     renderTable([])
     expect(screen.getByText('Aucune application ne correspond à la recherche.')).toBeInTheDocument()
+  })
+
+  it('shows quick actions and update state', () => {
+    renderTable(APPS, {
+      sonarr: {
+        app: 'sonarr',
+        image: 'linuxserver/sonarr:latest',
+        current_digest: 'aaaa11112222',
+        available_digest: 'bbbb33334444',
+        status: 'available',
+      },
+    })
+
+    expect(screen.getByRole('button', { name: 'Arrêter' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Redémarrer' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Mettre à jour sonarr' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Installer' })).not.toBeInTheDocument()
   })
 })

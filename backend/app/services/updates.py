@@ -6,6 +6,7 @@ from app.schemas.app import AppStateOut
 from app.schemas.updates import UpdateEntry, UpdatesOut
 
 CACHE_TTL = timedelta(minutes=30)
+MIN_REFRESH_INTERVAL = timedelta(seconds=60)
 
 _cache: tuple[datetime, list[UpdateEntry]] | None = None
 
@@ -42,13 +43,16 @@ def build_updates(
 ) -> UpdatesOut:
     reference = now or datetime.now(UTC).replace(tzinfo=None)
     global _cache
-    if _cache is not None and not force and reference - _cache[0] < CACHE_TTL:
-        entries = _cache[1]
-        return UpdatesOut(
-            checked_at=_cache[0],
-            entries=entries,
-            available=sum(1 for entry in entries if entry.status == "available"),
-        )
+    if _cache is not None:
+        age = reference - _cache[0]
+        too_soon = age < MIN_REFRESH_INTERVAL
+        if (not force and age < CACHE_TTL) or (force and too_soon):
+            entries = _cache[1]
+            return UpdatesOut(
+                checked_at=_cache[0],
+                entries=entries,
+                available=sum(1 for entry in entries if entry.status == "available"),
+            )
 
     entries: list[UpdateEntry] = []
     for state in states:

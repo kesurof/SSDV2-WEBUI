@@ -16,6 +16,7 @@ from app.schemas.app import (
     AppRemoveRequest,
     AppStateOut,
     AppStatsOut,
+    AppStorageOut,
     LogsOut,
 )
 from app.schemas.job import JobOut
@@ -23,6 +24,7 @@ from app.services.app_history import build_app_history
 from app.services.app_overview import load_app_states
 from app.services.app_state import WARNING_SSDDB_UNAVAILABLE, build_app_detail
 from app.services.app_stats import filter_env, read_container_stats
+from app.services.app_storage import build_app_storage, read_volume_usage
 from app.services.catalogue import read_catalogue
 from app.services.docker_state import (
     collect_containers,
@@ -318,6 +320,24 @@ def get_app_env(
             seen.add(variable.name)
             variables.append(variable)
     return AppEnvOut(app=app, variables=sorted(variables, key=lambda item: item.name))
+
+
+@router.get("/{app}/storage", response_model=AppStorageOut)
+def get_app_storage(
+    app: str,
+    settings: SettingsDep,
+    docker_client: DockerDep,
+    _user: CurrentUser,
+) -> AppStorageOut:
+    entries, catalogue_error = read_catalogue(settings.catalogue_file)
+    if catalogue_error:
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, catalogue_error)
+    if not any(item.name == app for item in entries):
+        raise HTTPException(status.HTTP_404_NOT_FOUND, f"application inconnue: {app}")
+    registries = read_registries(settings.registries_dir)
+    registry = registries.get(app)
+    usage = read_volume_usage(docker_client)
+    return build_app_storage(app, registry.volumes if registry else [], usage)
 
 
 @router.get("/{app}/auth", response_model=AppAuthOut)

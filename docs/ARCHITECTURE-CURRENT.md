@@ -47,9 +47,14 @@
   mode dégradé), page de détail d'application (cartes Informations, Accès et réseau,
   Compagnons, Ressources, Sauvegardes, Déploiement, Liens ; onglets Conteneurs, Logs SSE,
   Volumes, Réseau/DNS, Variables, Historique ; actions avec confirmations graduées),
-  pages Jobs (liste + détail SSE), Notifications, Audit, **Santé**, Sauvegardes,
-  **Mises à jour**, Authentification (masse), Paramètres (lecture seule + sécurité),
-  Diagnostics (réparations) et **Historique par application** (agrégé, export CSV).
+  pages Jobs (**deux colonnes** : liste filtrable + panneau de détail avec événements SSE,
+  relance des jobs d'application), Notifications, Audit, **Santé**, Sauvegardes,
+  **Mises à jour** (rafraîchissement forcé au chargement et via le bouton), Authentification
+  (masse), Paramètres (lecture seule + sécurité), Diagnostics (réparations) et
+  **Historique par application** (agrégé, export CSV) ; détail d'application : actions
+  en en-tête (Ouvrir ↗ conditionnel, Démarrer/Arrêter, Redémarrer, Sauvegarder, menu),
+  cartes Informations (avec « Depuis »), Stockage, Déploiement (faits Docker + Recréer) ;
+  table des applications : colonnes « Actions rapides » et « Mise à jour ».
 - `Dockerfile` : multi-stage Node 22 → `python:3.13-slim`, entrypoint PUID/PGID
   (`setpriv --init-groups`, ADR-0017), frontend compilé servi par FastAPI, healthcheck
   `/health`, runtime SSDV2 : ansible (`ansible-core` 2.21.0, collections

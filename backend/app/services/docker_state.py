@@ -11,6 +11,9 @@ class ContainerInfo:
     state: str
     health: str | None
     app_label: str | None
+    started_at: str | None = None
+    created_at: str | None = None
+    image_id: str | None = None
 
 
 @dataclass(frozen=True)
@@ -72,6 +75,9 @@ def collect_containers(client: docker.DockerClient | None) -> DockerSnapshot:
                     state=container.status,
                     health=health,
                     app_label=container.labels.get("ssdv2.app"),
+                    started_at=state.get("StartedAt"),
+                    created_at=container.attrs.get("Created"),
+                    image_id=container.attrs.get("Image"),
                 )
             )
         return DockerSnapshot(containers, None)

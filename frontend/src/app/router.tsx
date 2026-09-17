@@ -11,7 +11,6 @@ import { LoginPage } from '@/features/auth/LoginPage'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
 import { DiagnosticsPage } from '@/features/diagnostics/DiagnosticsPage'
 import { HealthPage } from '@/features/health/HealthPage'
-import { JobDetailPage } from '@/features/jobs/JobDetailPage'
 import { JobsPage } from '@/features/jobs/JobsPage'
 import { NotificationsPage } from '@/features/notifications/NotificationsPage'
 import { SettingsPage } from '@/features/settings/SettingsPage'
@@ -31,7 +30,7 @@ export const router = createBrowserRouter([
       { path: 'apps/:app', element: <AppDetailPage /> },
       { path: 'apps/:app/history', element: <AppHistoryPage /> },
       { path: 'jobs', element: <JobsPage /> },
-      { path: 'jobs/:id', element: <JobDetailPage /> },
+      { path: 'jobs/:id', element: <JobsPage /> },
       { path: 'notifications', element: <NotificationsPage /> },
       { path: 'audit', element: <AuditPage /> },
       { path: 'health', element: <HealthPage /> },

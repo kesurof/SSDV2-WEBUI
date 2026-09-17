@@ -87,3 +87,29 @@ def test_updates_endpoint(auth_client):
     body = response.json()
     assert body["schema_version"] == 1
     assert isinstance(body["entries"], list)
+
+
+def test_build_updates_force_respects_min_interval(monkeypatch):
+    monkeypatch.setattr(updates_service, "_cache", None)
+    states = [_state("a", "repo/a:latest")]
+    client = FakeClient(
+        FakeImages(
+            local={"repo/a:latest": "sha256:aaa"},
+            remote={"repo/a:latest": "sha256:aaa"},
+        )
+    )
+    first = updates_service.build_updates(states, client)
+
+    calls = {"count": 0}
+    original = client.images.get_registry_data
+
+    def counting_registry(reference: str):
+        calls["count"] += 1
+        return original(reference)
+
+    client.images.get_registry_data = counting_registry  # type: ignore[method-assign]
+
+    # Rafraîchissement forcé trop rapproché : le cache est renvoyé sans appel registre.
+    second = updates_service.build_updates(states, client, force=True)
+    assert calls["count"] == 0
+    assert second.checked_at == first.checked_at

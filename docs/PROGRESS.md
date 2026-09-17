@@ -10,6 +10,23 @@ Aucun.
 
 ## Derniers chantiers terminés (2026-09-17)
 
+**Confort d'exploitation : actions, stockage, déploiement, jobs et mises à jour**.
+
+- Détail d'application : actions en en-tête (plus grosses, colorées, « Ouvrir ↗ »
+  uniquement avec URL), carte **Stockage** (volumes + tailles, `docker system df` avec
+  cache 60 s via `GET /apps/{app}/storage`), « Depuis » (uptime) dans Informations,
+  carte **Déploiement** alimentée par les faits Docker (`started_at`, image, Image ID)
+  avec bouton Recréer.
+- Mises à jour : `?refresh=true` force la vérification registre (garde-fou serveur 60 s) ;
+  la vue rafraîchit au chargement et le bouton fonctionne.
+- Jobs : vue en deux colonnes (liste filtrable + panneau de détail avec événements SSE,
+  durée, code de sortie et relance des jobs d'application) ; `JobDetailPage` absorbé.
+- Table des applications : colonnes « Actions rapides » (démarrer/arrêter/redémarrer) et
+  « Mise à jour » (bouton si disponible, sinon « À jour »/« — »).
+- Preuves : 147 tests pytest et 55 tests Vitest verts, lint/typecheck/build verts ;
+  image locale vérifiée sous Docker Desktop (login, `/updates?refresh=true`, bundle à jour).
+
+
 **Refonte UI (maquette finale) et pages d'exploitation (ADR-0022)**.
 
 - Design system : tokens clair/sombre (palette de la maquette), icônes Lucide, shell

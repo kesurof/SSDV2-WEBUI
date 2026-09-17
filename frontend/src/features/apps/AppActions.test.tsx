@@ -59,12 +59,27 @@ describe('AppActions', () => {
     vi.unstubAllGlobals()
   })
 
-  it('disables actions according to the application state', () => {
-    renderActions(makeApp({ runtime_status: 'stopped' }))
+  it('shows the relevant power action according to the application state', () => {
+    const { unmount } = renderActions(makeApp({ runtime_status: 'stopped' }))
 
     expect(screen.getByRole('button', { name: 'Démarrer' })).toBeEnabled()
-    expect(screen.getByRole('button', { name: 'Arrêter' })).toBeDisabled()
+    expect(screen.queryByRole('button', { name: 'Arrêter' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Redémarrer' })).toBeEnabled()
+    unmount()
+
+    renderActions(makeApp({ runtime_status: 'running' }))
+    expect(screen.getByRole('button', { name: 'Arrêter' })).toBeEnabled()
+    expect(screen.queryByRole('button', { name: 'Démarrer' })).not.toBeInTheDocument()
+  })
+
+  it("affiche le bouton Ouvrir uniquement avec une URL", () => {
+    const { unmount } = renderActions(makeApp())
+    expect(screen.queryByRole('link', { name: /Ouvrir/ })).not.toBeInTheDocument()
+    unmount()
+
+    renderActions(makeApp({ url: 'https://sonarr.exemple.tld' }))
+    const link = screen.getByRole('link', { name: /Ouvrir/ })
+    expect(link).toHaveAttribute('href', 'https://sonarr.exemple.tld')
   })
 
   it('offers only install for a non-installed application', () => {
@@ -141,14 +156,13 @@ describe('AppActions', () => {
     )
   })
 
-  it('launches a backup from the actions menu', async () => {
+  it('launches a backup from the visible action', async () => {
     const user = userEvent.setup()
     const fetchMock = vi.fn(async () => jobResponse())
     vi.stubGlobal('fetch', fetchMock)
 
     renderActions(makeApp())
-    await user.click(screen.getByRole('button', { name: 'Plus d’actions' }))
-    await user.click(await screen.findByRole('menuitem', { name: 'Sauvegarder' }))
+    await user.click(screen.getByRole('button', { name: 'Sauvegarder' }))
     await user.click(screen.getByRole('button', { name: 'Confirmer' }))
 
     expect(fetchMock).toHaveBeenCalledWith(

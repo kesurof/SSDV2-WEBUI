@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import type { ReactNode } from 'react'
 import {
   Boxes,
   Cpu,
@@ -6,6 +7,7 @@ import {
   Globe,
   Link2,
   MemoryStick,
+  Rocket,
   TriangleAlert,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
@@ -15,6 +17,7 @@ import type { StatusTone } from '@/components/app/status-pill'
 import { KeyValueList } from '@/components/app/key-value-list'
 import { ProgressBar } from '@/components/app/progress-bar'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
   Table,
@@ -25,7 +28,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import type { AppDetail, AppHistoryEvent, AppStats, Backup, Container } from '@/api/types'
+import type { AppDetail, AppHistoryEvent, AppStats, AppStorage, Backup, Container } from '@/api/types'
 import { AppHistoryView } from '@/features/apps/AppHistoryView'
 import type { HistoryFilter } from '@/features/apps/AppHistoryView'
 import { AppLogsTab } from '@/features/apps/AppLogsTab'
@@ -33,6 +36,26 @@ import { StatusBadge } from '@/features/apps/StatusBadge'
 import { jobTypeLabel } from '@/features/jobs/JobsView'
 import { fr } from '@/i18n/fr'
 import { formatBytes, formatDate, formatPercent } from '@/lib/format'
+
+function formatUptime(startedAt: string | null | undefined): string {
+  if (!startedAt) {
+    return '—'
+  }
+  const start = new Date(startedAt).getTime()
+  if (Number.isNaN(start)) {
+    return '—'
+  }
+  const minutes = Math.max(0, Math.floor((Date.now() - start) / 60_000))
+  const days = Math.floor(minutes / 1440)
+  const hours = Math.floor((minutes % 1440) / 60)
+  if (days > 0) {
+    return `${days} j ${hours} h`
+  }
+  if (hours > 0) {
+    return `${hours} h ${minutes % 60} min`
+  }
+  return `${minutes} min`
+}
 
 function warningLabel(code: string): string {
   return fr.warnings[code as keyof typeof fr.warnings] ?? code
@@ -124,6 +147,9 @@ export function AppDetailView({
   backups,
   history,
   env,
+  storage,
+  actions,
+  onRecreate,
 }: {
   app: AppDetail
   auth: string | null
@@ -131,12 +157,18 @@ export function AppDetailView({
   backups?: Backup[]
   history?: AppHistoryEvent[]
   env?: Array<{ name: string; value: string }>
+  storage?: AppStorage
+  actions?: ReactNode
+  onRecreate?: () => void
 }) {
   const [historyFilter, setHistoryFilter] = useState<HistoryFilter>('all')
   const companions = app.container_list.filter((container) => container.name !== app.name)
   const appBackups = (backups ?? []).filter((backup) => backup.app === app.name)
   const lastBackup = appBackups[0]
   const lastJob = (history ?? []).find((event) => event.kind === 'job')
+  const mainContainer =
+    app.container_list.find((container) => container.name === app.name) ?? app.container_list[0]
+  const lastDeployment = mainContainer?.started_at ?? mainContainer?.created_at ?? null
   const envVariables = stats?.containers ?? []
 
   const registryUrl = app.image?.includes('ghcr.io')
@@ -147,22 +179,25 @@ export function AppDetailView({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="grid size-14 place-items-center rounded-2xl bg-primary text-primary-foreground">
-          <Boxes className="size-7" aria-hidden />
-        </div>
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight">{app.name}</h1>
-            <StatusBadge status={app.runtime_status} />
-            {app.warnings.length > 0 && (
-              <Badge variant="outline" className="border-warning text-warning">
-                <TriangleAlert className="size-3" aria-hidden /> {app.warnings.length}
-              </Badge>
-            )}
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="grid size-14 place-items-center rounded-2xl bg-primary text-primary-foreground">
+            <Boxes className="size-7" aria-hidden />
           </div>
-          <p className="mt-1 text-sm text-muted-foreground">{app.description}</p>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-2xl font-bold tracking-tight">{app.name}</h1>
+              <StatusBadge status={app.runtime_status} />
+              {app.warnings.length > 0 && (
+                <Badge variant="outline" className="border-warning text-warning">
+                  <TriangleAlert className="size-3" aria-hidden /> {app.warnings.length}
+                </Badge>
+              )}
+            </div>
+            <p className="mt-1 text-sm text-muted-foreground">{app.description}</p>
+          </div>
         </div>
+        {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
       </div>
 
       {app.warnings.length > 0 && (
@@ -208,6 +243,7 @@ export function AppDetailView({
                     ),
                   },
                   { label: fr.apps.fields.subdomain, value: app.ssddb?.subdomain ?? '—' },
+                  { label: fr.apps.detail.since, value: formatUptime(lastDeployment) },
                 ]}
               />
             </Card>
@@ -307,18 +343,56 @@ export function AppDetailView({
               )}
             </Card>
 
-            <Card title={fr.apps.detail.deployment}>
-              {lastJob ? (
-                <KeyValueList
-                  items={[
-                    { label: fr.apps.detail.lastDeploy, value: formatDate(lastJob.at) },
-                    { label: fr.apps.detail.result, value: <StatusPill tone={lastJob.result === 'success' ? 'ok' : 'err'}>{lastJob.result}</StatusPill> },
-                    { label: fr.apps.detail.type, value: jobTypeLabel(lastJob.label) },
-                  ]}
-                />
+            <Card title={fr.apps.tabs.volumes}>
+              {!storage || storage.volumes.length === 0 ? (
+                <p className="text-sm text-muted-foreground">{fr.apps.emptyList}</p>
               ) : (
-                <p className="text-sm text-muted-foreground">{fr.common.none}</p>
+                <>
+                  <KeyValueList
+                    items={storage.volumes.map((volume) => ({
+                      label: volume.name,
+                      value: volume.size_bytes === null ? fr.common.none : formatBytes(volume.size_bytes),
+                    }))}
+                  />
+                  {storage.total_size_bytes !== null && storage.volumes.length > 1 ? (
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      {fr.apps.detail.total} : {formatBytes(storage.total_size_bytes)}
+                    </p>
+                  ) : null}
+                </>
               )}
+            </Card>
+
+            <Card title={fr.apps.detail.deployment}>
+              <KeyValueList
+                items={[
+                  {
+                    label: fr.apps.detail.lastDeploy,
+                    value: lastDeployment ? formatDate(lastDeployment) : '—',
+                  },
+                  { label: fr.apps.fields.image, value: <span className="font-mono text-xs">{mainContainer?.image ?? app.image ?? '—'}</span> },
+                  {
+                    label: fr.apps.detail.imageId,
+                    value: (
+                      <span className="font-mono text-xs">
+                        {mainContainer?.image_id ? mainContainer.image_id.replace('sha256:', '').slice(0, 12) : '—'}
+                      </span>
+                    ),
+                  },
+                  ...(lastJob
+                    ? [
+                        { label: fr.apps.detail.result, value: <StatusPill tone={lastJob.result === 'success' ? 'ok' : 'err'}>{lastJob.result}</StatusPill> },
+                        { label: fr.apps.detail.type, value: jobTypeLabel(lastJob.label) },
+                      ]
+                    : []),
+                ]}
+              />
+              {onRecreate ? (
+                <Button variant="outline" size="sm" className="mt-3" onClick={onRecreate}>
+                  <Rocket className="size-3.5" aria-hidden />
+                  {fr.apps.detail.recreate}
+                </Button>
+              ) : null}
             </Card>
 
             <Card title={fr.apps.detail.links}>

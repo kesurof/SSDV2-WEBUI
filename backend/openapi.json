@@ -721,6 +721,48 @@
         }
       }
     },
+    "/api/v1/apps/{app}/storage": {
+      "get": {
+        "tags": [
+          "apps"
+        ],
+        "summary": "Get App Storage",
+        "operationId": "get_app_storage_api_v1_apps__app__storage_get",
+        "parameters": [
+          {
+            "name": "app",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "App"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppStorageOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/apps/{app}/auth": {
       "get": {
         "tags": [
@@ -1632,6 +1674,18 @@
         ],
         "summary": "Get Updates",
         "operationId": "get_updates_api_v1_updates_get",
+        "parameters": [
+          {
+            "name": "refresh",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Refresh"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -1639,6 +1693,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/UpdatesOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -2144,6 +2208,51 @@
         ],
         "title": "AppStatsOut"
       },
+      "AppStorageOut": {
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "title": "Schema Version",
+            "default": 1
+          },
+          "app": {
+            "type": "string",
+            "title": "App"
+          },
+          "volumes": {
+            "items": {
+              "$ref": "#/components/schemas/VolumeUsageOut"
+            },
+            "type": "array",
+            "title": "Volumes"
+          },
+          "total_size_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Size Bytes"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "app",
+          "volumes"
+        ],
+        "title": "AppStorageOut"
+      },
       "AuditEventOut": {
         "properties": {
           "id": {
@@ -2392,6 +2501,39 @@
               }
             ],
             "title": "Health"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "image_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Id"
           }
         },
         "type": "object",
@@ -3633,6 +3775,41 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "VolumeUsageOut": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "size_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Size Bytes"
+          },
+          "ref_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ref Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "VolumeUsageOut"
       }
     }
   }

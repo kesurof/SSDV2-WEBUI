@@ -106,6 +106,7 @@ export const fr = {
       noCompanions: 'Aucun compagnon détecté.',
       healthOk: "aucun problème détecté sur l'application ou ses dépendances.",
       saveNow: 'Sauvegarder maintenant',
+      total: 'Total',
       recreate: "Recréer l'application",
     },
     fields: {
@@ -143,6 +144,8 @@ export const fr = {
       image: 'Image',
       containers: 'Conteneurs',
       warnings: 'Alertes',
+      quickActions: 'Actions rapides',
+      update: 'Mise à jour',
     },
   },
   status: {
@@ -189,6 +192,16 @@ export const fr = {
     empty: 'Aucun job.',
     events: 'Événements',
     launched: 'Job #{id} lancé',
+    retry: 'Relancer',
+    search: 'Rechercher un job…',
+    filters: { all: 'Tous', running: 'En cours', success: 'Succès', failed: 'Échec' },
+    detail: {
+      launchedAt: 'Déclenché le',
+      duration: 'Durée',
+      exitCode: 'Code de sortie',
+      progress: 'Progression',
+      finished: 'Terminé',
+    },
     types: {
       app_start: 'Démarrage',
       app_stop: 'Arrêt',

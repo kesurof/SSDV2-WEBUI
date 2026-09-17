@@ -10,9 +10,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { AppRowActions, AppRowUpdate } from '@/features/apps/AppRowActions'
 import { StatusBadge } from '@/features/apps/StatusBadge'
 import { fr } from '@/i18n/fr'
-import type { AppState } from '@/api/types'
+import type { AppState, UpdateEntry } from '@/api/types'
 
 const features = tableFeatures({})
 const columnHelper = createColumnHelper<typeof features, AppState>()
@@ -21,7 +22,8 @@ function warningLabel(code: string): string {
   return fr.warnings[code as keyof typeof fr.warnings] ?? code
 }
 
-const columns = columnHelper.columns([
+function buildColumns(updatesByApp?: Record<string, UpdateEntry>) {
+  return columnHelper.columns([
   columnHelper.accessor('name', {
     header: fr.apps.columns.name,
     cell: (ctx) => (
@@ -53,6 +55,16 @@ const columns = columnHelper.columns([
     header: fr.apps.columns.containers,
     cell: (ctx) => <span className="text-sm">{ctx.getValue()}</span>,
   }),
+  columnHelper.display({
+    id: 'quick_actions',
+    header: fr.apps.columns.quickActions,
+    cell: (ctx) => <AppRowActions app={ctx.row.original} />,
+  }),
+  columnHelper.display({
+    id: 'update',
+    header: fr.apps.columns.update,
+    cell: (ctx) => <AppRowUpdate app={ctx.row.original} update={updatesByApp?.[ctx.row.original.name]} />,
+  }),
   columnHelper.accessor('warnings', {
     header: fr.apps.columns.warnings,
     cell: (ctx) => {
@@ -62,7 +74,7 @@ const columns = columnHelper.columns([
       }
       return (
         <span
-          className="inline-flex items-center gap-1 text-amber-600"
+          className="inline-flex items-center gap-1 text-warning"
           title={warnings.map(warningLabel).join(', ')}
         >
           <TriangleAlert className="size-4" />
@@ -71,10 +83,17 @@ const columns = columnHelper.columns([
       )
     },
   }),
-])
+  ])
+}
 
-export function AppsTable({ apps }: { apps: AppState[] }) {
-  const table = useTable({ features, columns, data: apps })
+export function AppsTable({
+  apps,
+  updatesByApp,
+}: {
+  apps: AppState[]
+  updatesByApp?: Record<string, UpdateEntry>
+}) {
+  const table = useTable({ features, columns: buildColumns(updatesByApp), data: apps })
 
   if (apps.length === 0) {
     return <p className="text-sm text-muted-foreground">{fr.apps.empty}</p>

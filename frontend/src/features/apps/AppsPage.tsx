@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input'
 import { AppsTable } from '@/features/apps/AppsTable'
 import { filterApps } from '@/features/apps/filter'
 import type { StatusFilter } from '@/features/apps/filter'
-import { useApps } from '@/features/system/useSystem'
+import { useApps, useUpdates } from '@/features/system/useSystem'
 import { fr } from '@/i18n/fr'
 
 const PAGE_SIZE = 20
@@ -29,6 +29,7 @@ function isStatusFilter(value: string | null): value is StatusFilter {
 
 export function AppsPage() {
   const apps = useApps()
+  const updates = useUpdates()
   const [searchParams, setSearchParams] = useSearchParams()
   const initialStatus = searchParams.get('status')
   const [search, setSearch] = useState('')
@@ -146,7 +147,12 @@ export function AppsPage() {
 
       {apps.data && (
         <>
-          <AppsTable apps={pageItems} />
+          <AppsTable
+            apps={pageItems}
+            updatesByApp={Object.fromEntries(
+              (updates.data?.entries ?? []).map((entry) => [entry.app, entry]),
+            )}
+          />
           <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
             <span>
               {filtered.length === 0
