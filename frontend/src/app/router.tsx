@@ -4,6 +4,7 @@ import { Layout } from '@/app/Layout'
 import { AppDetailPage } from '@/features/apps/AppDetailPage'
 import { AppsPage } from '@/features/apps/AppsPage'
 import { AuditPage } from '@/features/audit/AuditPage'
+import { BackupsPage } from '@/features/backups/BackupsPage'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
 import { DiagnosticsPage } from '@/features/diagnostics/DiagnosticsPage'
@@ -25,6 +26,7 @@ export const router = createBrowserRouter([
       { path: 'jobs/:id', element: <JobDetailPage /> },
       { path: 'notifications', element: <NotificationsPage /> },
       { path: 'audit', element: <AuditPage /> },
+      { path: 'backups', element: <BackupsPage /> },
       { path: 'diagnostics', element: <DiagnosticsPage /> },
     ],
   },

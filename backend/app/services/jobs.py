@@ -20,6 +20,7 @@ JOB_LABELS = {
     "app_remove": "Suppression",
     "app_reinstall": "Réinstallation",
     "app_recreate": "Recréation",
+    "app_backup": "Sauvegarde",
     "app_start": "Démarrage",
     "app_stop": "Arrêt",
     "app_restart": "Redémarrage",
@@ -28,7 +29,13 @@ JOB_LABELS = {
     "diagnostics_cleanup_volumes": "Nettoyage des volumes orphelins",
 }
 
-NOTIFY_JOB_TYPES = ("app_install", "app_remove", "app_reinstall", "app_recreate")
+NOTIFY_JOB_TYPES = (
+    "app_install",
+    "app_remove",
+    "app_reinstall",
+    "app_recreate",
+    "app_backup",
+)
 
 JOB_TYPE_ACTIONS = {
     "app_start": "start",
@@ -36,6 +43,7 @@ JOB_TYPE_ACTIONS = {
     "app_restart": "restart",
     "app_reinstall": "reinstall",
     "app_recreate": "recreate",
+    "app_backup": "backup",
 }
 
 DIAGNOSTICS_JOBS = {
@@ -52,6 +60,7 @@ ACTION_TIMEOUTS = {
     "app_remove": 900,
     "app_reinstall": 1800,
     "app_recreate": 1800,
+    "app_backup": 1800,
     "diagnostics_rebuild_registries": 900,
     "diagnostics_cleanup_containers": 600,
     "diagnostics_cleanup_volumes": 600,

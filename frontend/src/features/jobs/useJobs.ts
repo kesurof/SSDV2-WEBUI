@@ -11,6 +11,7 @@ export type AppAction =
   | 'remove'
   | 'reinstall'
   | 'recreate'
+  | 'backup'
 
 export type AppActionRequest = {
   action: AppAction

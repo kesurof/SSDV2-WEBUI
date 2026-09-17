@@ -188,3 +188,16 @@ def test_reinstall_and_recreate_jobs(auth_client, write_catalogue):
     wait_for_job(auth_client, recreate["id"])
 
     assert runner.calls == [["app", "reinstall", "wallos"], ["app", "recreate", "wallos"]]
+
+
+def test_backup_job(auth_client, write_catalogue):
+    write_catalogue("wallos - Budget\n")
+    runner = FakeStreamingRunner()
+    job_manager.configure(lambda: runner)
+
+    response = auth_client.post("/api/v1/apps/wallos/backup")
+
+    assert response.status_code == 202
+    assert response.json()["type"] == "app_backup"
+    assert wait_for_job(auth_client, response.json()["id"])["status"] == "success"
+    assert runner.calls == [["app", "backup", "wallos"]]

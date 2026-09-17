@@ -232,6 +232,15 @@ def recreate_app(
     return _submit_job(app, "app_recreate", settings, _user)
 
 
+@router.post("/{app}/backup", response_model=JobOut, status_code=status.HTTP_202_ACCEPTED)
+def backup_app(
+    app: str,
+    settings: SettingsDep,
+    _user: CurrentUser,
+) -> JobOut:
+    return _submit_job(app, "app_backup", settings, _user)
+
+
 @router.get("/{app}/auth", response_model=AppAuthOut)
 def get_app_auth(
     app: str,

@@ -163,6 +163,9 @@ export function AppActions({ app }: { app: AppDetail }) {
           <DropdownMenuItem onClick={() => setPending('reinstall')}>
             {fr.actions.reinstall}
           </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setPending('backup')}>
+            {fr.actions.backup}
+          </DropdownMenuItem>
           <DropdownMenuItem
             variant="destructive"
             onClick={() => {

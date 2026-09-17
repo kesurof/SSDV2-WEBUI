@@ -16,6 +16,7 @@ const NAV_ITEMS = [
   { to: '/jobs', label: fr.nav.jobs },
   { to: '/notifications', label: fr.nav.notifications },
   { to: '/audit', label: fr.nav.audit },
+  { to: '/backups', label: fr.nav.backups },
   { to: '/diagnostics', label: fr.nav.diagnostics },
 ]
 

@@ -140,4 +140,20 @@ describe('AppActions', () => {
       }),
     )
   })
+
+  it('launches a backup from the actions menu', async () => {
+    const user = userEvent.setup()
+    const fetchMock = vi.fn(async () => jobResponse())
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderActions(makeApp())
+    await user.click(screen.getByRole('button', { name: 'Plus d’actions' }))
+    await user.click(await screen.findByRole('menuitem', { name: 'Sauvegarder' }))
+    await user.click(screen.getByRole('button', { name: 'Confirmer' }))
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/v1/apps/sonarr/backup',
+      expect.objectContaining({ method: 'POST' }),
+    )
+  })
 })

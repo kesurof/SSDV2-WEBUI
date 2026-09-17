@@ -10,7 +10,7 @@
 | 1 — Socle WebUI | FastAPI + React/Vite + shadcn + SQLite + auth admin + image Docker + healthcheck | En cours (reste : exposition Traefik) |
 | 2 — Lecture seule | Dashboard, catalogue ~190 apps, filtres, détail app, conteneurs, logs | Terminée — 2026-09-17 (auth affichée via `ssdv2ctl`, logs avec suivi SSE ; confort des logs — recherche, pause — reporté) |
 | 3 — Cycle de vie | Jobs, SSE, install/start/stop/restart/reinstall/remove, confirmations | Terminée — 2026-09-17 (jobs + SSE, cycle de vie complet via `ssdv2ctl`, confirmations graduées) |
-| 4 — Administration | Auth en masse, configuration, notifications persistantes, audit, backups, diagnostics | En cours — diagnostics réparateurs, notifications persistantes (SSE) et audit livrés ; reste : backups, auth en masse, `ssdv2ctl config` |
+| 4 — Administration | Auth en masse, configuration, notifications persistantes, audit, backups, diagnostics | En cours — diagnostics, notifications, audit et sauvegardes (création/liste) livrés ; reste : restauration (indisponible côté SSDV2), auth en masse, `ssdv2ctl config` |
 | 5 — Avancé | Mise à jour SSDV2, Git, patches, Docker avancé, fonctions hôte | À faire |
 
 Le MVP utile correspond aux points listés dans le brief §64 ; il couvre les phases 1 à 4.

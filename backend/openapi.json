@@ -524,6 +524,48 @@
         }
       }
     },
+    "/api/v1/apps/{app}/backup": {
+      "post": {
+        "tags": [
+          "apps"
+        ],
+        "summary": "Backup App",
+        "operationId": "backup_app_api_v1_apps__app__backup_post",
+        "parameters": [
+          {
+            "name": "app",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "App"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/apps/{app}/auth": {
       "get": {
         "tags": [
@@ -684,6 +726,31 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/UserOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/backups": {
+      "get": {
+        "tags": [
+          "backups"
+        ],
+        "summary": "Get Backups",
+        "operationId": "get_backups_api_v1_backups_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/BackupOut"
+                  },
+                  "type": "array",
+                  "title": "Response Get Backups Api V1 Backups Get"
                 }
               }
             }
@@ -1514,6 +1581,35 @@
           "detail"
         ],
         "title": "AuditEventOut"
+      },
+      "BackupOut": {
+        "properties": {
+          "app": {
+            "type": "string",
+            "title": "App"
+          },
+          "file": {
+            "type": "string",
+            "title": "File"
+          },
+          "size": {
+            "type": "integer",
+            "title": "Size"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "app",
+          "file",
+          "size",
+          "created_at"
+        ],
+        "title": "BackupOut"
       },
       "ContainerOut": {
         "properties": {

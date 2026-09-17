@@ -21,9 +21,10 @@
   `GET /api/v1/diagnostics` et `POST /api/v1/diagnostics/rebuild-registries|
   `GET /api/v1/notifications` (liste + non-lues), `PATCH /notifications/{id}/read`,
   `POST /notifications/read-all`, `GET /notifications/events` (SSE),
-  `GET /api/v1/audit` (journal des actions) ; le tout via
-  l'adaptateur `ssdv2ctl` (`app/adapters/ssdv2_cli.py`, commandes allowlistées,
-  `shell=False`, `SSDV2CTL_PATH`/`SSDV2CTL_TIMEOUT`).
+  `GET /api/v1/backups` (archives `~/backup`, monté) et
+  `POST /api/v1/apps/{app}/backup` (job `app_backup`, mécanisme `sauve_one_appli`) ;
+  le tout via l'adaptateur `ssdv2ctl` (`app/adapters/ssdv2_cli.py`, commandes
+  allowlistées, `shell=False`, `SSDV2CTL_PATH`/`SSDV2CTL_TIMEOUT`).
 - `frontend/` : React 19 + Vite 8 + TypeScript 5.9 + Tailwind 4 + shadcn/ui +
   TanStack Query v5 + TanStack Table v9 + React Router v7 ; login, layout, dashboard,
   table des applications (recherche, filtres, badges d'état, alertes, bandeau mode
@@ -31,8 +32,8 @@
   logs avec suivi SSE, volumes, réseau/DNS, actions installer/démarrer/arrêter/redémarrer/
   recréer/réinstaller/supprimer avec confirmations graduées), page Jobs (liste + détail
   avec événements SSE), page Notifications (badge non-lues, marquage lu, liens vers les
-  jobs), page Audit, page Diagnostics (contrôles + actions de réparation avec
-  confirmation forte).
+  jobs), page Audit, page Sauvegardes (archives SSDV2), page Diagnostics (contrôles +
+  actions de réparation avec confirmation forte).
 - `Dockerfile` : multi-stage Node 22 → `python:3.13-slim`, entrypoint PUID/PGID
   (`setpriv --init-groups`, ADR-0017), frontend compilé servi par FastAPI, healthcheck
   `/health`, runtime SSDV2 : ansible (`ansible-core` 2.21.0, collections
@@ -63,7 +64,9 @@
 
 ## Ce qui n'existe pas (à ce jour)
 
-- Aucun backup, aucune commande `ssdv2ctl config`, aucun réglage applicatif (Phase 4).
+- Aucune restauration de sauvegarde : le mécanisme SSDV2 est inopérant (entrée de menu
+  retirée par le patch `20260916_remove_restore_menu`) — à reprendre côté SSDV2.
+- Aucune commande `ssdv2ctl config`, aucun réglage applicatif, aucune auth en masse.
 - Aucune page Docker/réseau, command palette, thème, aucun confort de logs
   (recherche, pause).
 - Aucune exposition publique (Traefik), aucune image publiée sur GHCR, aucun multiarch.

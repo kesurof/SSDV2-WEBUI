@@ -11,6 +11,7 @@ export const fr = {
     jobs: 'Jobs',
     notifications: 'Notifications',
     audit: 'Audit',
+    backups: 'Sauvegardes',
     diagnostics: 'Diagnostics',
   },
   login: {
@@ -145,6 +146,7 @@ export const fr = {
     install: 'Installer',
     reinstall: 'Réinstaller',
     recreate: 'Recréer',
+    backup: 'Sauvegarder',
     remove: 'Supprimer',
     more: 'Plus d’actions',
     confirmTitle: 'Confirmer l’action',
@@ -169,6 +171,17 @@ export const fr = {
     markRead: 'Marquer comme lu',
     open: 'Ouvrir',
     unread: 'non lues',
+  },
+  backups: {
+    title: 'Sauvegardes',
+    hint: 'Archives créées par SSDV2 dans ~/backup. La restauration n’est pas exposée (mécanisme inopérant côté SSDV2).',
+    empty: 'Aucune sauvegarde.',
+    columns: {
+      app: 'Application',
+      file: 'Fichier',
+      size: 'Taille',
+      date: 'Date',
+    },
   },
   audit: {
     title: 'Audit',

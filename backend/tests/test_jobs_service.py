@@ -40,6 +40,7 @@ def test_build_job_args_remove() -> None:
 def test_build_job_args_actions() -> None:
     assert build_job_args("app_reinstall", "wallos", {}) == ["app", "reinstall", "wallos"]
     assert build_job_args("app_recreate", "wallos", {}) == ["app", "recreate", "wallos"]
+    assert build_job_args("app_backup", "wallos", {}) == ["app", "backup", "wallos"]
 
 
 def test_build_job_args_diagnostics() -> None:

@@ -13,6 +13,7 @@ services:
       PUID: ${SSD_UID:-1000}
       PGID: ${SSD_GID:-1000}
       DOCKER_GID: ${DOCKER_GID:-999}
+      BACKUP_DIR: /home/${SSD_USER:-utilisateur}/backup
       ANSIBLE_INVENTORY: /home/${SSD_USER:-utilisateur}/.ansible/inventories/local
       ANSIBLE_VAULT_PASSWORD_FILE: /home/${SSD_USER:-utilisateur}/.vault_pass
       WEBUI_DATA: /data
@@ -28,6 +29,7 @@ services:
       - /home/${SSD_USER:-utilisateur}/.config/ssd/env:/home/${SSD_USER:-utilisateur}/.config/ssd/env:ro
       - /home/${SSD_USER:-utilisateur}/.vault_pass:/home/${SSD_USER:-utilisateur}/.vault_pass:ro
       - /home/${SSD_USER:-utilisateur}/.ansible/inventories:/home/${SSD_USER:-utilisateur}/.ansible/inventories
+      - /home/${SSD_USER:-utilisateur}/backup:/home/${SSD_USER:-utilisateur}/backup
       - /home/${SSD_USER:-utilisateur}/seedbox-compose:/home/${SSD_USER:-utilisateur}/seedbox-compose
       - /home/${SSD_USER:-utilisateur}/seedbox:/home/${SSD_USER:-utilisateur}/seedbox
       - webui-data:/data

@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     ssdv2_storage: Path = Path("/home/utilisateur/seedbox")
     ssdv2ctl_path: Path = Path("ssdv2ctl")
     ssdv2ctl_timeout: int = 60
+    backup_dir: Path = Path("/home/utilisateur/backup")
     webui_data: Path = Path("/data")
     static_dir: Path = Path("/app/static")
 

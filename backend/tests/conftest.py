@@ -13,6 +13,7 @@ _TMP = Path(tempfile.mkdtemp(prefix="ssdv2-webui-tests-"))
 _SOURCE = _TMP / "ssdv2-source"
 _STORAGE = _TMP / "ssdv2-storage"
 _DATA = _TMP / "webui-data"
+_BACKUP = _TMP / "backup"
 
 TEST_ADMIN_USER = "admin"
 TEST_ADMIN_PASSWORD = "test-password"
@@ -26,9 +27,11 @@ def pytest_configure(config: pytest.Config) -> None:
     (_SOURCE / "includes" / "config").mkdir(parents=True, exist_ok=True)
     (_STORAGE / "conf").mkdir(parents=True, exist_ok=True)
     _DATA.mkdir(parents=True, exist_ok=True)
+    _BACKUP.mkdir(parents=True, exist_ok=True)
     os.environ["SSDV2_SOURCE"] = str(_SOURCE)
     os.environ["SSDV2_STORAGE"] = str(_STORAGE)
     os.environ["WEBUI_DATA"] = str(_DATA)
+    os.environ["BACKUP_DIR"] = str(_BACKUP)
     os.environ["WEBUI_ADMIN_USER"] = "admin"
     os.environ["WEBUI_ADMIN_PASSWORD"] = "test-password"
 

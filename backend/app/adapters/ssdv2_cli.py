@@ -14,6 +14,7 @@ ALLOWED_COMMANDS = {
     ("app", "remove"),
     ("app", "reinstall"),
     ("app", "recreate"),
+    ("app", "backup"),
     ("app", "start"),
     ("app", "stop"),
     ("app", "restart"),
