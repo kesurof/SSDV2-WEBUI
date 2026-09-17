@@ -34,7 +34,7 @@ def read_ssddb(path: Path) -> SsddbData:
                 for row in conn.execute("select name, status, subdomain, port from applications")
             }
             domain_row = conn.execute(
-                "select value from seedbox_params where name = 'domain'"
+                "select value from seedbox_params where param = 'domain'"
             ).fetchone()
             domain = domain_row["value"] if domain_row else None
             return SsddbData(applications, domain, [])

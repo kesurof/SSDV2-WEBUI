@@ -40,3 +40,19 @@ def test_apps_aggregation(
 
     assert states["wallos"]["installed"] is False
     assert states["wallos"]["runtime_status"] == "not_installed"
+
+
+def test_apps_warns_when_ssddb_unreadable(
+    auth_client,
+    write_catalogue,
+    write_ssddb,
+    settings,
+):
+    write_catalogue("wallos - Budget\n")
+    write_ssddb([], domain=None)
+    settings.ssddb_file.write_text("pas une base sqlite", encoding="utf-8")
+
+    response = auth_client.get("/api/v1/apps")
+
+    assert response.status_code == 200
+    assert "ssddb_unavailable" in response.json()[0]["warnings"]

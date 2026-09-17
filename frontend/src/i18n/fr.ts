@@ -48,5 +48,7 @@ export const fr = {
     containers_without_ssddb: 'Conteneur sans entrée ssddb',
     unhealthy: 'Conteneur en mauvaise santé',
     docker_unavailable: 'Docker indisponible',
+    catalogue_unavailable: 'Catalogue SSDV2 introuvable',
+    ssddb_unavailable: 'Base ssddb illisible',
   },
 } as const
