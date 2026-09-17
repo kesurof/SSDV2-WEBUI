@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    runs-on: [self-hosted, SSDV2-WEBUI]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lint et tests (Python 3.13)
+        run: |
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE/backend:/src:ro" \
+            -v ssdv2-webui-pip-cache:/root/.cache/pip \
+            -w / \
+            python:3.13-slim \
+            sh -c "cp -r /src /work && cd /work && pip install -q -e '.[dev]' && ruff check . && ruff format --check . && pytest -q"
+
+  frontend:
+    runs-on: [self-hosted, SSDV2-WEBUI]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lint, types, tests et build (Node 22)
+        run: |
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE/frontend:/src:ro" \
+            -v ssdv2-webui-npm-cache:/root/.npm \
+            -w / \
+            node:22 \
+            sh -c "cp -r /src /work && cd /work && npm ci --no-audit --no-fund && npm run lint && npm run typecheck && npm run test && npm run build"
+
+  docker-build:
+    runs-on: [self-hosted, SSDV2-WEBUI]
+    needs: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build de l'image
+        run: docker build -t ssdv2-webui:ci .

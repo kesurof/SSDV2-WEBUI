@@ -114,6 +114,52 @@ pointe vers son remplaçant. Une décision non tranchée reste dans « Décision
 - **Alternatives écartées** : requêtes HTTP bloquantes ; Celery/Redis ; workers parallèles.
 - **Références** : brief §27-§30, §51.
 
+## ADR-0008 — Schéma SQLite WebUI sans migrations au MVP
+
+- **Statut** : acceptée — 2026-09-17
+- **Contexte** : la base WebUI ne porte que des données propres (users, sessions) et son
+  schéma est encore très mouvant ; le brief impose une exploitation simple (une image,
+  aucune dépendance d'infrastructure).
+- **Décision** : SQLAlchemy 2 avec `create_all` au démarrage, sans Alembic.
+- **Conséquences** : tout changement de schéma (prévu en Phase 3 : jobs, notifications,
+  audit) devra faire l'objet d'une décision explicite (introduction d'Alembic ou
+  migration manuelle) ; pas de downgrade possible.
+- **Alternatives écartées** : Alembic dès M1 (complexité non justifiée) ; SQL manuel.
+- **Références** : brief §45-§46, principes §2 et §11.
+
+## ADR-0009 — Types frontend générés depuis un OpenAPI versionné
+
+- **Statut** : acceptée — 2026-09-17
+- **Contexte** : le brief impose de générer les types TypeScript depuis l'OpenAPI FastAPI
+  plutôt que de recopier les DTO ; la CI ne dispose pas d'un serveur lancé pour interroger
+  `/openapi.json`.
+- **Décision** : `backend/openapi.json` est exporté par `python -m app.export_openapi` et
+  versionné ; `frontend/src/api/schema.d.ts` est généré par `openapi-typescript`
+  (`npm run gen:api`) et versionné aussi.
+- **Conséquences** : toute modification d'API doit régénérer les deux fichiers dans le
+  même changement ; `openapi-typescript` 7 exige TypeScript 5.x, ce qui épingle le
+  frontend à `typescript ~5.9` malgré le template Vite 8 (TS 6).
+- **Alternatives écartées** : types écrits à la main ; export OpenAPI à la volée en CI
+  depuis un serveur éphémère (plus complexe pour un bénéfice identique).
+- **Références** : brief §68, ADR-0004.
+
+## ADR-0010 — Aucune branche ni PR sur projetssd/ssdv2 avant finalisation du projet
+
+- **Statut** : acceptée — 2026-09-17 (décision du propriétaire du projet)
+- **Contexte** : le développement de la WebUI s'appuie sur le clone SSDV2 du serveur de
+  test et la Phase 0 prévoit d'y introduire `ssdv2ctl`. Le dépôt amont `projetssd/ssdv2`
+  ne doit pas recevoir de contributions tant que la WebUI n'est pas finalisée.
+- **Décision** : aucune branche ni pull request sur `projetssd/ssdv2` pendant toute la
+  durée du projet ; tout développement lié à SSDV2 reste local (non poussé). La contrainte
+  ne pourra être levée que par une décision explicite ultérieure.
+- **Conséquences** : la Phase 0 (`ssdv2ctl`) est développée localement et ne peut pas être
+  proposée en amont ; le clone local peut diverger de l'amont et devra être revérifié
+  avant toute contribution finale ; les évolutions SSDV2 nécessaires sont regroupées puis
+  proposées en une seule fois à la fin.
+- **Alternatives écartées** : branche + PR immédiate sur `projetssd/ssdv2` ; fork public
+  pendant le développement.
+- **Références** : brief §9 et §63 (Phase 0), [`PROGRESS.md`](PROGRESS.md).
+
 ## Décisions ouvertes
 
 À trancher explicitement puis consigner en ADR (voir brief §72) :

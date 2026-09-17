@@ -1,0 +1,7 @@
+.git
+.github
+data
+**/__pycache__
+**/node_modules
+frontend/dist
+backend/openapi.json
