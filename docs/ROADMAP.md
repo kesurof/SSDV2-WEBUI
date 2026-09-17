@@ -6,7 +6,7 @@
 | Phase | Contenu | Statut |
 |---|---|---|
 | Documentation | Système documentaire, ADR initiaux, versioning Git | Terminée — 2026-09-17 |
-| 0 — Contrat SSDV2 | `ssdv2ctl` non interactif JSON (apps, app, auth, diagnostics) | En cours — lecture seule livrée localement (`apps list`, `app status` ; développement local uniquement, ADR-0010) |
+| 0 — Contrat SSDV2 | `ssdv2ctl` non interactif JSON (apps, app, auth, diagnostics) | En cours — lecture seule + `start`/`stop`/`restart` livrés localement ; reste install/remove/recreate, auth, diagnostics (ADR-0010) |
 | 1 — Socle WebUI | FastAPI + React/Vite + shadcn + SQLite + auth admin + image Docker + healthcheck | En cours (reste : exposition Traefik) |
 | 2 — Lecture seule | Dashboard, catalogue ~190 apps, filtres, détail app, conteneurs, logs | En cours (liste/filtres/états faits ; reste : dashboard, détail, logs) |
 | 3 — Cycle de vie | Jobs, SSE, install/start/stop/restart/reinstall/remove, confirmations | À faire |

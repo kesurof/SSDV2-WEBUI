@@ -6,24 +6,28 @@
 
 ## Chantier actif
 
-**Phase 0 — `ssdv2ctl`, palier lecture seule** (démarré 2026-09-17).
+**Phase 0 — `ssdv2ctl`** (démarré 2026-09-17).
 
 - Code : clone local `~/Developer/ssdv2`, branche `wip/ssdv2ctl` (aucun push — ADR-0010),
-  commits `30a0cad0` et suivant.
-- Livré : `ssdv2ctl apps list` et `ssdv2ctl app status <app>`, JSON par défaut, erreurs
-  structurées sur stderr, codes 0/1/2, allowlist catalogue, contrat documenté (ADR-0011).
+  dernière révision `18e82c17`.
+- Livré :
+  - lecture seule : `apps list`, `app status` (ADR-0011) ;
+  - actions : `app start|stop|restart` sur les conteneurs existants (ADR-0012).
 - Preuves :
-  - 10 tests unittest verts (local en `python:3.13-slim` et serveur en python 3.12) ;
-  - validation serveur réelle : 183 entrées de catalogue ; `app status streamfusion` →
-    ssddb + registres + 7 conteneurs, 0 alerte (cohérent avec l'API WebUI) ; `wallos` non
-    installé ; `app status inconnue` → `unknown_app`, code de sortie 1.
+  - 16 tests unittest verts (local en `python:3.13-slim` et serveur en python 3.12) ;
+  - validation serveur : 183 entrées de catalogue ; `streamfusion` → 7 conteneurs ;
+    cycle réel sur `dozzle` : `stop` → `Exited (0)`, `start` → `Up`, `restart` → `Up`,
+    status final `running` ;
+  - erreurs structurées vérifiées : `unknown_app`, `no_containers`,
+    `docker_unavailable` (code 1, stdout vide).
 
 ### Suite de la Phase 0 (non commencée)
 
-- Actions non interactives (`app install/remove/reinstall/start/stop/restart`, `auth`,
-  `diagnostics`) — à valider sur une application dédiée, jamais sur les apps en service.
-- Décider si la WebUI doit consommer `ssdv2ctl` pour certaines lectures (réduirait la
-  duplication temporaire du parsing catalogue) — voir ADR-0011.
+- Actions restantes : install, remove, reinstall/recréer (« relance » SSDV2), auth,
+  diagnostics — validation uniquement sur une application dédiée.
+- Décider si la WebUI consomme `ssdv2ctl` pour certaines lectures (réduirait la
+  duplication temporaire du parsing catalogue) ; branchement de l'adaptateur
+  (`SSDV2CTL_PATH`) pour la Phase 3.
 
 ## Points d'attention détectés
 
@@ -32,7 +36,7 @@
   incident `37391944` à ignorer dans le dashboard (exclusion `backend/tests/**` suggérée).
 - **Duplication temporaire** : le parsing du catalogue existe dans le backend WebUI et dans
   `ssdv2ctl` (implémentations volontairement alignées) ; à résorber par une décision
-  (ADR-0011, suite de la Phase 0).
+  (suite de la Phase 0).
 - **Entrées `ssddb` hors catalogue** : `traefik`, `boostsuitev2` et `appname` (donnée de
   test) ne sont pas listées par la WebUI, pilotée par le catalogue ; à traiter en
   diagnostics (Phase 4).

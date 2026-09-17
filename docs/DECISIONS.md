@@ -185,6 +185,32 @@ pointe vers son remplaçant. Une décision non tranchée reste dans « Décision
   `ssdv2ctl` ; réimplémentation Python du rattachement des conteneurs ; `shell=True`.
 - **Références** : brief §9, §48, §71 (règles 1, 5, 6, 8), ADR-0005, ADR-0010.
 
+## ADR-0012 — Actions `start`/`stop`/`restart` dans `ssdv2ctl`
+
+- **Statut** : acceptée — 2026-09-17
+- **Contexte** : SSDV2 n'a pas de commande non interactive start/stop/restart au niveau
+  d'une application ; sa fonction historique `relance_container` **recrée** le conteneur
+  (image mise à jour possible), ce qui correspond au brief §21 « Recréer », pas à
+  « Redémarrer ».
+- **Décision** : `ssdv2ctl app start|stop|restart <app>` exécute `docker start|stop|restart`
+  sur les conteneurs **existants** de l'application, résolus via le mécanisme SSDV2
+  `collect_app_containers` (label + registre + conventions) puis filtrés par existence.
+  - préconditions en échec : `unknown_app`, `docker_unavailable`, `no_containers`
+    (stderr JSON, stdout vide, code 1) ;
+  - résultat : stdout JSON `{schema, app, action, ok, containers[{name, ok, error}]}`,
+    code 0 si tout est ok ; échec total ou partiel → stdout détaillé + stderr
+    `action_failed`, code 1 ;
+  - aucune suppression de conteneur, volume ou donnée ; aucune confirmation interactive
+    (la confirmation graduée est une exigence d'interface, brief §53).
+- **Conséquences** : « redémarrer » (docker restart) et « recréer » (SSDV2
+  `relance_container`) restent deux actions distinctes ; cette dernière est un palier
+  ultérieur. Chaque conteneur est traité séparément pour un rapport précis (pas d'appel
+  groupé).
+- **Alternatives écartées** : réutiliser `relance_container` pour `restart` (sémantique de
+  recréation) ; un seul `docker restart` multi-conteneurs (rapport par conteneur moins
+  précis).
+- **Références** : brief §8, §21, §53, ADR-0010, ADR-0011.
+
 ## Décisions ouvertes
 
 À trancher explicitement puis consigner en ADR (voir brief §72) :
