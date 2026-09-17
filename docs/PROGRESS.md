@@ -6,6 +6,10 @@
 
 ## Chantier actif
 
+Aucun.
+
+## Derniers chantiers terminés (2026-09-17)
+
 **Distribution comme application SSDV2 (`ssdv2webui`, ADR-0020)**.
 
 - Image universelle : CLI Docker embarquée (binaire statique par architecture), `tzdata`,
@@ -21,15 +25,14 @@
   `ssddb`, données et enregistrement Cloudflare supprimés) et réinstallation — cycle
   complet vert. Migration de la base `webui.sqlite3` de l'ancien volume `webui-data`,
   sessions purgées, `internal_auth` réactivé ; API interne : login 200, 184 applications,
-  25 jobs, 17 événements d'audit, 2 sauvegardes. Routeur `ssdv2webui-rtr` →
-  `chain-oauth2-proxy@file` sur `https://ssdv2.exemple.tld`.
+  25 jobs, 2 sauvegardes. Routeur `ssdv2webui-rtr` → `chain-oauth2-proxy@file` sur
+  `https://ssdv2.exemple.tld`.
+- Distribution : paquet GHCR **public** (dépôt public) ; `docker pull` anonyme validé
+  depuis le serveur (digest `sha256:7d0055c3…`) et `app reinstall` avec pull effectif —
+  plus aucune configuration locale (`pull_image: false` retiré).
 - Découverte : `suppression_appli` supprime la surcharge `~/seedbox/vars/<app>.yml`
   (functions.sh:720) — la définition vit donc dans les sources SSDV2 (upstream différé par
   ADR-0010), la surcharge restant réservée aux personnalisations.
-- Reste à faire : rendre le paquet GHCR public (paquet encore privé, `pull_image: false`
-  temporaire sur le serveur), puis valider un `recreate` avec pull authentique.
-
-## Derniers chantiers terminés (2026-09-17)
 
 **Phase 0 — `ssdv2ctl` complet** (clone local `~/Developer/ssdv2`, branche `wip/ssdv2ctl`,
 aucun push — ADR-0010 ; dernière révision `444b9681`).

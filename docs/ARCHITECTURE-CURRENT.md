@@ -99,9 +99,9 @@
   (services morts sur les ports 3000/8080) ont été neutralisés (`.disabled`) car ils
   capturaient `/api/v1` et provoquaient des 504 ; l'exposition de la WebUI est désormais
   décrite par les labels générés par SSDV2.
-- Reste à valider : pull du paquet GHCR **public** (le paquet est encore privé, la
-  validation ci-dessus utilise l'image publiée préchargée localement et
-  `pull_image: false` temporaire).
+- Distribution : paquet GHCR **public** ; `docker pull ghcr.io/kesurof/ssdv2-webui:latest`
+  anonyme validé depuis le serveur (digest `sha256:7d0055c3…`) et `app reinstall` avec pull
+  effectif (image du conteneur = digest publié), données et compte admin conservés.
 
 ## Ce qui n'existe pas (à ce jour)
 
@@ -111,9 +111,8 @@
 - Aucune écriture de configuration depuis la WebUI : les paramètres sont en lecture seule
   (les modifications passent par les procédures SSDV2, ex. `menu_change_domaine`).
 - `ghcr.io/kesurof/ssdv2-webui` publiée en multiarchitecture (tags `:latest` et `:dev`,
-  manifeste `sha256:400a4873…` pour le commit `10227aa`) ; le workflow doit être relancé à
-  chaque évolution de l'image. Paquet encore **privé** : le rendre public (ADR-0020) reste
-  la dernière étape de la distribution universelle.
+  manifeste `sha256:7d0055c3…`, dépôt et paquet publics) ; le workflow doit être relancé à
+  chaque évolution de l'image.
 - Aucune page Docker/réseau, command palette, thème.
 - Aucune migration de schéma hors micro-migrations additives (ADR-0016).
 
