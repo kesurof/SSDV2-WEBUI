@@ -1,10 +1,11 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException, status
 
 from app.deps import CurrentUser, DockerDep, SettingsDep
-from app.schemas.app import AppStateOut
+from app.schemas.app import AppDetailOut, AppStateOut
 from app.services.app_state import (
     WARNING_CATALOGUE_UNAVAILABLE,
     WARNING_SSDDB_UNAVAILABLE,
+    build_app_detail,
     build_app_states,
 )
 from app.services.catalogue import read_catalogue
@@ -35,3 +36,26 @@ def list_apps(
     for state in states:
         state.warnings.extend(extra_warnings)
     return states
+
+
+@router.get("/{app}", response_model=AppDetailOut)
+def get_app(
+    app: str,
+    settings: SettingsDep,
+    docker_client: DockerDep,
+    _user: CurrentUser,
+) -> AppDetailOut:
+    entries, catalogue_error = read_catalogue(settings.catalogue_file)
+    if catalogue_error:
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, catalogue_error)
+    entry = next((item for item in entries if item.name == app), None)
+    if entry is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, f"application inconnue: {app}")
+
+    ssddb = read_ssddb(settings.ssddb_file)
+    registries = read_registries(settings.registries_dir)
+    snapshot = collect_containers(docker_client)
+    detail = build_app_detail(entry, ssddb, registries.get(app), snapshot)
+    if ssddb.warnings:
+        detail.warnings.append(WARNING_SSDDB_UNAVAILABLE)
+    return detail

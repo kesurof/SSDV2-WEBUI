@@ -1,5 +1,6 @@
 import { createColumnHelper, tableFeatures, useTable } from '@tanstack/react-table'
 import { TriangleAlert } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
 import {
   Table,
@@ -25,7 +26,9 @@ const columns = columnHelper.columns([
     header: fr.apps.columns.name,
     cell: (ctx) => (
       <div>
-        <div className="font-medium">{ctx.getValue()}</div>
+        <Link to={`/apps/${ctx.getValue()}`} className="font-medium hover:underline">
+          {ctx.getValue()}
+        </Link>
         <div className="max-w-md truncate text-xs text-muted-foreground">
           {ctx.row.original.description}
         </div>

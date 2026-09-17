@@ -7,6 +7,7 @@ export const fr = {
   },
   nav: {
     apps: 'Applications',
+    diagnostics: 'Diagnostics',
   },
   login: {
     title: 'Connexion',
@@ -26,6 +27,29 @@ export const fr = {
     filterRunning: 'En marche',
     filterStopped: 'Arrêtées',
     empty: 'Aucune application ne correspond à la recherche.',
+    back: 'Retour aux applications',
+    alerts: 'Alertes',
+    tabs: {
+      overview: 'Vue générale',
+      containers: 'Conteneurs',
+      volumes: 'Volumes',
+      network: 'Réseau / DNS',
+    },
+    fields: {
+      url: 'URL',
+      image: 'Image',
+      runtime: 'Exécution',
+      subdomain: 'Sous-domaine',
+      port: 'Port',
+      status: 'Statut ssddb',
+    },
+    containerColumns: {
+      name: 'Nom',
+      image: 'Image',
+      state: 'État',
+      health: 'Santé',
+    },
+    emptyList: '—',
     columns: {
       name: 'Application',
       status: 'État',
@@ -41,6 +65,26 @@ export const fr = {
     stopped: 'Arrêté',
     unknown: 'Inconnu',
     not_installed: 'Non installé',
+  },
+  containerState: {
+    running: 'En marche',
+    exited: 'Arrêté',
+    created: 'Créé',
+    restarting: 'Redémarrage',
+    paused: 'En pause',
+    dead: 'Mort',
+  },
+  containerHealth: {
+    healthy: 'Sain',
+    unhealthy: 'Dégradé',
+    starting: 'Démarrage',
+  },
+  diagnostics: {
+    title: 'Diagnostics SSDV2',
+    missingRegistries: 'Registres de conteneurs manquants',
+    orphanContainers: 'Conteneurs orphelins (label sans application en base)',
+    danglingVolumes: 'Volumes anonymes orphelins',
+    none: 'Aucun',
   },
   warnings: {
     installed_without_containers: 'Installée sans conteneur détecté',

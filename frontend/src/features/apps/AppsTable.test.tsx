@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
+import { MemoryRouter } from 'react-router-dom'
 
 import { AppsTable } from '@/features/apps/AppsTable'
 import type { AppState } from '@/api/types'
@@ -32,8 +33,16 @@ const APPS: AppState[] = [
 ]
 
 describe('AppsTable', () => {
+  function renderTable(apps: AppState[]) {
+    return render(
+      <MemoryRouter>
+        <AppsTable apps={apps} />
+      </MemoryRouter>,
+    )
+  }
+
   it('renders application rows with status', () => {
-    render(<AppsTable apps={APPS} />)
+    renderTable(APPS)
 
     expect(screen.getByText('sonarr')).toBeInTheDocument()
     expect(screen.getByText('En marche')).toBeInTheDocument()
@@ -42,8 +51,14 @@ describe('AppsTable', () => {
     expect(screen.getByText('https://sonarr.example.com')).toBeInTheDocument()
   })
 
+  it('links application names to the detail page', () => {
+    renderTable(APPS)
+
+    expect(screen.getByRole('link', { name: 'sonarr' })).toHaveAttribute('href', '/apps/sonarr')
+  })
+
   it('shows an empty message', () => {
-    render(<AppsTable apps={[]} />)
+    renderTable([])
     expect(screen.getByText('Aucune application ne correspond à la recherche.')).toBeInTheDocument()
   })
 })

@@ -3,7 +3,7 @@ import { Navigate, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { useLogout, useMe } from '@/features/auth/useAuth'
-import { useHealth } from '@/features/system/useHealth'
+import { useHealth } from '@/features/system/useSystem'
 import { fr } from '@/i18n/fr'
 
 export function Layout() {
@@ -39,6 +39,16 @@ export function Layout() {
             }
           >
             {fr.nav.apps}
+          </NavLink>
+          <NavLink
+            to="/diagnostics"
+            className={({ isActive }) =>
+              `block rounded-md px-2 py-1.5 text-sm ${
+                isActive ? 'bg-accent font-medium' : 'text-muted-foreground hover:bg-accent/50'
+              }`
+            }
+          >
+            {fr.nav.diagnostics}
           </NavLink>
         </nav>
         <div className="space-y-2 border-t p-2">

@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input'
 import { AppsTable } from '@/features/apps/AppsTable'
 import { filterApps } from '@/features/apps/filter'
 import type { StatusFilter } from '@/features/apps/filter'
-import { useApps } from '@/features/apps/useApps'
+import { useApps } from '@/features/system/useSystem'
 import { fr } from '@/i18n/fr'
 
 const FILTERS: { value: StatusFilter; label: string }[] = [

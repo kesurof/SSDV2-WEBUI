@@ -30,6 +30,48 @@
         }
       }
     },
+    "/api/v1/apps/{app}": {
+      "get": {
+        "tags": [
+          "apps"
+        ],
+        "summary": "Get App",
+        "operationId": "get_app_api_v1_apps__app__get",
+        "parameters": [
+          {
+            "name": "app",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "App"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppDetailOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/auth/login": {
       "post": {
         "tags": [
@@ -172,6 +214,118 @@
   },
   "components": {
     "schemas": {
+      "AppDetailOut": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "available": {
+            "type": "boolean",
+            "title": "Available"
+          },
+          "installed": {
+            "type": "boolean",
+            "title": "Installed"
+          },
+          "runtime_status": {
+            "type": "string",
+            "enum": [
+              "running",
+              "partial",
+              "stopped",
+              "unknown",
+              "not_installed"
+            ],
+            "title": "Runtime Status"
+          },
+          "healthy": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Healthy"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          },
+          "image": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image"
+          },
+          "containers": {
+            "type": "integer",
+            "title": "Containers"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          },
+          "container_list": {
+            "items": {
+              "$ref": "#/components/schemas/ContainerOut"
+            },
+            "type": "array",
+            "title": "Container List"
+          },
+          "ssddb": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SsddbAppOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "registries": {
+            "$ref": "#/components/schemas/RegistriesOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "description",
+          "available",
+          "installed",
+          "runtime_status",
+          "healthy",
+          "url",
+          "image",
+          "containers",
+          "warnings",
+          "container_list",
+          "ssddb",
+          "registries"
+        ],
+        "title": "AppDetailOut"
+      },
       "AppStateOut": {
         "properties": {
           "name": {
@@ -260,6 +414,48 @@
           "warnings"
         ],
         "title": "AppStateOut"
+      },
+      "ContainerOut": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "image": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image"
+          },
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "health": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Health"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "image",
+          "state",
+          "health"
+        ],
+        "title": "ContainerOut"
       },
       "DiagnosticsChecks": {
         "properties": {
@@ -382,6 +578,82 @@
           "password"
         ],
         "title": "LoginRequest"
+      },
+      "RegistriesOut": {
+        "properties": {
+          "containers": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Containers"
+          },
+          "volumes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Volumes"
+          },
+          "dns": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Dns"
+          }
+        },
+        "type": "object",
+        "required": [
+          "containers",
+          "volumes",
+          "dns"
+        ],
+        "title": "RegistriesOut"
+      },
+      "SsddbAppOut": {
+        "properties": {
+          "status": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "subdomain": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subdomain"
+          },
+          "port": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Port"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "subdomain",
+          "port"
+        ],
+        "title": "SsddbAppOut"
       },
       "UserOut": {
         "properties": {

@@ -56,3 +56,50 @@ def test_apps_warns_when_ssddb_unreadable(
 
     assert response.status_code == 200
     assert "ssddb_unavailable" in response.json()[0]["warnings"]
+
+
+def test_app_detail_requires_authentication(client):
+    assert client.get("/api/v1/apps/sonarr").status_code == 401
+
+
+def test_app_detail(
+    auth_client,
+    write_catalogue,
+    write_ssddb,
+    write_registry,
+    fake_containers,
+):
+    write_catalogue("sonarr - Gestion Séries\nwallos - Budget\n")
+    write_ssddb([("sonarr", 2, "sonarr", 8989)], domain="example.com")
+    write_registry("sonarr", "containers", ["sonarr", "db-sonarr"])
+    write_registry("sonarr", "volumes", ["sonarr-config"])
+    write_registry("sonarr", "dns", ["sonarr.example.com"])
+
+    from tests.conftest import FakeContainer
+
+    fake_containers.append(FakeContainer(name="sonarr", health="healthy"))
+    fake_containers.append(FakeContainer(name="db-sonarr", state="exited", image="postgres:16"))
+
+    response = auth_client.get("/api/v1/apps/sonarr")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["name"] == "sonarr"
+    assert body["runtime_status"] == "partial"
+    assert body["url"] == "https://sonarr.example.com"
+    assert body["ssddb"] == {"status": 2, "subdomain": "sonarr", "port": 8989}
+    assert body["registries"]["volumes"] == ["sonarr-config"]
+    assert body["registries"]["dns"] == ["sonarr.example.com"]
+    assert [
+        (container["name"], container["state"], container["health"])
+        for container in body["container_list"]
+    ] == [("db-sonarr", "exited", None), ("sonarr", "running", "healthy")]
+
+
+def test_app_detail_unknown_app(auth_client, write_catalogue):
+    write_catalogue("wallos - Budget\n")
+
+    response = auth_client.get("/api/v1/apps/sonarr")
+
+    assert response.status_code == 404
+    assert "inconnue" in response.json()["detail"]

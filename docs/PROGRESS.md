@@ -35,10 +35,18 @@ aucun push — ADR-0010 ; dernière révision `444b9681`).
   `GET /api/v1/diagnostics` renvoie les contrôles réels ; `GET /api/v1/apps` inchangé
   (183 applications, 8 installées).
 
+**Phase 2 — détail d'application et page Diagnostics**.
+
+- Backend : `GET /api/v1/apps/{app}` (détail : `container_list`, `ssddb`, registres,
+  alertes ; 404 si app inconnue du catalogue) ; 40 tests pytest verts.
+- Frontend : route `/apps/:app` (onglets Vue générale, Conteneurs, Volumes, Réseau/DNS,
+  lien depuis la table), page `/diagnostics` alimentée par l'API, navigation étendue ;
+  10 tests Vitest verts.
+- Preuves : CI verte, déploiement serveur validé (voir ci-dessous).
+
 ## Prochains chantiers pressentis
 
-1. Phase 2 : page UI Diagnostics (les données sont déjà exposées par l'API), dashboard,
-   page de détail d'application, logs.
+1. Phase 2 : dashboard (`GET /api/v1/system/summary`), logs des conteneurs.
 2. Phase 3 : jobs + SSE, puis mutations WebUI — dépend de la décision ouverte sur
    l'exécution des mutations depuis le conteneur (runtime ansible/jq, ADR-0014).
 
