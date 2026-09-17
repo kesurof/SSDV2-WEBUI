@@ -6,6 +6,7 @@ from fastapi import APIRouter, FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import func, select
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.api import apps, auth, health
 from app.core.config import get_settings
@@ -39,8 +40,11 @@ def bootstrap_admin() -> None:
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
-    init_db()
-    bootstrap_admin()
+    try:
+        init_db()
+        bootstrap_admin()
+    except (SQLAlchemyError, OSError) as exc:
+        logger.error("Base de données indisponible au démarrage: %s", exc)
     yield
 
 

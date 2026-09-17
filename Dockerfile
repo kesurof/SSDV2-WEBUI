@@ -18,7 +18,9 @@ RUN pip install --no-cache-dir .
 
 COPY --from=frontend /build/dist ./static
 
-RUN useradd --system --uid 10001 webui
+RUN useradd --system --uid 10001 webui \
+    && mkdir -p /data \
+    && chown webui:webui /data
 USER webui
 
 EXPOSE 8000
