@@ -403,6 +403,34 @@ pointe vers son remplaçant. Une décision non tranchée reste dans « Décision
 - **Références** : ADR-0010, ADR-0017, ADR-0018, ADR-0019 ; skill `add-app` SSDV2 ; brief
   §10, §75.
 
+## ADR-0021 — Dépôt public : licence GPL-3.0, assainissement et release automatique
+
+- **Statut** : acceptée — 2026-09-17
+- **Contexte** : le dépôt et le paquet GHCR sont publics ; l'arbre et l'historique
+  contenaient des données personnelles sans utilité pour les utilisateurs (domaine,
+  chemins, IP, identifiants de test) et le compose de développement portait des défauts
+  propres au serveur de test.
+- **Décision** :
+  - licence **GPL-3.0**, cohérente avec SSDV2 ;
+  - purge des données personnelles de l'arbre **et de l'historique** (`git filter-repo`,
+    réécriture des 56 commits puis force-push ; emails d'auteur remplacés par l'adresse
+    noreply GitHub) ;
+  - `compose.yaml` de développement générique : variables requises via `.env`
+    (`.env.example` versionné), port local uniquement, aucun label, domaine ou réseau
+    propre à un hôte ; montages obsolètes retirés (CLI Docker et `ssdv2ctl` sont embarqués
+    dans l'image) ;
+  - release automatique : push `main` → `:dev` + `:latest`, tag `v*` → `:<version>` +
+    `:latest`, dispatch manuel conservé ;
+  - description et topics du dépôt renseignés.
+- **Conséquences** : les hashes des commits antérieurs changent (les références de hashes
+  ont été retirées de la documentation, l'historique Git reste la source) ; les clones
+  existants doivent être remis à niveau ; chaque push `main` republie l'image
+  multiarchitecture.
+- **Alternatives écartées** : conserver l'historique (données personnelles toujours
+  accessibles) ; dépôt neuf sans historique (contredit « Histoire → Git ») ; compose
+  supprimé (perte de la voie de développement locale).
+- **Références** : ADR-0020 ; brief §75.
+
 ## Décisions ouvertes
 
 À trancher explicitement puis consigner en ADR (voir brief §72) :

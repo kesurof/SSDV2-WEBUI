@@ -10,6 +10,18 @@ Aucun.
 
 ## Derniers chantiers terminés (2026-09-17)
 
+**Dépôt public assaini et industrialisé (ADR-0021)**.
+
+- Données personnelles purgées de l'arbre et de l'historique (domaine, chemins, IP,
+  identifiants ; emails d'auteur → noreply GitHub) : 56 commits réécrits puis force-push,
+  `git log -S` ne trouve plus d'occurrence hors `ghcr.io/kesurof/ssdv2-webui`.
+- `compose.yaml` de développement générique (variables requises, `.env.example`, port
+  local, montages obsolètes retirés) ; `LICENSE` GPL-3.0 ; description et topics du dépôt.
+- Release automatique : push `main` → `:dev` + `:latest` (preuve : run `35253010071`) ;
+  `ssdv2ctl app recreate ssdv2webui` a récupéré l'image republiée (digest
+  `sha256:21ed08ce…`), données et compte admin conservés, API validée (login 200,
+  184 applications, 25 jobs, 19 audits).
+
 **Distribution comme application SSDV2 (`ssdv2webui`, ADR-0020)**.
 
 - Image universelle : CLI Docker embarquée (binaire statique par architecture), `tzdata`,

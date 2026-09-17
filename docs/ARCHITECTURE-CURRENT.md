@@ -99,8 +99,8 @@
   capturaient `/api/v1` et provoquaient des 504 ; l'exposition de la WebUI est désormais
   décrite par les labels générés par SSDV2.
 - Distribution : paquet GHCR **public** ; `docker pull ghcr.io/kesurof/ssdv2-webui:latest`
-  anonyme validé depuis le serveur (digest `sha256:7d0055c3…`) et `app reinstall` avec pull
-  effectif (image du conteneur = digest publié), données et compte admin conservés.
+  anonyme validé depuis le serveur et `app reinstall` avec pull effectif (image du
+  conteneur = digest publié), données et compte admin conservés.
 
 ## Ce qui n'existe pas (à ce jour)
 
@@ -110,8 +110,8 @@
 - Aucune écriture de configuration depuis la WebUI : les paramètres sont en lecture seule
   (les modifications passent par les procédures SSDV2, ex. `menu_change_domaine`).
 - `ghcr.io/kesurof/ssdv2-webui` publiée en multiarchitecture (tags `:latest` et `:dev`,
-  manifeste `sha256:7d0055c3…`, dépôt et paquet publics) ; le workflow doit être relancé à
-  chaque évolution de l'image.
+  dépôt et paquet publics, licence GPL-3.0) ; release automatique sur push `main`
+  (`:dev` + `:latest`), tag `v*` pour les versions (ADR-0021).
 - Aucune page Docker/réseau, command palette, thème.
 - Aucune migration de schéma hors micro-migrations additives (ADR-0016).
 
