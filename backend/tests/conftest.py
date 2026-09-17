@@ -108,6 +108,27 @@ class FakeDockerClient:
         }
 
 
+class FakeStreamingRunner:
+    def __init__(
+        self,
+        exit_code: int = 0,
+        lines: tuple[str, ...] = ("ligne 1", "ligne 2"),
+        error: Exception | None = None,
+    ) -> None:
+        self.exit_code = exit_code
+        self.lines = lines
+        self.error = error
+        self.calls: list[list[str]] = []
+
+    def run_streaming(self, args, on_line, timeout=None) -> int:
+        self.calls.append(args)
+        if self.error is not None:
+            raise self.error
+        for line in self.lines:
+            on_line(line)
+        return self.exit_code
+
+
 @pytest.fixture(scope="session")
 def settings():
     from app.core.config import get_settings
@@ -125,8 +146,10 @@ def client(fake_containers: list[FakeContainer]) -> Iterator[TestClient]:
     from app.api.auth import login_limiter
     from app.deps import get_docker_client
     from app.main import app
+    from app.services.jobs import job_manager
 
     login_limiter()._attempts.clear()
+    job_manager.configure(lambda: FakeStreamingRunner())
     app.dependency_overrides[get_docker_client] = lambda: FakeDockerClient(fake_containers)
     with TestClient(app) as test_client:
         yield test_client

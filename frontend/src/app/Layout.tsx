@@ -9,6 +9,7 @@ import { fr } from '@/i18n/fr'
 const NAV_ITEMS = [
   { to: '/dashboard', label: fr.nav.dashboard },
   { to: '/apps', label: fr.nav.apps },
+  { to: '/jobs', label: fr.nav.jobs },
   { to: '/diagnostics', label: fr.nav.diagnostics },
 ]
 

@@ -2,6 +2,8 @@ import json
 import os
 import re
 import subprocess
+import threading
+from collections.abc import Callable
 
 from app.core.config import Settings
 
@@ -94,6 +96,51 @@ class Ssdv2CtlRunner:
         if not isinstance(payload, dict):
             raise Ssdv2CtlError("ssdv2ctl_invalid_output", "sortie ssdv2ctl inattendue")
         return payload
+
+    def run_streaming(
+        self,
+        args: list[str],
+        on_line: Callable[[str], None],
+        timeout: int | None = None,
+    ) -> int:
+        _validate(args)
+        try:
+            process = subprocess.Popen(
+                [str(self.path), *args],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                stdin=subprocess.DEVNULL,
+                env=self._environment(),
+            )
+        except OSError as exc:
+            raise Ssdv2CtlError("ssdv2ctl_unavailable", str(exc)) from exc
+
+        timed_out = False
+
+        def _kill() -> None:
+            nonlocal timed_out
+            timed_out = True
+            process.kill()
+
+        timer = None
+        if timeout:
+            timer = threading.Timer(timeout, _kill)
+            timer.start()
+        try:
+            assert process.stdout is not None
+            for line in process.stdout:
+                on_line(line.rstrip("\n"))
+            process.wait()
+        finally:
+            if timer is not None:
+                timer.cancel()
+            if process.stdout is not None:
+                process.stdout.close()
+
+        if timed_out:
+            raise Ssdv2CtlError("ssdv2ctl_timeout", "ssdv2ctl a dépassé le délai")
+        return process.returncode if process.returncode is not None else -1
 
     def version(self) -> str | None:
         try:

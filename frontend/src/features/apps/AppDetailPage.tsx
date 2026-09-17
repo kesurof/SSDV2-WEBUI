@@ -1,6 +1,7 @@
 import { useParams } from 'react-router-dom'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { AppActions } from '@/features/apps/AppActions'
 import { AppDetailView } from '@/features/apps/AppDetailView'
 import { useAppAuth } from '@/features/apps/useAppAuth'
 import { useApp } from '@/features/system/useSystem'
@@ -24,5 +25,10 @@ export function AppDetailPage() {
     )
   }
 
-  return <AppDetailView app={detail.data} auth={auth.data?.auth ?? null} />
+  return (
+    <div className="space-y-4">
+      <AppActions app={detail.data} />
+      <AppDetailView app={detail.data} auth={auth.data?.auth ?? null} />
+    </div>
+  )
 }

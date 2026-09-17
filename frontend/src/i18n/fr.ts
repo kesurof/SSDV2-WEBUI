@@ -8,6 +8,7 @@ export const fr = {
   nav: {
     dashboard: 'Dashboard',
     apps: 'Applications',
+    jobs: 'Jobs',
     diagnostics: 'Diagnostics',
   },
   login: {
@@ -96,6 +97,42 @@ export const fr = {
     orphanContainers: 'Conteneurs orphelins (label sans application en base)',
     danglingVolumes: 'Volumes anonymes orphelins',
     none: 'Aucun',
+  },
+  jobs: {
+    title: 'Jobs',
+    back: 'Retour aux jobs',
+    empty: 'Aucun job.',
+    events: 'Événements',
+    launched: 'Job #{id} lancé',
+    types: {
+      app_start: 'Démarrage',
+      app_stop: 'Arrêt',
+      app_restart: 'Redémarrage',
+    },
+    status: {
+      queued: 'En attente',
+      running: 'En cours',
+      success: 'Succès',
+      failed: 'Échec',
+      cancelled: 'Annulé',
+      interrupted: 'Interrompu',
+    },
+    columns: {
+      id: 'ID',
+      type: 'Type',
+      target: 'Cible',
+      status: 'Statut',
+      created: 'Créé',
+    },
+  },
+  actions: {
+    start: 'Démarrer',
+    stop: 'Arrêter',
+    restart: 'Redémarrer',
+    confirmTitle: 'Confirmer l’action',
+    confirmMessage: 'Voulez-vous vraiment effectuer « {action} » sur {app} ?',
+    cancel: 'Annuler',
+    confirm: 'Confirmer',
   },
   dashboard: {
     title: 'Dashboard',

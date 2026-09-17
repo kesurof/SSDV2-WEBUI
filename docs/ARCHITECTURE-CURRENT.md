@@ -14,6 +14,9 @@
   `GET /api/v1/apps/{app}/auth` (type d'authentification via `ssdv2ctl auth get`),
   `GET /api/v1/apps/{app}/logs` (conteneur rattaché à l'application, lignes, horodatage)
   et `GET /api/v1/apps/{app}/logs/stream` (SSE, suivi en direct),
+  `POST /api/v1/apps/{app}/start|stop|restart` (crée un job, 202),
+  `GET /api/v1/jobs` et `/api/v1/jobs/{id}` (file de jobs, état en SQLite),
+  `GET /api/v1/jobs/{id}/events` (SSE) et `POST /api/v1/jobs/{id}/cancel`,
   `GET /api/v1/system/summary` (hôte via Docker info, branche/commit SSDV2, compteurs),
   `GET /api/v1/diagnostics` via l'adaptateur `ssdv2ctl` (`app/adapters/ssdv2_cli.py`,
   commandes allowlistées, `shell=False`, `SSDV2CTL_PATH`/`SSDV2CTL_TIMEOUT`).
@@ -21,7 +24,8 @@
   TanStack Query v5 + TanStack Table v9 + React Router v7 ; login, layout, dashboard,
   table des applications (recherche, filtres, badges d'état, alertes, bandeau mode
   dégradé), page de détail d'application (vue générale avec authentification, conteneurs,
-  logs avec suivi SSE, volumes, réseau/DNS), page Diagnostics.
+  logs avec suivi SSE, volumes, réseau/DNS, actions démarrer/arrêter/redémarrer avec
+  confirmation), page Jobs (liste + détail avec événements SSE), page Diagnostics.
 - `Dockerfile` : multi-stage Node 22 → `python:3.13-slim`, utilisateur non root
   (`uid 10001`), frontend compilé servi par FastAPI, healthcheck `/health`.
 - `compose.yaml` : conteneur unique `ssdv2-webui` lié à `127.0.0.1:8800`, socket Docker,
@@ -47,12 +51,11 @@
 
 ## Ce qui n'existe pas (à ce jour)
 
-- Aucune mutation via la WebUI : `ssdv2ctl` (clone local non poussé, ADR-0010) est complet
-  pour la lecture, les actions, le cycle de vie, l'auth et les diagnostics (ADR-0011 à
-  ADR-0013), et la WebUI ne l'utilise que pour `GET /api/v1/diagnostics` (ADR-0014).
-- Aucun job, aucune file, aucun SSE, aucune notification persistante.
-- Aucun dashboard, page de détail d'application, logs, diagnostics, sauvegardes, pages
-  Docker/réseau, command palette, thème.
+- Aucune mutation nécessitant ansible (`install`, `remove`, `reinstall`, `recreate`) :
+  `ssdv2ctl` les expose, mais le conteneur n'a pas ansible (ADR-0014, décision ouverte).
+- Aucune notification persistante, aucun audit, aucun backup, aucune commande
+  `ssdv2ctl config` (reportés en Phase 4).
+- Aucune sauvegarde, page Docker/réseau, command palette, thème.
 - Aucune exposition publique (Traefik), aucune image publiée sur GHCR, aucun multiarch.
 - Aucune migration de schéma (SQLAlchemy `create_all` uniquement — ADR-0008).
 

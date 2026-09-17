@@ -8,6 +8,7 @@ from fastapi.responses import StreamingResponse
 from app.adapters.ssdv2_cli import Ssdv2CtlError
 from app.deps import CurrentUser, DockerDep, SettingsDep, Ssdv2CtlDep
 from app.schemas.app import AppAuthOut, AppDetailOut, AppStateOut, LogsOut
+from app.schemas.job import JobOut
 from app.services.app_overview import load_app_states
 from app.services.app_state import WARNING_SSDDB_UNAVAILABLE, build_app_detail
 from app.services.catalogue import read_catalogue
@@ -16,6 +17,7 @@ from app.services.docker_state import (
     read_container_logs,
     stream_container_logs,
 )
+from app.services.jobs import job_manager
 from app.services.registries import read_registries
 from app.services.ssddb import read_ssddb
 
@@ -130,6 +132,43 @@ def stream_app_logs(
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
+
+
+def _submit_app_action(app: str, action: str, settings: SettingsDep, user: CurrentUser) -> JobOut:
+    entries, catalogue_error = read_catalogue(settings.catalogue_file)
+    if catalogue_error:
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, catalogue_error)
+    if not any(item.name == app for item in entries):
+        raise HTTPException(status.HTTP_404_NOT_FOUND, f"application inconnue: {app}")
+    job = job_manager.submit(f"app_{action}", app, user.username)
+    return JobOut.model_validate(job)
+
+
+@router.post("/{app}/start", response_model=JobOut, status_code=status.HTTP_202_ACCEPTED)
+def start_app(
+    app: str,
+    settings: SettingsDep,
+    _user: CurrentUser,
+) -> JobOut:
+    return _submit_app_action(app, "start", settings, _user)
+
+
+@router.post("/{app}/stop", response_model=JobOut, status_code=status.HTTP_202_ACCEPTED)
+def stop_app(
+    app: str,
+    settings: SettingsDep,
+    _user: CurrentUser,
+) -> JobOut:
+    return _submit_app_action(app, "stop", settings, _user)
+
+
+@router.post("/{app}/restart", response_model=JobOut, status_code=status.HTTP_202_ACCEPTED)
+def restart_app(
+    app: str,
+    settings: SettingsDep,
+    _user: CurrentUser,
+) -> JobOut:
+    return _submit_app_action(app, "restart", settings, _user)
 
 
 @router.get("/{app}/auth", response_model=AppAuthOut)

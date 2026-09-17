@@ -1,0 +1,145 @@
+import logging
+import queue
+import threading
+from collections.abc import Callable
+
+from sqlalchemy import select, update
+
+from app.adapters.ssdv2_cli import Ssdv2CtlError, Ssdv2CtlRunner
+from app.db.models import Job, JobEvent, utcnow
+from app.db.session import get_session_factory
+
+logger = logging.getLogger(__name__)
+
+TERMINAL_STATUSES = ("success", "failed", "cancelled", "interrupted")
+
+JOB_TYPE_ACTIONS = {
+    "app_start": "start",
+    "app_stop": "stop",
+    "app_restart": "restart",
+}
+
+ACTION_TIMEOUT = 600
+
+
+class JobManager:
+    def __init__(self) -> None:
+        self._queue: queue.Queue[int] = queue.Queue()
+        self._thread: threading.Thread | None = None
+        self._stopping = threading.Event()
+        self._runner_provider: Callable[[], Ssdv2CtlRunner] | None = None
+
+    def configure(self, runner_provider: Callable[[], Ssdv2CtlRunner]) -> None:
+        self._runner_provider = runner_provider
+
+    def reset_interrupted(self) -> None:
+        with get_session_factory()() as session:
+            session.execute(
+                update(Job)
+                .where(Job.status.in_(("queued", "running")))
+                .values(status="interrupted", finished_at=utcnow())
+            )
+            session.commit()
+
+    def start(self) -> None:
+        if self._thread is not None:
+            return
+        self._stopping.clear()
+        self._thread = threading.Thread(target=self._loop, name="ssdv2-webui-jobs", daemon=True)
+        self._thread.start()
+
+    def stop(self) -> None:
+        self._stopping.set()
+        if self._thread is not None:
+            self._thread.join(timeout=5)
+            self._thread = None
+
+    def submit(self, job_type: str, target: str, created_by: str | None) -> Job:
+        with get_session_factory()() as session:
+            job = Job(type=job_type, target=target, created_by=created_by)
+            session.add(job)
+            session.commit()
+            session.refresh(job)
+            job_id = job.id
+        self._queue.put(job_id)
+        return job
+
+    def _loop(self) -> None:
+        while not self._stopping.is_set():
+            try:
+                job_id = self._queue.get(timeout=0.5)
+            except queue.Empty:
+                continue
+            try:
+                self.run_job(job_id)
+            except Exception:
+                logger.exception("échec inattendu du job %s", job_id)
+
+    def _add_event(self, job_id: int, line: str) -> None:
+        with get_session_factory()() as session:
+            session.add(JobEvent(job_id=job_id, line=line))
+            session.commit()
+
+    def run_job(self, job_id: int) -> None:
+        with get_session_factory()() as session:
+            job = session.get(Job, job_id)
+            if job is None or job.status != "queued":
+                return
+            job.status = "running"
+            job.started_at = utcnow()
+            session.commit()
+            job_type = job.type
+            target = job.target
+
+        exit_code: int | None = None
+        message: str | None = None
+        try:
+            action = JOB_TYPE_ACTIONS.get(job_type)
+            if action is None:
+                raise Ssdv2CtlError("unknown_job_type", f"type de job inconnu: {job_type}")
+            if self._runner_provider is None:
+                raise Ssdv2CtlError("jobs_unavailable", "gestionnaire de jobs non configuré")
+            self._add_event(job_id, f"Job {job_type} sur {target} démarré")
+            runner = self._runner_provider()
+            exit_code = runner.run_streaming(
+                ["app", action, target], lambda line: self._add_event(job_id, line), ACTION_TIMEOUT
+            )
+            if exit_code == 0:
+                status = "success"
+            else:
+                status = "failed"
+                message = f"ssdv2ctl a retourné le code {exit_code}"
+            self._add_event(job_id, f"Job terminé (code {exit_code})")
+        except Ssdv2CtlError as exc:
+            status = "failed"
+            message = exc.message
+            self._add_event(job_id, f"Échec : {exc.message}")
+        except Exception as exc:
+            logger.exception("job %s en échec", job_id)
+            status = "failed"
+            message = str(exc)
+            self._add_event(job_id, f"Échec inattendu : {exc}")
+
+        with get_session_factory()() as session:
+            job = session.get(Job, job_id)
+            if job is not None and job.status == "running":
+                job.status = status
+                job.exit_code = exit_code
+                job.message = message
+                job.finished_at = utcnow()
+                session.commit()
+
+    def events_after(self, job_id: int, last_id: int) -> tuple[list[JobEvent], Job | None]:
+        with get_session_factory()() as session:
+            events = list(
+                session.scalars(
+                    select(JobEvent)
+                    .where(JobEvent.job_id == job_id, JobEvent.id > last_id)
+                    .order_by(JobEvent.id)
+                )
+            )
+            job = session.get(Job, job_id)
+            return events, job
+
+
+job_manager = JobManager()

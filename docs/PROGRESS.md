@@ -49,13 +49,23 @@ aucun push — ADR-0010 ; dernière révision `444b9681`).
   n'en a aujourd'hui) ; le flux SSE renvoie `{"ready": true}` puis les lignes réelles de
   `streamfusion` ; le dashboard affiche l'hôte et les compteurs réels.
 
+**Phase 3a — jobs, SSE et actions start/stop/restart**.
+
+- Backend : file de jobs en mémoire + état SQLite (`jobs`, `job_events`), worker unique,
+  jobs `running` → `interrupted` au démarrage (ADR-0007) ; `POST /api/v1/apps/{app}/
+  start|stop|restart` (202), `GET /api/v1/jobs`, `/jobs/{id}`, `/jobs/{id}/events` (SSE),
+  `POST /jobs/{id}/cancel` ; 75 tests pytest verts.
+- Frontend : page Jobs (liste + détail avec événements en direct), boutons
+  Démarrer/Arrêter/Redémarrer dans le détail d'application avec confirmation et toast
+  (Sonner) puis navigation vers le job ; 21 tests Vitest verts.
+- Preuves : CI verte, déploiement serveur validé (voir ci-dessous).
+
 ## Prochains chantiers pressentis
 
-1. Phase 3 : jobs + SSE, puis mutations WebUI — dépend de la décision ouverte sur
-   l'exécution des mutations depuis le conteneur (runtime ansible/jq, ADR-0014).
-   Les actions `start`/`stop`/`restart` et `diagnostics` sont déjà exécutables dans le
-   conteneur ; `install`/`remove`/`reinstall`/`recreate` attendent la décision (vault,
-   ansible).
+1. Phase 3b : enrichir l'image (`ansible-core`, `community.docker`, `kwoodson.yedit`)
+   puis exposer install/remove/reinstall/recreate en jobs (décision déjà prise).
+2. Phase 4 : notifications persistantes, audit, backups, diagnostics réparateurs,
+   `ssdv2ctl config`.
 
 ## Points d'attention détectés
 

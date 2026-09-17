@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client'
 import { RouterProvider } from 'react-router-dom'
 
 import { router } from '@/app/router'
+import { Toaster } from '@/components/ui/sonner'
 
 import '@/index.css'
 
@@ -19,6 +20,7 @@ if (rootElement) {
     <StrictMode>
       <QueryClientProvider client={queryClient}>
         <RouterProvider router={router} />
+        <Toaster />
       </QueryClientProvider>
     </StrictMode>,
   )

@@ -8,12 +8,14 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy import func, select
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.api import apps, auth, diagnostics, health, system
+from app.adapters.ssdv2_cli import Ssdv2CtlRunner
+from app.api import apps, auth, diagnostics, health, jobs, system
 from app.core.config import get_settings
 from app.core.logging import setup_logging
 from app.core.security import hash_password
 from app.db.models import User
 from app.db.session import get_session_factory, init_db
+from app.services.jobs import job_manager
 
 logger = logging.getLogger(__name__)
 
@@ -43,9 +45,14 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     try:
         init_db()
         bootstrap_admin()
+        settings = get_settings()
+        job_manager.configure(lambda: Ssdv2CtlRunner(settings))
+        job_manager.reset_interrupted()
+        job_manager.start()
     except (SQLAlchemyError, OSError) as exc:
         logger.error("Base de données indisponible au démarrage: %s", exc)
     yield
+    job_manager.stop()
 
 
 def create_app() -> FastAPI:
@@ -57,6 +64,7 @@ def create_app() -> FastAPI:
     api_router.include_router(auth.router)
     api_router.include_router(diagnostics.router)
     api_router.include_router(health.router)
+    api_router.include_router(jobs.router)
     api_router.include_router(system.router)
     app.include_router(api_router)
     app.include_router(health.router)

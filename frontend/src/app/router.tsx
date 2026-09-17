@@ -6,6 +6,8 @@ import { AppsPage } from '@/features/apps/AppsPage'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
 import { DiagnosticsPage } from '@/features/diagnostics/DiagnosticsPage'
+import { JobDetailPage } from '@/features/jobs/JobDetailPage'
+import { JobsPage } from '@/features/jobs/JobsPage'
 
 export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
@@ -17,6 +19,8 @@ export const router = createBrowserRouter([
       { path: 'dashboard', element: <DashboardPage /> },
       { path: 'apps', element: <AppsPage /> },
       { path: 'apps/:app', element: <AppDetailPage /> },
+      { path: 'jobs', element: <JobsPage /> },
+      { path: 'jobs/:id', element: <JobDetailPage /> },
       { path: 'diagnostics', element: <DiagnosticsPage /> },
     ],
   },

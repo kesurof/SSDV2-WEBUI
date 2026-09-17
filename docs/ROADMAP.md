@@ -9,7 +9,7 @@
 | 0 — Contrat SSDV2 | `ssdv2ctl` non interactif JSON (apps, app, auth, diagnostics) | Terminée — 2026-09-17 (clone local, ADR-0010) ; `config get/set` reporté en Phase 4 |
 | 1 — Socle WebUI | FastAPI + React/Vite + shadcn + SQLite + auth admin + image Docker + healthcheck | En cours (reste : exposition Traefik) |
 | 2 — Lecture seule | Dashboard, catalogue ~190 apps, filtres, détail app, conteneurs, logs | Terminée — 2026-09-17 (auth affichée via `ssdv2ctl`, logs avec suivi SSE ; confort des logs — recherche, pause — reporté) |
-| 3 — Cycle de vie | Jobs, SSE, install/start/stop/restart/reinstall/remove, confirmations | À faire (exécution des mutations depuis le conteneur à trancher — ADR-0014) |
+| 3 — Cycle de vie | Jobs, SSE, install/start/stop/restart/reinstall/remove, confirmations | En cours — jobs + SSE et start/stop/restart livrés ; reste install/remove/reinstall/recreate (image à enrichir avec ansible, ADR-0014) |
 | 4 — Administration | Auth en masse, configuration, notifications persistantes, audit, backups, diagnostics | À faire |
 | 5 — Avancé | Mise à jour SSDV2, Git, patches, Docker avancé, fonctions hôte | À faire |
 
