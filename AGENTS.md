@@ -2,10 +2,10 @@
 
 ## État du dépôt
 
-M1 (lecture seule) déployé sur le serveur de test. Backend `backend/` (FastAPI + pytest),
-frontend `frontend/` (React/Vite/shadcn/TanStack), `Dockerfile` multi-stage,
-`compose.yaml`, CI self-hosted `.github/workflows/ci.yml`. Détails :
-`docs/ARCHITECTURE-CURRENT.md`.
+Déployé sur le serveur de test comme application SSDV2 `ssdv2webui` (ADR-0020). Backend
+`backend/` (FastAPI + pytest), frontend `frontend/` (React/Vite/shadcn/TanStack),
+`Dockerfile` multi-stage (CLI Docker et `ssdv2ctl` embarqués), `compose.yaml` (voie de
+développement), CI/release self-hosted. Détails : `docs/ARCHITECTURE-CURRENT.md`.
 
 ## Commandes
 
@@ -15,17 +15,24 @@ frontend `frontend/` (React/Vite/shadcn/TanStack), `Dockerfile` multi-stage,
 - Types API : régénérer `backend/openapi.json` (`python -m app.export_openapi`, même
   conteneur que les tests) puis `npm run gen:api` — les deux fichiers sont versionnés.
 - Image : `docker build -t ssdv2-webui:local .`
-- Serveur de test : `ssh utilisateur@198.51.100.10 "cd ~/ssdv2-webui && git pull && docker compose up -d --build"` ;
-  UI sur `127.0.0.1:8800` uniquement (tunnel : `ssh -L 8800:127.0.0.1:8800 utilisateur@198.51.100.10`).
+- Serveur de test : application SSDV2 `ssdv2webui` (image `ghcr.io/kesurof/ssdv2-webui:latest`,
+  définition `~/seedbox-compose/includes/dockerapps/vars/ssdv2webui.yml` — arbre local, sans
+  commit, ADR-0010 ; données `~/seedbox/docker/utilisateur/ssdv2webui/data` ; UI
+  `https://ssdv2.exemple.tld`). Mise à jour : pousser sur `main`, puis
+  `docker pull ghcr.io/kesurof/ssdv2-webui:latest && ssdv2ctl app recreate ssdv2webui`
+  (ou attendre le prochain `install`/`recreate`). Le compose `~/ssdv2-webui` reste la voie
+  de développement (tunnel `ssh -L 8800:127.0.0.1:8800 utilisateur@198.51.100.10` s'il est
+  relancé localement).
 - `ssdv2ctl` (Phase 0 complète, clone local `~/Developer/ssdv2`, branche `wip/ssdv2ctl`,
   jamais de push — ADR-0010) : tests
   `docker run --rm -v "$PWD:/src:ro" -w / python:3.13-slim sh -c "cp -r /src /work && cd /work && python3 -m unittest discover -s tests/python"` ;
   validation serveur : `rsync` vers `~/ssdv2-ctl-dev` puis exécution avec
   `SETTINGS_SOURCE=~/seedbox-compose SETTINGS_STORAGE=~/seedbox`.
-- Adaptateur WebUI : `SSDV2CTL_PATH` (défaut `ssdv2ctl`) et `SSDV2CTL_TIMEOUT` ; le compose
-  monte `SSDV2CTL_DIR` (défaut `~/ssdv2-ctl-dev`) sur `/opt/ssdv2ctl` et le binaire Docker
-  de l'hôte. Toute nouvelle commande ssdv2ctl exposée doit être ajoutée à l'allowlist de
-  `app/adapters/ssdv2_cli.py` (jamais de shell).
+- Adaptateur WebUI : `SSDV2CTL_PATH` (défaut `/usr/local/bin/ssdv2ctl`, embarqué dans
+  l'image — `scripts/sync-ssdv2ctl.sh` resynchronise la copie vendored) et
+  `SSDV2CTL_TIMEOUT` ; le compose de développement monte `SSDV2CTL_DIR` (défaut
+  `~/ssdv2-ctl-dev`) sur `/opt/ssdv2ctl`. Toute nouvelle commande ssdv2ctl exposée doit
+  être ajoutée à l'allowlist de `app/adapters/ssdv2_cli.py` (jamais de shell).
 
 ## Documentation
 

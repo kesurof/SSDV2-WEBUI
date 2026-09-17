@@ -13,9 +13,21 @@
   `scripts/sync-ssdv2ctl.sh`), défauts backend dérivés de `HOME` ; smoke test en CI.
 - Intégration SSDV2 : `includes/dockerapps/vars/ssdv2webui.yml` + entrée catalogue dans le
   clone local (`~/Developer/ssdv2`, branche `wip/ssdv2ctl`, aucun push — ADR-0010) ;
-  installation par le menu avec surcharge `~/seedbox/vars/ssdv2webui.yml` sur le serveur.
-- Preuves : à compléter (installation réelle par le menu, cycle `ssdv2ctl`, migration des
-  données depuis le volume `webui-data`).
+  déployée sur le serveur depuis les sources SSDV2 (`~/seedbox-compose`, arbre de travail
+  local, aucun commit).
+- Preuves serveur : installation par `ssdv2ctl app install` (ansible depuis l'image
+  publiée), `app status` (registres + `ssddb` + DNS `ssdv2`), `app restart`, `app backup`
+  (archive `~/backup`), puis `app remove --delete-data` (conteneur, registres, ligne
+  `ssddb`, données et enregistrement Cloudflare supprimés) et réinstallation — cycle
+  complet vert. Migration de la base `webui.sqlite3` de l'ancien volume `webui-data`,
+  sessions purgées, `internal_auth` réactivé ; API interne : login 200, 184 applications,
+  25 jobs, 17 événements d'audit, 2 sauvegardes. Routeur `ssdv2webui-rtr` →
+  `chain-oauth2-proxy@file` sur `https://ssdv2.exemple.tld`.
+- Découverte : `suppression_appli` supprime la surcharge `~/seedbox/vars/<app>.yml`
+  (functions.sh:720) — la définition vit donc dans les sources SSDV2 (upstream différé par
+  ADR-0010), la surcharge restant réservée aux personnalisations.
+- Reste à faire : rendre le paquet GHCR public (paquet encore privé, `pull_image: false`
+  temporaire sur le serveur), puis valider un `recreate` avec pull authentique.
 
 ## Derniers chantiers terminés (2026-09-17)
 

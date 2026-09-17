@@ -75,19 +75,33 @@
 
 ## Exécution constatée
 
-- Serveur de test `exemple.tld` : clone `~/ssdv2-webui`, conteneur `ssdv2-webui` démarré,
-  `/health` → `{"status":"ok","docker":true,"ssdv2":true,"ssdv2ctl":true,"database":true}`,
-  `GET /api/v1/apps` → 183 entrées dont 8 installées et 8 en marche, 0 alerte.
-  UI publique : `https://ssdv2.exemple.tld` (oauth2-proxy puis auth admin), tunnel SSH
-  `127.0.0.1:8800` toujours disponible.
-- Données lues : catalogue `services-available` (183), `ssddb` (11 entrées, dont 3 hors
-  catalogue), registres `~/seedbox/conf` (8 applications), 19 conteneurs Docker.
-- L'application reste accessible directement en local (`127.0.0.1:8800`) et publiquement
-  via Traefik/Cloudflare avec double authentification (oauth2-proxy + compte admin WebUI).
+- Serveur de test `exemple.tld` : application SSDV2 **`ssdv2webui`** installée (conteneur
+  `ssdv2webui`, image `ghcr.io/kesurof/ssdv2-webui:latest`, registres
+  `~/seedbox/conf/ssdv2webui.containers`, ligne `ssddb` `ssdv2webui|2|ssdv2|8000`, données
+  dans `~/seedbox/docker/utilisateur/ssdv2webui/data`), `/health` →
+  `{"status":"ok","docker":true,"ssdv2":true,"ssdv2ctl":true,"database":true}`.
+  UI publique : `https://ssdv2.exemple.tld` (routeur `ssdv2webui-rtr`, middleware
+  `chain-oauth2-proxy@file`, TLS Cloudflare) puis compte admin interne (réactivé) ;
+  l'ancien déploiement compose `~/ssdv2-webui` est arrêté et son port local `127.0.0.1:8800`
+  n'existe plus (accès par Traefik uniquement).
+- Validation `ssdv2ctl` sur `ssdv2webui` : `app status` (`sources.docker/ssddb/registries`
+  vrais), `app restart`, `app backup` (archive locale créée dans `~/backup`),
+  `app remove --delete-data` (conteneur, registres, ligne `ssddb`, dossier de données et
+  enregistrement Cloudflare supprimés) puis `app install --subdomain ssdv2 --auth
+  oauth2-proxy` — cycle complet vert.
+- Migration des données : base `webui.sqlite3` du volume `webui-data` copiée dans le
+  dossier de l'application, sessions purgées, `internal_auth` réactivé (l'état désactivé
+  de mise au point est clos) ; API interne vérifiée (login 200, 184 applications dont
+  `ssdv2webui`, 25 jobs, 17 événements d'audit, 2 sauvegardes).
+- Données lues : catalogue `services-available` (184), registres `~/seedbox/conf`
+  (9 applications).
 - Traefik : les routeurs historiques du fichier `~/seedbox/docker/traefik/rules/ssdv2.toml`
   (services morts sur les ports 3000/8080) ont été neutralisés (`.disabled`) car ils
-  capturaient `/api/v1` et provoquaient des 504 ; l'exposition de la WebUI est décrite par
-  les labels Docker du compose.
+  capturaient `/api/v1` et provoquaient des 504 ; l'exposition de la WebUI est désormais
+  décrite par les labels générés par SSDV2.
+- Reste à valider : pull du paquet GHCR **public** (le paquet est encore privé, la
+  validation ci-dessus utilise l'image publiée préchargée localement et
+  `pull_image: false` temporaire).
 
 ## Ce qui n'existe pas (à ce jour)
 
@@ -97,8 +111,9 @@
 - Aucune écriture de configuration depuis la WebUI : les paramètres sont en lecture seule
   (les modifications passent par les procédures SSDV2, ex. `menu_change_domaine`).
 - `ghcr.io/kesurof/ssdv2-webui` publiée en multiarchitecture (tags `:latest` et `:dev`,
-  manifeste `sha256:65476cb4…`) ; le workflow doit être relancé à chaque évolution de
-  l'image.
+  manifeste `sha256:400a4873…` pour le commit `10227aa`) ; le workflow doit être relancé à
+  chaque évolution de l'image. Paquet encore **privé** : le rendre public (ADR-0020) reste
+  la dernière étape de la distribution universelle.
 - Aucune page Docker/réseau, command palette, thème.
 - Aucune migration de schéma hors micro-migrations additives (ADR-0016).
 
