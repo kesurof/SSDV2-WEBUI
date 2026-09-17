@@ -91,10 +91,22 @@ aucun push — ADR-0010 ; dernière révision `444b9681`).
   présents), `cleanup-orphan-containers` (job 20 `success`, aucun orphelin) et
   `cleanup-dangling-volumes` (job 21 `success`, 2 volumes → 0, diagnostic à 0).
 
+**Phase 4b — notifications persistantes et audit**.
+
+- Backend : tables `notifications` et `audit_events` ; notifications créées à la fin des
+  jobs (échec → `error`, cycle de vie réussi → `success`, lien vers le job) ; audit des
+  connexions/déconnexions et de chaque job (action, cible, statut, utilisateur) ;
+  `GET /notifications` (+ `unread`), `PATCH /{id}/read`, `POST /read-all`,
+  `GET /notifications/events` (SSE), `GET /audit` ; 95 tests pytest verts.
+- Frontend : page Notifications (badge non-lues dans la sidebar, marquage lu, liens),
+  page Audit, rafraîchissement temps réel via SSE ; 29 tests Vitest verts.
+- Preuves : CI verte ; sur le serveur, job `app_restart wallos` en échec → notification
+  `error` « Échec : Redémarrage wallos » (lien `/jobs/22`), marquage lu et SSE validés ;
+  audit : `admin | app_restart | wallos | failed` et `admin | login | success`.
+
 ## Prochains chantiers pressentis
 
-1. Phase 4b : notifications persistantes (+ SSE), audit des actions, backups,
-   `ssdv2ctl config`.
+1. Phase 4c : backups (voir/restaurer), auth en masse, `ssdv2ctl config`.
 2. Polish : confort des logs (recherche, pause), exposition Traefik, multiarch/GHCR.
 
 ## Points d'attention détectés
