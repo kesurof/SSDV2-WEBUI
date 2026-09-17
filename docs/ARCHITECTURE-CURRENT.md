@@ -31,7 +31,8 @@
   (`uid 10001`), frontend compilé servi par FastAPI, healthcheck `/health`, runtime
   ansible (`ansible-core` 2.21.0, collections `community.docker`/`community.general`/
   `ansible.posix`, rôles `kwoodson.yedit`/`geerlingguy.docker` dans `/opt/ansible`).
-- `compose.yaml` : conteneur unique `ssdv2-webui` lié à `127.0.0.1:8800`, socket Docker,
+- `compose.yaml` : conteneur unique `ssdv2-webui` lié à `127.0.0.1:8800`, exécuté avec
+  l'UID/GID de l'utilisateur SSDV2 (`SSD_UID`/`SSD_GID`, ADR-0017), socket Docker,
   binaire Docker de l'hôte monté, `SSDV2CTL_PATH` et `HOME` pointant vers l'utilisateur
   SSDV2, dossier `ssdv2ctl` de développement monté sur `/opt/ssdv2ctl`, fichiers
   `~/.config/ssd/env` et `~/.vault_pass` montés en lecture seule (nécessaires à

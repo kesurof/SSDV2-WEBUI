@@ -4,6 +4,7 @@ services:
     image: ssdv2-webui:dev
     container_name: ssdv2-webui
     restart: unless-stopped
+    user: "${SSD_UID:-1000}:${SSD_GID:-1000}"
 
     environment:
       SSDV2_SOURCE: /home/${SSD_USER:-utilisateur}/seedbox-compose

@@ -302,6 +302,24 @@ pointe vers son remplaçant. Une décision non tranchée reste dans « Décision
   stocker les paramètres hors schéma.
 - **Références** : ADR-0008, brief §45-§46.
 
+## ADR-0017 — Conteneur exécuté avec l'UID de l'utilisateur SSDV2
+
+- **Statut** : acceptée — 2026-09-17
+- **Contexte** : les mutations écrivent dans le stockage SSDV2 (`~/seedbox` :
+  `account.yml`, registres, `vars/`) et dans le dépôt source ; ces chemins appartiennent à
+  l'utilisateur hôte. Le conteneur tournait avec l'utilisateur embarqué `webui`
+  (uid 10001) → `Permission denied` à l'installation.
+- **Décision** : exécuter le conteneur avec l'UID/GID de l'utilisateur SSDV2
+  (`user: "${SSD_UID}:${SSD_GID}"` dans le compose, valeurs fournies par l'utilisateur) et
+  aligner la propriété du volume de données WebUI sur cet UID.
+- **Conséquences** : l'image reste livrée avec son utilisateur non-root mais le
+  déploiement l'écrase ; le volume `webui-data` doit appartenir à cet UID (chown unique au
+  déploiement) ; l'accès en écriture aux fichiers SSDV2 est de fait équivalent à celui de
+  l'utilisateur hôte.
+- **Alternatives écartées** : rendre `~/seedbox` accessible en écriture à l'uid 10001
+  (modification invasive et durable de l'hôte) ; exécuter les mutations hors du conteneur.
+- **Références** : brief §10-§11, §72 ; ADR-0010, ADR-0015.
+
 ## Décisions ouvertes
 
 À trancher explicitement puis consigner en ADR (voir brief §72) :
