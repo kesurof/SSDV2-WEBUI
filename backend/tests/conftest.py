@@ -50,6 +50,7 @@ class FakeContainer:
     health: str | None = None
     app_label: str | None = None
     image: str = "example/image:latest"
+    env: list[str] | None = None
 
     @property
     def status(self) -> str:
@@ -64,7 +65,25 @@ class FakeContainer:
         state: dict = {"Status": self.state}
         if self.health:
             state["Health"] = {"Status": self.health}
-        return {"State": state, "Config": {"Image": self.image, "Labels": self.labels}}
+        return {
+            "State": state,
+            "Config": {"Image": self.image, "Labels": self.labels, "Env": self.env or []},
+        }
+
+    def stats(self, stream: bool = False) -> dict:
+        return {
+            "cpu_stats": {
+                "cpu_usage": {"total_usage": 200, "percpu_usage": [100, 100]},
+                "system_cpu_usage": 2000,
+                "online_cpus": 2,
+            },
+            "precpu_stats": {"cpu_usage": {"total_usage": 100}, "system_cpu_usage": 1000},
+            "memory_stats": {
+                "usage": 150 * 1024 * 1024,
+                "limit": 500 * 1024 * 1024,
+                "stats": {"cache": 50 * 1024 * 1024},
+            },
+        }
 
     def logs(
         self,
@@ -95,9 +114,18 @@ class FakeContainers:
         raise docker.errors.NotFound(f"conteneur introuvable: {name}")
 
 
+class FakeImages:
+    def get(self, reference: str):
+        raise docker.errors.ImageNotFound(reference)
+
+    def get_registry_data(self, reference: str):
+        raise docker.errors.DockerException("registre indisponible")
+
+
 class FakeDockerClient:
     def __init__(self, containers: list[FakeContainer]) -> None:
         self.containers = FakeContainers(containers)
+        self.images = FakeImages()
 
     def info(self) -> dict:
         return {

@@ -18,6 +18,12 @@
   (crée un job, 202), `GET /api/v1/jobs` et `/api/v1/jobs/{id}` (file de jobs, état en
   SQLite), `GET /api/v1/jobs/{id}/events` (SSE) et `POST /api/v1/jobs/{id}/cancel`,
   `GET /api/v1/system/summary` (hôte via Docker info, branche/commit SSDV2, compteurs),
+  `GET /api/v1/system/metrics` (CPU/RAM hôte depuis `/host/proc`, disque, conteneurs),
+  `GET /api/v1/system/health` (contrôles de services, sauvegardes, jobs, alertes, DNS,
+  sonde TLS avec cache — ADR-0022), `GET /api/v1/apps/{app}/history` (jobs + audit +
+  notifications + sauvegardes, filtrable), `GET /api/v1/apps/{app}/stats` (CPU/RAM par
+  conteneur, cache) et `GET /api/v1/apps/{app}/env` (allowlist stricte), `GET /api/v1/updates`
+  (digest local vs registre par image d'application, cache),
   `GET /api/v1/diagnostics` et `POST /api/v1/diagnostics/rebuild-registries|
   `GET /api/v1/notifications` (liste + non-lues), `PATCH /notifications/{id}/read`,
   `POST /notifications/read-all`, `GET /notifications/events` (SSE),
@@ -31,16 +37,19 @@
   l'adaptateur `ssdv2ctl` (`app/adapters/ssdv2_cli.py`, commandes allowlistées,
   `shell=False`, `SSDV2CTL_PATH`/`SSDV2CTL_TIMEOUT`).
 - `frontend/` : React 19 + Vite 8 + TypeScript 5.9 + Tailwind 4 + shadcn/ui +
-  TanStack Query v5 + TanStack Table v9 + React Router v7 ; assistant de premier
-  démarrage (`/setup`), login, layout (nom d'instance), dashboard,
-  table des applications (recherche, filtres, badges d'état, alertes, bandeau mode
-  dégradé), page de détail d'application (vue générale avec authentification, conteneurs,
-  logs avec suivi SSE, volumes, réseau/DNS, actions installer/démarrer/arrêter/redémarrer/
-  recréer/réinstaller/supprimer avec confirmations graduées), page Jobs (liste + détail
-  avec événements SSE), page Notifications (badge non-lues, marquage lu, liens vers les
-  jobs), page Audit, page Sauvegardes (archives SSDV2), page Authentification
-  (changement en masse), page Paramètres (lecture seule + sécurité),
-  page Diagnostics (contrôles + actions de réparation avec confirmation forte).
+  TanStack Query v5 + TanStack Table v9 + React Router v7 + Lucide + next-themes ;
+  design system repris de la maquette de référence (`docs/SSDV2_WEBUI_MOCKUP_FINAL_UI.html`,
+  ADR-0022) : tokens clair/sombre, sidebar en trois sections (Pilotage / Exploitation /
+  Configuration), recherche globale ⌘K, badges, composants transverses (StatusPill,
+  MetricCard, KeyValueList, ProgressBar) ; assistant de premier démarrage (`/setup`),
+  login, dashboard (santé, compteurs, jobs récents, alertes, bandeau mises à jour),
+  table des applications (filtres, pagination 20/page, badges d'état, alertes, bandeau
+  mode dégradé), page de détail d'application (cartes Informations, Accès et réseau,
+  Compagnons, Ressources, Sauvegardes, Déploiement, Liens ; onglets Conteneurs, Logs SSE,
+  Volumes, Réseau/DNS, Variables, Historique ; actions avec confirmations graduées),
+  pages Jobs (liste + détail SSE), Notifications, Audit, **Santé**, Sauvegardes,
+  **Mises à jour**, Authentification (masse), Paramètres (lecture seule + sécurité),
+  Diagnostics (réparations) et **Historique par application** (agrégé, export CSV).
 - `Dockerfile` : multi-stage Node 22 → `python:3.13-slim`, entrypoint PUID/PGID
   (`setpriv --init-groups`, ADR-0017), frontend compilé servi par FastAPI, healthcheck
   `/health`, runtime SSDV2 : ansible (`ansible-core` 2.21.0, collections
@@ -74,30 +83,33 @@
 ## Exécution constatée
 
 - Serveur de test privé (domaine d'exemple `exemple.tld`) : application SSDV2
-  **`ssdv2webui`** installée (conteneur `ssdv2webui`, image
-  `ghcr.io/kesurof/ssdv2-webui:latest`, registres `~/seedbox/conf/ssdv2webui.containers`,
-  ligne `ssddb` `ssdv2webui|2|ssdv2|8000`, données dans
-  `~/seedbox/docker/<utilisateur>/ssdv2webui/data`), `/health` →
+  **`ssdv2webui`** — définition au catalogue (`vars/ssdv2webui.yml`, montages
+  `/proc/stat` et `/proc/meminfo` en lecture seule) ; **installation retirée le
+  2026-09-17** (conteneur, registres, ligne `ssddb`, entrées `account.yml`, données et
+  enregistrement DNS supprimés via `ssdv2ctl app remove --delete-data`) pour permettre une
+  installation vierge par l'utilisateur. Les validations ci-dessous datent de
+  l'installation précédente.
+- Validation `ssdv2ctl` sur `ssdv2webui` (installation précédente) : `app status`
+  (`sources.docker/ssddb/registries` vrais), `app restart`, `app backup` (archive locale
+  créée dans `~/backup`), `app remove --delete-data` (conteneur, registres, ligne `ssddb`,
+  dossier de données et enregistrement Cloudflare supprimés) puis `app install
+  --subdomain ssdv2 --auth oauth2-proxy` — cycle complet vert ; `/health` →
   `{"status":"ok","docker":true,"ssdv2":true,"ssdv2ctl":true,"database":true}`.
-  UI publique : `https://ssdv2.exemple.tld` (routeur `ssdv2webui-rtr`, middleware
-  `chain-oauth2-proxy@file`, TLS Cloudflare) puis compte admin interne (réactivé) ;
-  l'ancien déploiement compose `~/ssdv2-webui` est arrêté et son port local `127.0.0.1:8800`
-  n'existe plus (accès par Traefik uniquement).
-- Validation `ssdv2ctl` sur `ssdv2webui` : `app status` (`sources.docker/ssddb/registries`
-  vrais), `app restart`, `app backup` (archive locale créée dans `~/backup`),
-  `app remove --delete-data` (conteneur, registres, ligne `ssddb`, dossier de données et
-  enregistrement Cloudflare supprimés) puis `app install --subdomain ssdv2 --auth
-  oauth2-proxy` — cycle complet vert.
-- Migration des données : base `webui.sqlite3` du volume `webui-data` copiée dans le
-  dossier de l'application, sessions purgées, `internal_auth` réactivé (l'état désactivé
-  de mise au point est clos) ; API interne vérifiée (login 200, 184 applications dont
-  `ssdv2webui`, 25 jobs, 17 événements d'audit, 2 sauvegardes).
+- Vérification locale de l'image (Docker Desktop, ADR-0022) : login 200,
+  `GET /api/v1/system/metrics` (CPU/RAM hôte, 6 conteneurs, avertissement
+  `storage_unavailable` attendu sans stockage SSDV2), `GET /api/v1/system/health`
+  (services + DNS/TLS « inconnu » sur `127.0.0.1`), `GET /api/v1/updates` vide, SPA servie,
+  aucune erreur dans les journaux.
+- Migration des données (installation précédente) : base `webui.sqlite3` du volume
+  `webui-data` copiée dans le dossier de l'application, sessions purgées, `internal_auth`
+  réactivé ; API interne vérifiée (login 200, 184 applications dont `ssdv2webui`,
+  25 jobs, 17 événements d'audit, 2 sauvegardes).
 - Données lues : catalogue `services-available` (184), registres `~/seedbox/conf`
   (9 applications).
 - Traefik : les routeurs historiques du fichier `~/seedbox/docker/traefik/rules/ssdv2.toml`
   (services morts sur les ports 3000/8080) ont été neutralisés (`.disabled`) car ils
-  capturaient `/api/v1` et provoquaient des 504 ; l'exposition de la WebUI est désormais
-  décrite par les labels générés par SSDV2.
+  capturaient `/api/v1` et provoquaient des 504 ; l'exposition de la WebUI est décrite par
+  les labels générés par SSDV2.
 - Distribution : paquet GHCR **public** ; `docker pull ghcr.io/kesurof/ssdv2-webui:latest`
   anonyme validé depuis le serveur et `app reinstall` avec pull effectif (image du
   conteneur = digest publié), données et compte admin conservés.
@@ -109,10 +121,14 @@
   SSDV2, ce projet se limite à lister et créer des sauvegardes.
 - Aucune écriture de configuration depuis la WebUI : les paramètres sont en lecture seule
   (les modifications passent par les procédures SSDV2, ex. `menu_change_domaine`).
+- Aucune mise à jour système (Docker Engine, OS, SSDV2 Core) ni restauration depuis la
+  WebUI : le centre de mises à jour couvre uniquement les images d'applications
+  (ADR-0022, Phase 5 pour le reste).
 - `ghcr.io/kesurof/ssdv2-webui` publiée en multiarchitecture (tags `:latest` et `:dev`,
   dépôt et paquet publics, licence GPL-3.0) ; release automatique sur push `main`
   (`:dev` + `:latest`), tag `v*` pour les versions (ADR-0021).
-- Aucune page Docker/réseau, command palette, thème.
+- Aucune page Docker/réseau ni palette de commandes complète (la recherche globale filtre
+  les applications).
 - Aucune migration de schéma hors micro-migrations additives (ADR-0016).
 
 ## Contexte externe (non vérifié par ce dépôt)

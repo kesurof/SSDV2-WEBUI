@@ -22,6 +22,7 @@ from app.api import (
     security,
     setup,
     system,
+    updates,
 )
 from app.core.config import get_settings
 from app.core.logging import setup_logging
@@ -88,6 +89,7 @@ def create_app() -> FastAPI:
     api_router.include_router(security.router)
     api_router.include_router(setup.router)
     api_router.include_router(system.router)
+    api_router.include_router(updates.router)
     app.include_router(api_router)
     app.include_router(health.router)
 

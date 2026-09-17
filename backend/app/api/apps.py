@@ -6,18 +6,23 @@ from fastapi import APIRouter, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
 
 from app.adapters.ssdv2_cli import Ssdv2CtlError
-from app.deps import CurrentUser, DockerDep, SettingsDep, Ssdv2CtlDep
+from app.deps import CurrentUser, DbDep, DockerDep, SettingsDep, Ssdv2CtlDep
 from app.schemas.app import (
     AppAuthOut,
     AppDetailOut,
+    AppEnvOut,
+    AppHistoryOut,
     AppInstallRequest,
     AppRemoveRequest,
     AppStateOut,
+    AppStatsOut,
     LogsOut,
 )
 from app.schemas.job import JobOut
+from app.services.app_history import build_app_history
 from app.services.app_overview import load_app_states
 from app.services.app_state import WARNING_SSDDB_UNAVAILABLE, build_app_detail
+from app.services.app_stats import filter_env, read_container_stats
 from app.services.catalogue import read_catalogue
 from app.services.docker_state import (
     collect_containers,
@@ -239,6 +244,80 @@ def backup_app(
     _user: CurrentUser,
 ) -> JobOut:
     return _submit_job(app, "app_backup", settings, _user)
+
+
+def _app_container_names(
+    app: str,
+    settings: SettingsDep,
+    docker_client: DockerDep,
+) -> list[str]:
+    entries, catalogue_error = read_catalogue(settings.catalogue_file)
+    if catalogue_error:
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, catalogue_error)
+    entry = next((item for item in entries if item.name == app), None)
+    if entry is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, f"application inconnue: {app}")
+
+    ssddb = read_ssddb(settings.ssddb_file)
+    registries = read_registries(settings.registries_dir)
+    snapshot = collect_containers(docker_client)
+    detail = build_app_detail(entry, ssddb, registries.get(app), snapshot)
+    return [item.name for item in detail.container_list]
+
+
+@router.get("/{app}/history", response_model=AppHistoryOut)
+def get_app_history(
+    app: str,
+    settings: SettingsDep,
+    db: DbDep,
+    _user: CurrentUser,
+    kind: str | None = Query(default=None, pattern="^(job|audit|notification|backup|errors)$"),
+    limit: int = Query(default=100, ge=1, le=500),
+) -> AppHistoryOut:
+    entries, catalogue_error = read_catalogue(settings.catalogue_file)
+    if catalogue_error:
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, catalogue_error)
+    if not any(item.name == app for item in entries):
+        raise HTTPException(status.HTTP_404_NOT_FOUND, f"application inconnue: {app}")
+    events = build_app_history(db, settings, app, kind=kind, limit=limit)
+    return AppHistoryOut(app=app, events=events)
+
+
+@router.get("/{app}/stats", response_model=AppStatsOut)
+def get_app_stats(
+    app: str,
+    settings: SettingsDep,
+    docker_client: DockerDep,
+    _user: CurrentUser,
+) -> AppStatsOut:
+    names = _app_container_names(app, settings, docker_client)
+    return AppStatsOut(app=app, containers=read_container_stats(docker_client, names))
+
+
+@router.get("/{app}/env", response_model=AppEnvOut)
+def get_app_env(
+    app: str,
+    settings: SettingsDep,
+    docker_client: DockerDep,
+    _user: CurrentUser,
+) -> AppEnvOut:
+    names = _app_container_names(app, settings, docker_client)
+    if docker_client is None:
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Docker est indisponible")
+    variables = []
+    seen: set[str] = set()
+    for name in names:
+        try:
+            container = docker_client.containers.get(name)
+        except docker.errors.DockerException:
+            continue
+        raw_env = (container.attrs.get("Config") or {}).get("Env") or []
+        for variable in filter_env(raw_env):
+            if variable.name in seen:
+                continue
+            seen.add(variable.name)
+            variables.append(variable)
+    return AppEnvOut(app=app, variables=sorted(variables, key=lambda item: item.name))
 
 
 @router.get("/{app}/auth", response_model=AppAuthOut)

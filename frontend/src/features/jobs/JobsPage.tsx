@@ -1,6 +1,7 @@
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { JobsView } from '@/features/jobs/JobsView'
 import { useJobs } from '@/features/jobs/useJobs'
+import { PageHeader } from '@/components/app/page-header'
 import { fr } from '@/i18n/fr'
 
 export function JobsPage() {
@@ -21,7 +22,7 @@ export function JobsPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-lg font-semibold">{fr.jobs.title}</h1>
+      <PageHeader title={fr.jobs.title} subtitle="Gérez et surveillez les tâches planifiées." />
       <JobsView jobs={jobs.data} />
     </div>
   )

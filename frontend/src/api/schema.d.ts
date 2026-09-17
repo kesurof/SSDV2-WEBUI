@@ -208,6 +208,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/apps/{app}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get App History */
+        get: operations["get_app_history_api_v1_apps__app__history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/apps/{app}/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get App Stats */
+        get: operations["get_app_stats_api_v1_apps__app__stats_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/apps/{app}/env": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get App Env */
+        get: operations["get_app_env_api_v1_apps__app__env_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/apps/{app}/auth": {
         parameters: {
             query?: never;
@@ -651,6 +702,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/system/metrics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Metrics */
+        get: operations["get_metrics_api_v1_system_metrics_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/system/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get System Health */
+        get: operations["get_system_health_api_v1_system_health_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/updates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Updates */
+        get: operations["get_updates_api_v1_updates_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -672,6 +774,19 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AlertsCheck */
+        AlertsCheck: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "ok" | "warning";
+            /**
+             * Unread
+             * @default 0
+             */
+            unread: number;
+        };
         /** AppAuthOut */
         AppAuthOut: {
             /** Schema */
@@ -718,6 +833,58 @@ export interface components {
             ssddb: components["schemas"]["SsddbAppOut"] | null;
             registries: components["schemas"]["RegistriesOut"];
         };
+        /** AppEnvOut */
+        AppEnvOut: {
+            /**
+             * Schema Version
+             * @default 1
+             */
+            schema_version: number;
+            /** App */
+            app: string;
+            /** Variables */
+            variables: components["schemas"]["AppEnvVarOut"][];
+        };
+        /** AppEnvVarOut */
+        AppEnvVarOut: {
+            /** Name */
+            name: string;
+            /** Value */
+            value: string;
+        };
+        /** AppHistoryEvent */
+        AppHistoryEvent: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "job" | "audit" | "notification" | "backup";
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Actor */
+            actor?: string | null;
+            /** Label */
+            label: string;
+            /** Result */
+            result: string;
+            /** Job Id */
+            job_id?: number | null;
+        };
+        /** AppHistoryOut */
+        AppHistoryOut: {
+            /**
+             * Schema Version
+             * @default 1
+             */
+            schema_version: number;
+            /** App */
+            app: string;
+            /** Events */
+            events: components["schemas"]["AppHistoryEvent"][];
+        };
         /** AppInstallRequest */
         AppInstallRequest: {
             /**
@@ -762,6 +929,18 @@ export interface components {
             /** Warnings */
             warnings: string[];
         };
+        /** AppStatsOut */
+        AppStatsOut: {
+            /**
+             * Schema Version
+             * @default 1
+             */
+            schema_version: number;
+            /** App */
+            app: string;
+            /** Containers */
+            containers: components["schemas"]["ContainerStatsOut"][];
+        };
         /** AuditEventOut */
         AuditEventOut: {
             /** Id */
@@ -792,6 +971,21 @@ export interface components {
              */
             auth: "aucune" | "basique" | "authelia" | "oauth" | "oauth2-proxy";
         };
+        /** BackupCheck */
+        BackupCheck: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "ok" | "unknown";
+            /** Last At */
+            last_at?: string | null;
+            /**
+             * Count
+             * @default 0
+             */
+            count: number;
+        };
         /** BackupOut */
         BackupOut: {
             /** App */
@@ -815,6 +1009,34 @@ export interface components {
                 [key: string]: string | null;
             };
         };
+        /** ContainerMetrics */
+        ContainerMetrics: {
+            /**
+             * Total
+             * @default 0
+             */
+            total: number;
+            /**
+             * Running
+             * @default 0
+             */
+            running: number;
+            /**
+             * Healthy
+             * @default 0
+             */
+            healthy: number;
+            /**
+             * Unhealthy
+             * @default 0
+             */
+            unhealthy: number;
+            /**
+             * Stopped
+             * @default 0
+             */
+            stopped: number;
+        };
         /** ContainerOut */
         ContainerOut: {
             /** Name */
@@ -825,6 +1047,19 @@ export interface components {
             state: string;
             /** Health */
             health: string | null;
+        };
+        /** ContainerStatsOut */
+        ContainerStatsOut: {
+            /** Name */
+            name: string;
+            /** Cpu Percent */
+            cpu_percent?: number | null;
+            /** Memory Used Bytes */
+            memory_used_bytes?: number | null;
+            /** Memory Limit Bytes */
+            memory_limit_bytes?: number | null;
+            /** Memory Percent */
+            memory_percent?: number | null;
         };
         /** DiagnosticsChecks */
         DiagnosticsChecks: {
@@ -842,6 +1077,30 @@ export interface components {
             checks: components["schemas"]["DiagnosticsChecks"];
             /** Warnings */
             warnings: string[];
+        };
+        /** DiskMetric */
+        DiskMetric: {
+            /** Total Bytes */
+            total_bytes?: number | null;
+            /** Used Bytes */
+            used_bytes?: number | null;
+            /** Percent */
+            percent?: number | null;
+        };
+        /** DnsCheck */
+        DnsCheck: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "ok" | "failed" | "unknown";
+            /** Hostname */
+            hostname?: string | null;
+            /**
+             * Addresses
+             * @default []
+             */
+            addresses: string[];
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -863,6 +1122,37 @@ export interface components {
             ssdv2ctl: boolean;
             /** Database */
             database: boolean;
+        };
+        /** HostMetricsOut */
+        HostMetricsOut: {
+            /**
+             * Schema Version
+             * @default 1
+             */
+            schema_version: number;
+            /** Cpu Percent */
+            cpu_percent?: number | null;
+            /** Cpu Count */
+            cpu_count?: number | null;
+            /** @default {} */
+            memory: components["schemas"]["MemoryMetric"];
+            /** @default {} */
+            disk: components["schemas"]["DiskMetric"];
+            /**
+             * @default {
+             *       "total": 0,
+             *       "running": 0,
+             *       "healthy": 0,
+             *       "unhealthy": 0,
+             *       "stopped": 0
+             *     }
+             */
+            containers: components["schemas"]["ContainerMetrics"];
+            /**
+             * Warnings
+             * @default []
+             */
+            warnings: string[];
         };
         /** HostSummary */
         HostSummary: {
@@ -908,6 +1198,24 @@ export interface components {
             /** Message */
             message: string | null;
         };
+        /** JobsCheck */
+        JobsCheck: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "ok" | "degraded";
+            /**
+             * Active
+             * @default 0
+             */
+            active: number;
+            /**
+             * Failed Recent
+             * @default 0
+             */
+            failed_recent: number;
+        };
         /** LoginRequest */
         LoginRequest: {
             /** Username */
@@ -923,6 +1231,15 @@ export interface components {
             container: string;
             /** Lines */
             lines: string[];
+        };
+        /** MemoryMetric */
+        MemoryMetric: {
+            /** Total Bytes */
+            total_bytes?: number | null;
+            /** Used Bytes */
+            used_bytes?: number | null;
+            /** Percent */
+            percent?: number | null;
         };
         /** NotificationListOut */
         NotificationListOut: {
@@ -974,6 +1291,18 @@ export interface components {
         SecurityUpdateRequest: {
             /** Internal Auth */
             internal_auth: boolean;
+        };
+        /** ServiceCheck */
+        ServiceCheck: {
+            /** Key */
+            key: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "ok" | "degraded" | "unknown";
+            /** Detail */
+            detail?: string | null;
         };
         /** SetupRequest */
         SetupRequest: {
@@ -1054,6 +1383,31 @@ export interface components {
              */
             not_installed: number;
         };
+        /** SystemHealthOut */
+        SystemHealthOut: {
+            /**
+             * Schema Version
+             * @default 1
+             */
+            schema_version: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "ok" | "degraded";
+            /**
+             * Checked At
+             * Format: date-time
+             */
+            checked_at: string;
+            /** Services */
+            services: components["schemas"]["ServiceCheck"][];
+            tls: components["schemas"]["TlsCheck"];
+            dns: components["schemas"]["DnsCheck"];
+            backups: components["schemas"]["BackupCheck"];
+            jobs: components["schemas"]["JobsCheck"];
+            alerts: components["schemas"]["AlertsCheck"];
+        };
         /** SystemSummaryOut */
         SystemSummaryOut: {
             /**
@@ -1065,6 +1419,57 @@ export interface components {
             ssdv2: components["schemas"]["Ssdv2Summary"];
             /** Warnings */
             warnings: string[];
+        };
+        /** TlsCheck */
+        TlsCheck: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "ok" | "warning" | "unknown";
+            /** Hostname */
+            hostname?: string | null;
+            /** Days Remaining */
+            days_remaining?: number | null;
+            /** Expires At */
+            expires_at?: string | null;
+        };
+        /** UpdateEntry */
+        UpdateEntry: {
+            /** App */
+            app: string;
+            /** Image */
+            image: string;
+            /** Current Digest */
+            current_digest?: string | null;
+            /** Available Digest */
+            available_digest?: string | null;
+            /**
+             * Status
+             * @default unknown
+             * @enum {string}
+             */
+            status: "up_to_date" | "available" | "unknown";
+        };
+        /** UpdatesOut */
+        UpdatesOut: {
+            /**
+             * Schema Version
+             * @default 1
+             */
+            schema_version: number;
+            /**
+             * Checked At
+             * Format: date-time
+             */
+            checked_at: string;
+            /** Entries */
+            entries: components["schemas"]["UpdateEntry"][];
+            /**
+             * Available
+             * @default 0
+             */
+            available: number;
         };
         /** UserOut */
         UserOut: {
@@ -1460,6 +1865,102 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["JobOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_app_history_api_v1_apps__app__history_get: {
+        parameters: {
+            query?: {
+                kind?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                app: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppHistoryOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_app_stats_api_v1_apps__app__stats_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                app: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppStatsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_app_env_api_v1_apps__app__env_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                app: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppEnvOut"];
                 };
             };
             /** @description Validation Error */
@@ -2161,6 +2662,66 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SystemSummaryOut"];
+                };
+            };
+        };
+    };
+    get_metrics_api_v1_system_metrics_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HostMetricsOut"];
+                };
+            };
+        };
+    };
+    get_system_health_api_v1_system_health_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SystemHealthOut"];
+                };
+            };
+        };
+    };
+    get_updates_api_v1_updates_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UpdatesOut"];
                 };
             };
         };

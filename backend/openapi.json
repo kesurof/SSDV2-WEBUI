@@ -566,6 +566,161 @@
         }
       }
     },
+    "/api/v1/apps/{app}/history": {
+      "get": {
+        "tags": [
+          "apps"
+        ],
+        "summary": "Get App History",
+        "operationId": "get_app_history_api_v1_apps__app__history_get",
+        "parameters": [
+          {
+            "name": "app",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "App"
+            }
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(job|audit|notification|backup|errors)$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Kind"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "default": 100,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppHistoryOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/apps/{app}/stats": {
+      "get": {
+        "tags": [
+          "apps"
+        ],
+        "summary": "Get App Stats",
+        "operationId": "get_app_stats_api_v1_apps__app__stats_get",
+        "parameters": [
+          {
+            "name": "app",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "App"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppStatsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/apps/{app}/env": {
+      "get": {
+        "tags": [
+          "apps"
+        ],
+        "summary": "Get App Env",
+        "operationId": "get_app_env_api_v1_apps__app__env_get",
+        "parameters": [
+          {
+            "name": "app",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "App"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppEnvOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/apps/{app}/auth": {
       "get": {
         "tags": [
@@ -1428,6 +1583,69 @@
         }
       }
     },
+    "/api/v1/system/metrics": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Get Metrics",
+        "operationId": "get_metrics_api_v1_system_metrics_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HostMetricsOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/system/health": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Get System Health",
+        "operationId": "get_system_health_api_v1_system_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemHealthOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/updates": {
+      "get": {
+        "tags": [
+          "updates"
+        ],
+        "summary": "Get Updates",
+        "operationId": "get_updates_api_v1_updates_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdatesOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "tags": [
@@ -1452,6 +1670,28 @@
   },
   "components": {
     "schemas": {
+      "AlertsCheck": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "warning"
+            ],
+            "title": "Status"
+          },
+          "unread": {
+            "type": "integer",
+            "title": "Unread",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "AlertsCheck"
+      },
       "AppAuthOut": {
         "properties": {
           "schema": {
@@ -1619,6 +1859,133 @@
         ],
         "title": "AppDetailOut"
       },
+      "AppEnvOut": {
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "title": "Schema Version",
+            "default": 1
+          },
+          "app": {
+            "type": "string",
+            "title": "App"
+          },
+          "variables": {
+            "items": {
+              "$ref": "#/components/schemas/AppEnvVarOut"
+            },
+            "type": "array",
+            "title": "Variables"
+          }
+        },
+        "type": "object",
+        "required": [
+          "app",
+          "variables"
+        ],
+        "title": "AppEnvOut"
+      },
+      "AppEnvVarOut": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "value": {
+            "type": "string",
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "value"
+        ],
+        "title": "AppEnvVarOut"
+      },
+      "AppHistoryEvent": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "job",
+              "audit",
+              "notification",
+              "backup"
+            ],
+            "title": "Kind"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "At"
+          },
+          "actor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "result": {
+            "type": "string",
+            "title": "Result"
+          },
+          "job_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "at",
+          "label",
+          "result"
+        ],
+        "title": "AppHistoryEvent"
+      },
+      "AppHistoryOut": {
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "title": "Schema Version",
+            "default": 1
+          },
+          "app": {
+            "type": "string",
+            "title": "App"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/AppHistoryEvent"
+            },
+            "type": "array",
+            "title": "Events"
+          }
+        },
+        "type": "object",
+        "required": [
+          "app",
+          "events"
+        ],
+        "title": "AppHistoryOut"
+      },
       "AppInstallRequest": {
         "properties": {
           "auth": {
@@ -1751,6 +2118,32 @@
         ],
         "title": "AppStateOut"
       },
+      "AppStatsOut": {
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "title": "Schema Version",
+            "default": 1
+          },
+          "app": {
+            "type": "string",
+            "title": "App"
+          },
+          "containers": {
+            "items": {
+              "$ref": "#/components/schemas/ContainerStatsOut"
+            },
+            "type": "array",
+            "title": "Containers"
+          }
+        },
+        "type": "object",
+        "required": [
+          "app",
+          "containers"
+        ],
+        "title": "AppStatsOut"
+      },
       "AuditEventOut": {
         "properties": {
           "id": {
@@ -1846,6 +2239,40 @@
         ],
         "title": "AuthBulkRequest"
       },
+      "BackupCheck": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "unknown"
+            ],
+            "title": "Status"
+          },
+          "last_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last At"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "BackupCheck"
+      },
       "BackupOut": {
         "properties": {
           "app": {
@@ -1903,6 +2330,37 @@
         ],
         "title": "ConfigOut"
       },
+      "ContainerMetrics": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "default": 0
+          },
+          "running": {
+            "type": "integer",
+            "title": "Running",
+            "default": 0
+          },
+          "healthy": {
+            "type": "integer",
+            "title": "Healthy",
+            "default": 0
+          },
+          "unhealthy": {
+            "type": "integer",
+            "title": "Unhealthy",
+            "default": 0
+          },
+          "stopped": {
+            "type": "integer",
+            "title": "Stopped",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "title": "ContainerMetrics"
+      },
       "ContainerOut": {
         "properties": {
           "name": {
@@ -1944,6 +2402,63 @@
           "health"
         ],
         "title": "ContainerOut"
+      },
+      "ContainerStatsOut": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "cpu_percent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cpu Percent"
+          },
+          "memory_used_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Memory Used Bytes"
+          },
+          "memory_limit_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Memory Limit Bytes"
+          },
+          "memory_percent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Memory Percent"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "ContainerStatsOut"
       },
       "DiagnosticsChecks": {
         "properties": {
@@ -1999,6 +2514,82 @@
         ],
         "title": "DiagnosticsOut"
       },
+      "DiskMetric": {
+        "properties": {
+          "total_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Bytes"
+          },
+          "used_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Used Bytes"
+          },
+          "percent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Percent"
+          }
+        },
+        "type": "object",
+        "title": "DiskMetric"
+      },
+      "DnsCheck": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "failed",
+              "unknown"
+            ],
+            "title": "Status"
+          },
+          "hostname": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hostname"
+          },
+          "addresses": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Addresses",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "DnsCheck"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -2048,6 +2639,65 @@
           "database"
         ],
         "title": "HealthOut"
+      },
+      "HostMetricsOut": {
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "title": "Schema Version",
+            "default": 1
+          },
+          "cpu_percent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cpu Percent"
+          },
+          "cpu_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cpu Count"
+          },
+          "memory": {
+            "$ref": "#/components/schemas/MemoryMetric",
+            "default": {}
+          },
+          "disk": {
+            "$ref": "#/components/schemas/DiskMetric",
+            "default": {}
+          },
+          "containers": {
+            "$ref": "#/components/schemas/ContainerMetrics",
+            "default": {
+              "total": 0,
+              "running": 0,
+              "healthy": 0,
+              "unhealthy": 0,
+              "stopped": 0
+            }
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "HostMetricsOut"
       },
       "HostSummary": {
         "properties": {
@@ -2224,6 +2874,33 @@
         ],
         "title": "JobOut"
       },
+      "JobsCheck": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "degraded"
+            ],
+            "title": "Status"
+          },
+          "active": {
+            "type": "integer",
+            "title": "Active",
+            "default": 0
+          },
+          "failed_recent": {
+            "type": "integer",
+            "title": "Failed Recent",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "JobsCheck"
+      },
       "LoginRequest": {
         "properties": {
           "username": {
@@ -2267,6 +2944,45 @@
           "lines"
         ],
         "title": "LogsOut"
+      },
+      "MemoryMetric": {
+        "properties": {
+          "total_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Bytes"
+          },
+          "used_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Used Bytes"
+          },
+          "percent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Percent"
+          }
+        },
+        "type": "object",
+        "title": "MemoryMetric"
       },
       "NotificationListOut": {
         "properties": {
@@ -2430,6 +3146,40 @@
           "internal_auth"
         ],
         "title": "SecurityUpdateRequest"
+      },
+      "ServiceCheck": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "degraded",
+              "unknown"
+            ],
+            "title": "Status"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "status"
+        ],
+        "title": "ServiceCheck"
       },
       "SetupRequest": {
         "properties": {
@@ -2603,6 +3353,62 @@
         "type": "object",
         "title": "Ssdv2Summary"
       },
+      "SystemHealthOut": {
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "title": "Schema Version",
+            "default": 1
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "degraded"
+            ],
+            "title": "Status"
+          },
+          "checked_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Checked At"
+          },
+          "services": {
+            "items": {
+              "$ref": "#/components/schemas/ServiceCheck"
+            },
+            "type": "array",
+            "title": "Services"
+          },
+          "tls": {
+            "$ref": "#/components/schemas/TlsCheck"
+          },
+          "dns": {
+            "$ref": "#/components/schemas/DnsCheck"
+          },
+          "backups": {
+            "$ref": "#/components/schemas/BackupCheck"
+          },
+          "jobs": {
+            "$ref": "#/components/schemas/JobsCheck"
+          },
+          "alerts": {
+            "$ref": "#/components/schemas/AlertsCheck"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "checked_at",
+          "services",
+          "tls",
+          "dns",
+          "backups",
+          "jobs",
+          "alerts"
+        ],
+        "title": "SystemHealthOut"
+      },
       "SystemSummaryOut": {
         "properties": {
           "status": {
@@ -2635,6 +3441,140 @@
           "warnings"
         ],
         "title": "SystemSummaryOut"
+      },
+      "TlsCheck": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "warning",
+              "unknown"
+            ],
+            "title": "Status"
+          },
+          "hostname": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hostname"
+          },
+          "days_remaining": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Days Remaining"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "TlsCheck"
+      },
+      "UpdateEntry": {
+        "properties": {
+          "app": {
+            "type": "string",
+            "title": "App"
+          },
+          "image": {
+            "type": "string",
+            "title": "Image"
+          },
+          "current_digest": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Digest"
+          },
+          "available_digest": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Available Digest"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "up_to_date",
+              "available",
+              "unknown"
+            ],
+            "title": "Status",
+            "default": "unknown"
+          }
+        },
+        "type": "object",
+        "required": [
+          "app",
+          "image"
+        ],
+        "title": "UpdateEntry"
+      },
+      "UpdatesOut": {
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "title": "Schema Version",
+            "default": 1
+          },
+          "checked_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Checked At"
+          },
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/UpdateEntry"
+            },
+            "type": "array",
+            "title": "Entries"
+          },
+          "available": {
+            "type": "integer",
+            "title": "Available",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "checked_at",
+          "entries"
+        ],
+        "title": "UpdatesOut"
       },
       "UserOut": {
         "properties": {

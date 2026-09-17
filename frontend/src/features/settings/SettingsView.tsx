@@ -7,6 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { PageHeader } from '@/components/app/page-header'
 import { fr } from '@/i18n/fr'
 
 const KEY_LABELS: Record<string, string> = {
@@ -23,7 +24,7 @@ const KEY_LABELS: Record<string, string> = {
 export function SettingsView({ config }: { config: Record<string, string | null> }) {
   return (
     <div className="space-y-4">
-      <h1 className="text-lg font-semibold">{fr.settings.title}</h1>
+      <PageHeader title={fr.settings.title} subtitle={fr.settings.hint} />
       <Alert>
         <AlertTitle>{fr.settings.readOnly}</AlertTitle>
         <AlertDescription>{fr.settings.hint}</AlertDescription>

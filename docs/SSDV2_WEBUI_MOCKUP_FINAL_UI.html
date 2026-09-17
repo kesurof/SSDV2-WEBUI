@@ -1,0 +1,744 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>SSDV2 WebUI — Maquette finale UI</title>
+<style>
+:root{
+  --bg:#f6f8fb; --surface:#fff; --surface-2:#f9fbfd; --surface-3:#f1f5f9;
+  --text:#101828; --muted:#667085; --line:#e4e7ec; --blue:#1677ff; --blue-2:#eaf3ff;
+  --green:#039855; --green-bg:#ecfdf3; --red:#d92d20; --red-bg:#fef3f2; --amber:#dc6803; --amber-bg:#fffaeb;
+  --shadow:0 12px 30px rgba(16,24,40,.06); --radius:16px; --radius-sm:10px; --sidebar:248px;
+}
+[data-theme="dark"]{
+  --bg:#0f131a; --surface:#161b22; --surface-2:#1b222c; --surface-3:#232b36;
+  --text:#f3f6fb; --muted:#98a2b3; --line:#2d3642; --blue:#4c9aff; --blue-2:#102a4c;
+  --green:#32d583; --green-bg:#102d22; --red:#f97066; --red-bg:#3a1718; --amber:#fdb022; --amber-bg:#3a2b0f;
+  --shadow:none;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
+button,input,select{font:inherit}
+button{cursor:pointer}
+a{color:inherit;text-decoration:none}
+.shell{min-height:100vh;display:grid;grid-template-columns:var(--sidebar) minmax(0,1fr)}
+.sidebar{position:sticky;top:0;height:100vh;background:var(--surface);border-right:1px solid var(--line);padding:18px 14px;display:flex;flex-direction:column;z-index:30}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 8px 20px}
+.logo{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,#1677ff,#3f8cff);display:grid;place-items:center;color:#fff;font-weight:800;box-shadow:0 8px 20px rgba(22,119,255,.25)}
+.brand strong{font-size:15px}.brand small{display:block;color:var(--muted);font-size:11px;margin-top:2px}
+.nav-section{margin:10px 6px 6px;color:#788196;font-size:11px;font-weight:800;letter-spacing:.06em}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;color:var(--muted);margin:2px 0;font-size:14px}
+.nav-item:hover{background:var(--surface-3);color:var(--text)}
+.nav-item.active{background:var(--blue-2);color:var(--blue);font-weight:700}
+.nav-ico{width:18px;height:18px;display:grid;place-items:center}
+.badge-count{margin-left:auto;background:var(--blue);color:white;border-radius:999px;min-width:22px;height:22px;padding:0 7px;display:grid;place-items:center;font-size:12px;font-weight:700}
+.sidebar-foot{margin-top:auto;border-top:1px solid var(--line);padding:14px 10px 4px;color:var(--muted);font-size:12px}
+.health{color:var(--green);font-weight:600;margin-top:5px}
+.main{min-width:0}
+.topbar{height:68px;background:color-mix(in srgb,var(--surface) 94%,transparent);border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 24px;gap:14px;position:sticky;top:0;z-index:20;backdrop-filter:blur(14px)}
+.search-global{position:relative;max-width:460px;flex:1}
+.search-global input{width:100%;height:40px;border:1px solid var(--line);background:var(--surface-2);color:var(--text);border-radius:10px;padding:0 44px 0 38px;outline:none}
+.search-global:before{content:"⌕";position:absolute;left:13px;top:7px;color:var(--muted);font-size:20px}
+.kbd{position:absolute;right:9px;top:8px;border:1px solid var(--line);background:var(--surface);padding:3px 6px;border-radius:6px;color:var(--muted);font-size:11px}
+.top-actions{margin-left:auto;display:flex;align-items:center;gap:10px}
+.icon-btn,.btn{border:1px solid var(--line);background:var(--surface);color:var(--text);height:38px;border-radius:10px;padding:0 12px;display:inline-flex;align-items:center;gap:8px;font-weight:650}
+.icon-btn{width:38px;padding:0;justify-content:center}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn.danger{color:var(--red);border-color:#f5c6c2;background:var(--red-bg)}
+.btn.ghost{border-color:transparent;background:transparent}
+.btn.small{height:32px;padding:0 10px;font-size:13px}
+.user{display:flex;align-items:center;gap:9px;padding:5px 8px;border-radius:12px}
+.avatar{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--blue);color:#fff;font-weight:800}
+.user-meta{font-size:12px}.user-meta strong{display:block}.user-meta span{color:var(--muted);font-size:11px}
+.content{padding:28px;max-width:1600px;margin:0 auto}
+.page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:22px}
+.page-title{font-size:28px;font-weight:800;letter-spacing:-.02em;margin:0}
+.page-sub{color:var(--muted);margin-top:6px;font-size:14px}
+.cards{display:grid;gap:14px}
+.grid-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.card-pad{padding:18px}
+.metric{display:flex;align-items:center;gap:14px}
+.metric-ico{width:46px;height:46px;border-radius:14px;background:var(--blue-2);color:var(--blue);display:grid;place-items:center;font-size:20px}
+.metric.green .metric-ico{background:var(--green-bg);color:var(--green)}
+.metric.red .metric-ico{background:var(--red-bg);color:var(--red)}
+.metric .num{font-size:26px;font-weight:800}.metric .lbl{color:var(--muted);font-size:13px}
+.section-title{font-size:16px;font-weight:800;margin:0 0 14px}
+.toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:16px 0}
+.input,.select{height:38px;border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:10px;padding:0 12px}
+.input{min-width:260px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:999px;height:32px;padding:0 12px;font-size:12px;font-weight:700}
+.chip.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:820px}
+th,td{padding:12px 14px;text-align:left;border-bottom:1px solid var(--line);font-size:13px}
+th{font-size:12px;color:#475467;background:var(--surface-2);font-weight:800;position:sticky;top:0;z-index:2}
+tbody tr:hover{background:color-mix(in srgb,var(--blue-2) 34%,transparent)}
+.appcell{display:flex;align-items:center;gap:10px}.app-icon{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:var(--surface-3);font-size:18px}
+.app-title{font-weight:800}.app-desc{font-size:12px;color:var(--muted);margin-top:2px}
+.status{display:inline-flex;align-items:center;gap:6px;padding:4px 9px;border-radius:999px;font-size:12px;font-weight:800;background:var(--surface-3);color:var(--muted)}
+.status:before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.status.ok{background:var(--green-bg);color:var(--green)}.status.err{background:var(--red-bg);color:var(--red)}.status.warn{background:var(--amber-bg);color:var(--amber)}
+.muted{color:var(--muted)}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.split{display:grid;grid-template-columns:minmax(0,1fr) 390px;gap:16px}
+.log{background:#111827;color:#d1d5db;border-radius:12px;padding:16px;font:12px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;min-height:260px;overflow:auto}
+.log .inf{color:#34d399}.log .err{color:#fb7185}.log .wrn{color:#fbbf24}
+.keyvals{display:grid;gap:0}.kv{display:grid;grid-template-columns:145px 1fr;gap:16px;padding:11px 0;border-bottom:1px solid var(--line);font-size:13px}.kv span:first-child{color:var(--muted)}
+.tabs{display:flex;gap:8px;border-bottom:1px solid var(--line);margin:18px 0 16px;overflow:auto}
+.tab{padding:10px 12px;color:var(--muted);font-weight:700;white-space:nowrap;border-bottom:2px solid transparent}
+.tab.active{color:var(--blue);border-color:var(--blue)}
+.timeline{display:grid;gap:10px}.tl{display:grid;grid-template-columns:22px 1fr auto;align-items:start;gap:8px;font-size:13px}.dot{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;background:var(--green-bg);color:var(--green);font-size:11px}.dot.err{background:var(--red-bg);color:var(--red)}
+.notice{display:flex;align-items:flex-start;gap:12px;padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);margin-bottom:10px}.notice.unread{background:color-mix(in srgb,var(--blue-2) 30%,var(--surface))}
+.notice-main{flex:1}.notice-title{font-weight:800}.notice-time{font-size:12px;color:var(--muted);margin-top:5px}
+.progress{height:8px;background:var(--surface-3);border-radius:99px;overflow:hidden}.progress>span{display:block;height:100%;background:var(--green);border-radius:99px}
+.mobile-menu{display:none}
+.mobile-bottom{display:none}
+.page{display:none}.page.active{display:block}
+.app-detail-head{display:flex;gap:14px;align-items:center;flex-wrap:wrap}.app-detail-head .app-icon{width:56px;height:56px;font-size:28px;background:linear-gradient(135deg,#4c28bf,#7754ff);color:#fff}
+.spacer{flex:1}
+.danger-zone{border-color:#f3b8b3}
+.settings-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.setting-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0;border-bottom:1px solid var(--line)}
+.toggle{width:42px;height:24px;background:var(--surface-3);border-radius:999px;position:relative;border:1px solid var(--line)}
+.toggle:after{content:"";position:absolute;width:18px;height:18px;left:2px;top:2px;background:#fff;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.2);transition:.2s}
+.toggle.on{background:var(--blue);border-color:var(--blue)}.toggle.on:after{left:20px}
+.empty{padding:28px;text-align:center;color:var(--muted)}
+.callout{border:1px solid var(--line);background:var(--surface-2);padding:14px;border-radius:12px;color:var(--muted);font-size:13px}
+.small{font-size:12px}
+.footer-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:14px;color:var(--muted);font-size:12px}
+
+/* --- Final UI mockup additions --- */
+.score-ring{
+  --score:92;
+  width:92px;height:92px;border-radius:50%;
+  display:grid;place-items:center;
+  background:conic-gradient(var(--green) calc(var(--score)*1%),var(--surface-3) 0);
+  position:relative;
+}
+.score-ring:after{content:"";position:absolute;inset:9px;border-radius:50%;background:var(--surface)}
+.score-ring strong{position:relative;z-index:1;font-size:22px}
+.health-tile{min-height:138px}
+.health-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.health-value{font-size:24px;font-weight:800;letter-spacing:-.02em}
+.health-meta{font-size:12px;color:var(--muted);margin-top:5px}
+.health-state{display:flex;align-items:center;gap:8px}
+.health-state .pulse{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 0 5px color-mix(in srgb,var(--green) 14%,transparent)}
+.mini-chart{height:72px;display:flex;align-items:end;gap:4px;padding-top:10px}
+.mini-chart span{flex:1;min-width:3px;border-radius:4px 4px 2px 2px;background:color-mix(in srgb,var(--blue) 72%,white)}
+.mini-chart.green span{background:color-mix(in srgb,var(--green) 70%,white)}
+.mini-chart.amber span{background:color-mix(in srgb,var(--amber) 65%,white)}
+.update-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.update-card{padding:16px}
+.update-card .version{font-size:12px;color:var(--muted);margin-top:5px}
+.release-notes ul{margin:10px 0 0;padding-left:20px;color:var(--muted);font-size:13px;line-height:1.7}
+.rich-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.rich-grid .card{min-width:0}
+.resource-line{display:grid;grid-template-columns:82px 1fr 58px;gap:10px;align-items:center;padding:8px 0;font-size:12px}
+.resource-line strong{text-align:right}
+.link-list{display:grid;gap:8px}
+.link-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px}
+.dep-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}
+.dep-dot{width:28px;height:28px;border-radius:9px;background:var(--blue-2);color:var(--blue);display:grid;place-items:center;font-weight:800}
+.history-line{display:grid;grid-template-columns:18px minmax(140px,180px) minmax(90px,120px) minmax(0,1fr) 130px 28px;gap:12px;align-items:center;padding:11px 12px;border-bottom:1px solid var(--line);font-size:13px}
+.history-line:hover{background:color-mix(in srgb,var(--blue-2) 28%,transparent)}
+.history-dot{width:10px;height:10px;border-radius:50%;background:var(--blue)}
+.history-dot.ok{background:var(--green)}.history-dot.warn{background:var(--amber)}.history-dot.err{background:var(--red)}
+.history-table{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--surface)}
+.history-head{background:var(--surface-2);font-size:11px;font-weight:800;color:#475467}
+.breadcrumb{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12px;margin-bottom:14px}
+.breadcrumb a{color:var(--blue);font-weight:700}
+.service-list{display:grid;gap:9px}.service-row{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px}
+.inline-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.mobile-card-title{display:flex;align-items:center;gap:10px}
+@media(max-width:1180px){
+  .update-summary{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .rich-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:760px){
+  .update-summary,.rich-grid{grid-template-columns:1fr}
+  .history-line{grid-template-columns:14px 1fr auto;gap:8px}
+  .history-line > :nth-child(3),.history-line > :nth-child(5),.history-line > :nth-child(6){display:none}
+  .history-head{display:none}
+}
+
+@media(max-width:1000px){
+  :root{--sidebar:210px}
+  .grid-4,.grid-3{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .split{grid-template-columns:1fr}
+  .settings-grid{grid-template-columns:1fr}
+}
+@media(max-width:760px){
+  .shell{display:block}
+  .sidebar{position:fixed;left:0;top:0;bottom:0;width:280px;transform:translateX(-102%);transition:.25s;box-shadow:var(--shadow);z-index:50}
+  .sidebar.open{transform:translateX(0)}
+  .topbar{height:60px;padding:0 12px}
+  .search-global{display:none}
+  .mobile-menu{display:inline-flex}
+  .user-meta{display:none}
+  .content{padding:18px 14px 86px}
+  .page-title{font-size:24px}
+  .page-head{align-items:center}
+  .grid-4,.grid-3,.grid-2{grid-template-columns:1fr}
+  .cards.mobile-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .table-wrap.desktop-table{display:none}
+  .mobile-list{display:grid!important;gap:10px}
+  .mobile-bottom{position:fixed;display:grid;grid-template-columns:repeat(4,1fr);left:0;right:0;bottom:0;height:66px;background:var(--surface);border-top:1px solid var(--line);z-index:35}
+  .mobile-bottom button{border:0;background:transparent;color:var(--muted);font-size:11px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+  .mobile-bottom button.active{color:var(--blue);font-weight:800}
+}
+@media(min-width:761px){.mobile-list{display:none!important}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="logo">◇</div>
+      <div><strong>SSDV2 WebUI</strong><small>Administration simplifiée</small></div>
+    </div>
+    <div class="nav-section">PILOTAGE</div>
+    <a class="nav-item active" data-page="dashboard"><span class="nav-ico">⌂</span>Dashboard</a>
+    <a class="nav-item" data-page="applications"><span class="nav-ico">▦</span>Applications</a>
+    <a class="nav-item" data-page="jobs"><span class="nav-ico">▶</span>Jobs</a>
+    <a class="nav-item" data-page="notifications"><span class="nav-ico">♢</span>Notifications <span class="badge-count">3</span></a>
+    <a class="nav-item" data-page="audit"><span class="nav-ico">≣</span>Audit</a>
+
+    <div class="nav-section">EXPLOITATION</div>
+    <a class="nav-item" data-page="health"><span class="nav-ico">♥</span>Santé</a>
+    <a class="nav-item" data-page="backups"><span class="nav-ico">◫</span>Sauvegardes</a>
+    <a class="nav-item" data-page="diagnostics"><span class="nav-ico">⌁</span>Diagnostics</a>
+    <a class="nav-item" data-page="updates"><span class="nav-ico">⇩</span>Mises à jour <span class="badge-count" style="background:var(--amber);color:white">4</span></a>
+
+    <div class="nav-section">CONFIGURATION</div>
+    <a class="nav-item" data-page="authentication"><span class="nav-ico">♙</span>Authentification</a>
+    <a class="nav-item" data-page="settings"><span class="nav-ico">⚙</span>Paramètres</a>
+
+    <div class="sidebar-foot">
+      SSDV2 v2.0.0
+      <div class="health">● Système opérationnel</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <button class="icon-btn mobile-menu" id="menuBtn">☰</button>
+      <div class="search-global">
+        <input placeholder="Rechercher une application, un domaine, une image..." />
+        <span class="kbd">⌘K</span>
+      </div>
+      <div class="top-actions">
+        <button class="icon-btn" id="themeBtn" title="Changer le thème">◐</button>
+        <div class="user">
+          <div class="avatar">A</div>
+          <div class="user-meta"><strong>admin</strong><span>Administrateur</span></div>
+        </div>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <section class="page active" id="page-dashboard">
+        <div class="page-head">
+          <div><h1 class="page-title">Dashboard</h1><div class="page-sub">Vue d'ensemble de votre instance SSDV2.</div></div>
+          <span class="status ok">En ligne</span>
+        </div>
+
+        <div class="grid-2 cards">
+          <div class="card card-pad">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+              <h3 class="section-title">Santé du serveur</h3>
+              <button class="btn ghost small" data-page="health">Vue complète</button>
+            </div>
+            <div class="kv"><span>CPU</span><div><div class="progress"><span style="width:12%"></span></div><div class="small muted" style="margin-top:6px">12 %</div></div></div>
+            <div class="kv"><span>Mémoire</span><div><div class="progress"><span style="width:24%"></span></div><div class="small muted" style="margin-top:6px">5,6 / 23,4 Go</div></div></div>
+            <div class="kv"><span>Stockage</span><div><div class="progress"><span style="width:28%"></span></div><div class="small muted" style="margin-top:6px">28 / 100 Go</div></div></div>
+          </div>
+          <div class="card card-pad">
+            <h3 class="section-title">SSDV2</h3>
+            <div class="keyvals">
+              <div class="kv"><span>Hôte</span><strong>instance-exemple</strong></div>
+              <div class="kv"><span>Système</span><strong>Ubuntu 24.04.4 LTS</strong></div>
+              <div class="kv"><span>Noyau</span><strong>6.17.0-1018-oracle</strong></div>
+              <div class="kv"><span>Architecture</span><strong>aarch64</strong></div>
+              <div class="kv"><span>Docker</span><strong>29.6.1</strong></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-4 cards mobile-2" style="margin-top:14px">
+          <div class="card card-pad metric"><div class="metric-ico">◇</div><div><div class="num">183</div><div class="lbl">Applications</div></div></div>
+          <div class="card card-pad metric green"><div class="metric-ico">↓</div><div><div class="num">8</div><div class="lbl">Installées</div></div></div>
+          <div class="card card-pad metric green"><div class="metric-ico">▶</div><div><div class="num">8</div><div class="lbl">En marche</div></div></div>
+          <div class="card card-pad metric red"><div class="metric-ico">■</div><div><div class="num">0</div><div class="lbl">Arrêtées</div></div></div>
+        </div>
+
+        <div class="card card-pad" style="margin-top:14px;display:flex;align-items:center;gap:14px">
+          <div class="metric-ico" style="background:var(--amber-bg);color:var(--amber)">⇩</div>
+          <div style="min-width:0"><strong>4 mises à jour disponibles</strong><div class="small muted" style="margin-top:4px">SSDV2 Core, Docker Engine, Dozzle et Prowlarr.</div></div>
+          <span class="spacer"></span>
+          <button class="btn small" data-page="updates">Voir le centre de mises à jour</button>
+        </div>
+
+        <div class="grid-2 cards" style="margin-top:14px">
+          <div class="card card-pad">
+            <div style="display:flex;justify-content:space-between;align-items:center"><h3 class="section-title">Jobs récents</h3><button class="btn ghost small" data-page="jobs">Voir tous</button></div>
+            <div class="notice"><span class="status ok">Succès</span><div class="notice-main"><div class="notice-title">auth_bulk → oauth2-proxy</div><div class="notice-time">17/09/2026 16:10</div></div></div>
+            <div class="notice"><span class="status ok">Succès</span><div class="notice-main"><div class="notice-title">app_backup → dozzle</div><div class="notice-time">17/09/2026 15:57</div></div></div>
+            <div class="notice"><span class="status err">Échec</span><div class="notice-main"><div class="notice-title">Redémarrage → wallos</div><div class="notice-time">17/09/2026 15:47</div></div></div>
+          </div>
+          <div class="card card-pad">
+            <div style="display:flex;justify-content:space-between;align-items:center"><h3 class="section-title">Alertes actives</h3><button class="btn ghost small" data-page="notifications">Voir toutes</button></div>
+            <div class="notice unread"><span class="status err">Erreur</span><div class="notice-main"><div class="notice-title">Échec : redémarrage wallos</div><div class="notice-time">ssdv2ctl a retourné le code 1 · 17/09/2026 15:47</div></div></div>
+            <div class="callout">Aucune autre alerte critique détectée.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- APPLICATIONS -->
+      <section class="page" id="page-applications">
+        <div class="page-head">
+          <div><h1 class="page-title">Applications</h1><div class="page-sub">Gérez vos applications Docker et leurs configurations.</div></div>
+          <button class="btn primary">＋ Installer une application</button>
+        </div>
+        <div class="grid-4 cards mobile-2">
+          <div class="card card-pad metric"><div class="metric-ico">◇</div><div><div class="num">183</div><div class="lbl">Applications</div></div></div>
+          <div class="card card-pad metric green"><div class="metric-ico">↓</div><div><div class="num">8</div><div class="lbl">Installées</div></div></div>
+          <div class="card card-pad metric green"><div class="metric-ico">▶</div><div><div class="num">8</div><div class="lbl">En marche</div></div></div>
+          <div class="card card-pad metric red"><div class="metric-ico">■</div><div><div class="num">0</div><div class="lbl">Arrêtées</div></div></div>
+        </div>
+        <div class="toolbar">
+          <input class="input" id="appSearch" placeholder="Rechercher une application..." />
+          <div class="chips">
+            <button class="chip active">Toutes 183</button><button class="chip">Installées 8</button><button class="chip">En marche 8</button><button class="chip">Arrêtées 0</button><button class="chip">Non installées 175</button>
+          </div>
+          <button class="btn">⌁ Filtres</button>
+        </div>
+
+        <div class="table-wrap desktop-table">
+          <table>
+            <thead><tr><th>Application</th><th>Statut</th><th>Domaine</th><th>Image</th><th>Conteneurs</th><th>Alertes</th><th></th></tr></thead>
+            <tbody id="appsTable"></tbody>
+          </table>
+        </div>
+        <div class="mobile-list" id="appsMobile"></div>
+        <div class="footer-row"><span>0 sélectionné</span><span>1–8 sur 183 · 1 2 3 … 23</span></div>
+      </section>
+
+      <!-- APP DETAIL -->
+      <section class="page" id="page-app-detail">
+        <div class="breadcrumb"><a href="#" data-page="applications">Applications</a><span>›</span><span>Dozzle</span></div>
+        <div class="app-detail-head">
+          <div class="app-icon">›_</div>
+          <div><h1 class="page-title" style="font-size:30px">Dozzle <span class="status ok" style="vertical-align:middle">En marche</span></h1><div class="page-sub">Visualisation des logs Docker</div></div>
+          <div class="spacer"></div>
+          <button class="btn primary">Ouvrir ↗</button><button class="btn">↻ Redémarrer</button><button class="btn">▣ Sauvegarder</button><button class="btn danger">Arrêter</button>
+        </div>
+
+        <div class="tabs">
+          <div class="tab active">Vue générale</div>
+          <div class="tab">Conteneurs</div>
+          <div class="tab">Logs</div>
+          <div class="tab">Volumes</div>
+          <div class="tab">Réseau</div>
+          <div class="tab">Variables</div>
+          <div class="tab">Sauvegardes</div>
+          <a href="#" class="tab" data-page="app-history">Historique</a>
+        </div>
+
+        <div class="rich-grid">
+          <div class="card card-pad">
+            <h3 class="section-title">Informations</h3>
+            <div class="keyvals">
+              <div class="kv"><span>Image</span><strong>amir20/dozzle:latest</strong></div>
+              <div class="kv"><span>Version</span><strong>v6.8.3</strong></div>
+              <div class="kv"><span>Type</span><strong>Application Docker</strong></div>
+              <div class="kv"><span>État</span><span class="status ok">En marche</span></div>
+              <div class="kv"><span>Depuis</span><strong>2 jours, 14 h</strong></div>
+              <div class="kv"><span>Redémarrages</span><strong>1</strong></div>
+              <div class="kv"><span>ID conteneur</span><strong class="mono">a1b2c3d4e5f6</strong></div>
+              <div class="kv"><span>Réseau</span><strong>ssdv2_default</strong></div>
+            </div>
+          </div>
+
+          <div class="card card-pad">
+            <h3 class="section-title">Accès et réseau</h3>
+            <div class="keyvals">
+              <div class="kv"><span>Ports</span><strong>8080 → 127.0.0.1:38080</strong></div>
+              <div class="kv"><span>Domaine</span><strong style="color:var(--blue)">dozzle.exemple.tld ↗</strong></div>
+              <div class="kv"><span>Authentification</span><strong>oauth2-proxy</strong></div>
+              <div class="kv"><span>Réseau</span><strong>ssdv2_default</strong></div>
+              <div class="kv"><span>TLS</span><span class="status ok">Valide</span></div>
+            </div>
+            <h3 class="section-title" style="margin-top:18px">Stockage</h3>
+            <div class="keyvals">
+              <div class="kv"><span>Volume</span><strong>/data</strong></div>
+              <div class="kv"><span>Taille</span><strong>87,4 Mo</strong></div>
+            </div>
+          </div>
+
+          <div class="card card-pad">
+            <h3 class="section-title">Dépendances / Compagnons</h3>
+            <div class="dep-row"><div class="dep-dot">O</div><div><strong>oauth2-proxy</strong><div class="small muted">Authentification</div></div><span class="spacer"></span><span class="status ok">En marche</span></div>
+            <div class="dep-row"><div class="dep-dot">T</div><div><strong>Traefik</strong><div class="small muted">Reverse proxy</div></div><span class="spacer"></span><span class="status ok">En marche</span></div>
+            <h3 class="section-title" style="margin-top:18px">Ressources</h3>
+            <div class="resource-line"><span>CPU</span><div class="progress"><span style="width:2%"></span></div><strong>0,2 %</strong></div>
+            <div class="resource-line"><span>Mémoire</span><div class="progress"><span style="width:25%"></span></div><strong>128 Mo</strong></div>
+          </div>
+
+          <div class="card card-pad">
+            <h3 class="section-title">Sauvegardes</h3>
+            <div class="keyvals">
+              <div class="kv"><span>Dernière</span><strong>17/09/2026 02:00</strong></div>
+              <div class="kv"><span>Résultat</span><span class="status ok">Succès</span></div>
+              <div class="kv"><span>Taille</span><strong>22 Mo</strong></div>
+            </div>
+            <button class="btn small" style="margin-top:12px">Sauvegarder maintenant</button>
+          </div>
+
+          <div class="card card-pad">
+            <h3 class="section-title">Déploiement</h3>
+            <div class="keyvals">
+              <div class="kv"><span>Dernier</span><strong>15/09/2026 14:22</strong></div>
+              <div class="kv"><span>Résultat</span><span class="status ok">Succès</span></div>
+              <div class="kv"><span>Image ID</span><strong class="mono">sha256:9fa2…</strong></div>
+            </div>
+            <button class="btn small" style="margin-top:12px">Recréer l'application</button>
+          </div>
+
+          <div class="card card-pad">
+            <h3 class="section-title">Variables non sensibles</h3>
+            <div class="keyvals">
+              <div class="kv"><span>DOZZLE_LEVEL</span><strong class="mono">info</strong></div>
+              <div class="kv"><span>DOZZLE_TAILSIZE</span><strong class="mono">300</strong></div>
+              <div class="kv"><span>TZ</span><strong class="mono">Europe/Paris</strong></div>
+            </div>
+            <button class="btn ghost small" style="margin-top:10px">Voir toutes les variables</button>
+          </div>
+        </div>
+
+        <div class="grid-2 cards" style="margin-top:16px">
+          <div class="card card-pad">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><h3 class="section-title">Logs récents</h3><button class="btn ghost small">Ouvrir les logs</button></div>
+            <div class="log" style="min-height:210px">
+<span class="inf">16:42:11 INF</span> Starting Dozzle v6.8.3<br>
+<span class="inf">16:42:12 INF</span> Connected to Docker Engine 29.6.1<br>
+<span class="inf">16:43:01 INF</span> New log stream: wallos<br>
+<span class="wrn">16:45:22 WRN</span> Container bazarr restarted<br>
+<span class="inf">16:55:44 INF</span> Docker event: container start (prowlarr)
+            </div>
+          </div>
+          <div class="card card-pad">
+            <h3 class="section-title">Liens utiles</h3>
+            <div class="link-list">
+              <div class="link-row"><span>Ouvrir l'application</span><strong style="color:var(--blue)">↗</strong></div>
+              <div class="link-row"><span>Voir les logs</span><strong style="color:var(--blue)">↗</strong></div>
+              <div class="link-row"><span>Documentation</span><strong style="color:var(--blue)">↗</strong></div>
+              <div class="link-row"><span>Page Docker Hub</span><strong style="color:var(--blue)">↗</strong></div>
+            </div>
+            <div class="callout" style="margin-top:14px"><strong>Santé :</strong> aucun problème détecté sur l'application ou ses dépendances.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- APP HISTORY -->
+      <section class="page" id="page-app-history">
+        <div class="breadcrumb"><a href="#" data-page="applications">Applications</a><span>›</span><a href="#" data-page="app-detail">Dozzle</a><span>›</span><span>Historique</span></div>
+        <div class="page-head">
+          <div><h1 class="page-title">Historique — Dozzle</h1><div class="page-sub">Toutes les activités liées à cette application, au même endroit.</div></div>
+          <button class="btn">⇩ Exporter</button>
+        </div>
+        <div class="chips" style="margin-bottom:16px">
+          <button class="chip active">Tout 24</button><button class="chip">Jobs 6</button><button class="chip">Audit 7</button><button class="chip">Notifications 4</button><button class="chip">Sauvegardes 3</button><button class="chip">Erreurs 4</button>
+        </div>
+        <div class="history-table">
+          <div class="history-line history-head"><span></span><span>Date et heure</span><span>Acteur</span><span>Événement</span><span>Résultat</span><span></span></div>
+          <div class="history-line"><span class="history-dot ok"></span><span>17/09/2026 16:42</span><span>admin</span><strong>Redémarrage du conteneur</strong><span class="status ok">Succès</span><button class="btn ghost small">⋮</button></div>
+          <div class="history-line"><span class="history-dot ok"></span><span>17/09/2026 14:18</span><span>système</span><strong>Sauvegarde automatique</strong><span class="status ok">Succès</span><button class="btn ghost small">⋮</button></div>
+          <div class="history-line"><span class="history-dot ok"></span><span>17/09/2026 12:03</span><span>admin</span><strong>Mise à jour de l'image</strong><span class="status ok">Succès</span><button class="btn ghost small">⋮</button></div>
+          <div class="history-line"><span class="history-dot warn"></span><span>17/09/2026 10:21</span><span>système</span><strong>Vérification de santé</strong><span class="status warn">Avertissement</span><button class="btn ghost small">⋮</button></div>
+          <div class="history-line"><span class="history-dot ok"></span><span>17/09/2026 08:15</span><span>admin</span><strong>Modification des variables</strong><span class="status ok">Succès</span><button class="btn ghost small">⋮</button></div>
+          <div class="history-line"><span class="history-dot ok"></span><span>16/09/2026 22:01</span><span>système</span><strong>Job planifié (nettoyage)</strong><span class="status ok">Succès</span><button class="btn ghost small">⋮</button></div>
+          <div class="history-line"><span class="history-dot err"></span><span>16/09/2026 16:12</span><span>système</span><strong>Échec de connexion</strong><span class="status err">Échec</span><button class="btn ghost small">⋮</button></div>
+          <div class="history-line"><span class="history-dot warn"></span><span>16/09/2026 12:11</span><span>système</span><strong>Alerte : utilisation mémoire élevée</strong><span class="status warn">Avertissement</span><button class="btn ghost small">⋮</button></div>
+        </div>
+      </section>
+
+      <!-- JOBS -->
+      <section class="page" id="page-jobs">
+        <div class="page-head"><div><h1 class="page-title">Jobs</h1><div class="page-sub">Gérez et surveillez les tâches planifiées.</div></div><button class="btn primary">＋ Lancer un job</button></div>
+        <div class="split">
+          <div class="card card-pad">
+            <div class="toolbar" style="margin-top:0"><input class="input" placeholder="Rechercher un job..." /><div class="chips"><button class="chip active">Tous</button><button class="chip">Succès</button><button class="chip">Échec</button></div></div>
+            <div id="jobList"></div>
+          </div>
+          <div class="card card-pad">
+            <div style="display:flex;align-items:center;gap:10px"><h3 class="section-title" style="margin:0">Redémarrage wallos</h3><span class="status err">Échec</span><span class="spacer"></span><button class="btn small">↻ Relancer</button></div>
+            <div class="keyvals" style="margin-top:12px"><div class="kv"><span>Déclenché le</span><strong>17/09/2026 15:47:34</strong></div><div class="kv"><span>Durée</span><strong>1 min 12 s</strong></div><div class="kv"><span>Application</span><strong>wallos</strong></div></div>
+            <h3 class="section-title" style="margin-top:18px">Progression</h3>
+            <div class="timeline">
+              <div class="tl"><span class="dot">✓</span><div><strong>Initialisation</strong></div><span class="muted">2 s</span></div>
+              <div class="tl"><span class="dot">✓</span><div><strong>Arrêt du conteneur</strong></div><span class="muted">8 s</span></div>
+              <div class="tl"><span class="dot err">×</span><div><strong>Démarrage du conteneur</strong><div class="small" style="color:var(--red)">Échec : le conteneur ne démarre pas</div></div><span class="muted">1 min 2 s</span></div>
+            </div>
+            <div class="tabs"><div class="tab active">Logs</div><div class="tab">Détails</div><div class="tab">Variables</div></div>
+            <div class="log" style="background:var(--red-bg);color:var(--text);min-height:180px">
+<span class="mono">15:47:34 INFO</span>  Arrêt du conteneur wallos...<br>
+<span class="mono">15:47:42 INFO</span>  Conteneur arrêté<br>
+<span class="mono">15:47:43 INFO</span>  Démarrage du conteneur...<br>
+<span class="err">15:48:45 ERROR</span> Le conteneur ne répond pas<br>
+<span class="err">15:48:46 ERROR</span> Job terminé avec un échec
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- NOTIFICATIONS -->
+      <section class="page" id="page-notifications">
+        <div class="page-head"><div><h1 class="page-title">Notifications <span class="muted" style="font-size:16px;font-weight:600">(3 non lues)</span></h1></div><button class="btn">Tout marquer comme lu</button></div>
+        <div class="card card-pad">
+          <div class="notice unread"><span class="status ok">Succès</span><div class="notice-main"><div class="notice-title">Changement d'authentification terminé : oauth2-proxy</div><div class="notice-time">17/09/2026 16:10:45</div></div><button class="btn small">Ouvrir</button></div>
+          <div class="notice unread"><span class="status ok">Succès</span><div class="notice-main"><div class="notice-title">Sauvegarde terminée : dozzle</div><div class="notice-time">17/09/2026 15:57:13</div></div><button class="btn small">Ouvrir</button></div>
+          <div class="notice unread"><span class="status err">Erreur</span><div class="notice-main"><div class="notice-title">Échec : Redémarrage wallos</div><div class="notice-time">ssdv2ctl a retourné le code 1 · 17/09/2026 15:47:34</div></div><button class="btn small">Ouvrir</button></div>
+          <div class="notice"><span class="status ok">Succès</span><div class="notice-main"><div class="notice-title">Nettoyage des volumes terminé</div><div class="notice-time">17/09/2026 15:39:22</div></div><button class="btn small">Ouvrir</button></div>
+        </div>
+      </section>
+
+      <!-- AUDIT -->
+      <section class="page" id="page-audit">
+        <div class="page-head"><div><h1 class="page-title">Audit</h1><div class="page-sub">Historique des actions sensibles et changements administratifs.</div></div></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Date</th><th>Utilisateur</th><th>Action</th><th>Cible</th><th>Statut</th></tr></thead>
+            <tbody>
+              <tr><td>17/09/2026 17:53:33</td><td>admin</td><td>security_internal_auth</td><td>—</td><td><span class="status ok">success</span></td></tr>
+              <tr><td>17/09/2026 16:10:45</td><td>admin</td><td>auth_bulk</td><td>oauth2-proxy</td><td><span class="status ok">success</span></td></tr>
+              <tr><td>17/09/2026 15:57:13</td><td>admin</td><td>app_backup</td><td>dozzle</td><td><span class="status ok">success</span></td></tr>
+              <tr><td>17/09/2026 15:47:34</td><td>admin</td><td>app_restart</td><td>wallos</td><td><span class="status err">failed</span></td></tr>
+              <tr><td>17/09/2026 15:39:22</td><td>admin</td><td>cleanup_volumes</td><td>diagnostics</td><td><span class="status ok">success</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- HEALTH -->
+      <section class="page" id="page-health">
+        <div class="page-head">
+          <div><h1 class="page-title">Santé de l'infrastructure</h1><div class="page-sub">Surveillez l'état de votre infrastructure et identifiez rapidement les problèmes.</div></div>
+          <div class="inline-actions"><span class="small muted">Dernière mise à jour : 17/09/2026 16:42:11</span><button class="btn">↻ Actualiser</button></div>
+        </div>
+
+        <div class="grid-4 cards">
+          <div class="card card-pad health-tile">
+            <div class="health-head"><strong>État global</strong><span class="status ok">Opérationnel</span></div>
+            <div style="display:flex;align-items:center;gap:18px"><div class="score-ring" style="--score:92"><strong>92%</strong></div><div><strong>Infrastructure saine</strong><div class="health-meta">Votre instance fonctionne correctement.</div></div></div>
+          </div>
+          <div class="card card-pad health-tile"><div class="health-head"><strong>CPU</strong><span class="muted small">8 cœurs</span></div><div class="health-value">28%</div><div class="health-meta">2,2 / 8 cœurs</div><div class="progress" style="margin-top:14px"><span style="width:28%"></span></div></div>
+          <div class="card card-pad health-tile"><div class="health-head"><strong>Mémoire</strong><span class="muted small">16 Go</span></div><div class="health-value">34%</div><div class="health-meta">5,4 / 16 Go</div><div class="progress" style="margin-top:14px"><span style="width:34%"></span></div></div>
+          <div class="card card-pad health-tile"><div class="health-head"><strong>Stockage</strong><span class="muted small">100 Go</span></div><div class="health-value">42%</div><div class="health-meta">42 / 100 Go</div><div class="progress" style="margin-top:14px"><span style="width:42%"></span></div></div>
+        </div>
+
+        <div class="grid-4 cards" style="margin-top:14px">
+          <div class="card card-pad"><div class="health-head"><strong>Docker Engine</strong><span class="status ok">Opérationnel</span></div><div class="health-meta">v29.6.1 · 12 conteneurs en cours</div></div>
+          <div class="card card-pad"><div class="health-head"><strong>Conteneurs</strong><span class="status warn">1 en erreur</span></div><div class="small" style="color:var(--green);margin-top:5px">● 11 sains</div><div class="small" style="color:var(--red);margin-top:5px">● 1 en erreur</div><div class="small muted" style="margin-top:5px">0 arrêtés</div></div>
+          <div class="card card-pad"><div class="health-head"><strong>Certificats TLS</strong><span class="status ok">Valide</span></div><div class="health-meta">Expire dans 72 jours<br>exemple.tld</div></div>
+          <div class="card card-pad"><div class="health-head"><strong>DNS / Domaine</strong><span class="status ok">Résolu</span></div><div class="health-meta">exemple.tld<br>Dernière vérification : il y a 5 min</div></div>
+          <div class="card card-pad"><div class="health-head"><strong>Sauvegardes</strong><span class="status ok">OK</span></div><div class="health-meta">Dernière : il y a 12 heures<br>Prochaine : dans 12 heures</div></div>
+          <div class="card card-pad"><div class="health-head"><strong>Jobs planifiés</strong><span class="status ok">Fonctionnels</span></div><div class="health-meta">8 jobs actifs<br>Dernière exécution : il y a 3 min</div></div>
+          <div class="card card-pad"><div class="health-head"><strong>Alertes</strong><span class="status warn">1 attention</span></div><div class="health-meta">0 critique · 0 information</div><button class="btn ghost small" data-page="notifications" style="margin-top:8px">Voir toutes les alertes</button></div>
+          <div class="card card-pad"><div class="health-head"><strong>Mises à jour</strong><span class="status warn">4 disponibles</span></div><div class="health-meta">1 système · 2 apps · 1 moteur</div><button class="btn ghost small" data-page="updates" style="margin-top:8px">Ouvrir le centre</button></div>
+        </div>
+
+        <div class="grid-2 cards" style="margin-top:14px">
+          <div class="card card-pad">
+            <h3 class="section-title">Ressources système — 24 dernières heures</h3>
+            <div class="grid-3 cards">
+              <div><div class="small muted">Utilisation CPU</div><strong>28%</strong><div class="mini-chart"><span style="height:20%"></span><span style="height:42%"></span><span style="height:34%"></span><span style="height:62%"></span><span style="height:28%"></span><span style="height:38%"></span><span style="height:24%"></span><span style="height:48%"></span></div></div>
+              <div><div class="small muted">Mémoire</div><strong>34%</strong><div class="mini-chart green"><span style="height:32%"></span><span style="height:38%"></span><span style="height:42%"></span><span style="height:36%"></span><span style="height:48%"></span><span style="height:44%"></span><span style="height:46%"></span><span style="height:50%"></span></div></div>
+              <div><div class="small muted">Stockage</div><strong>42%</strong><div class="mini-chart amber"><span style="height:35%"></span><span style="height:36%"></span><span style="height:38%"></span><span style="height:39%"></span><span style="height:40%"></span><span style="height:41%"></span><span style="height:42%"></span><span style="height:42%"></span></div></div>
+            </div>
+          </div>
+          <div class="card card-pad">
+            <h3 class="section-title">État des services</h3>
+            <div class="service-list">
+              <div class="service-row"><span>SSDV2 Core</span><span class="status ok">Opérationnel</span></div>
+              <div class="service-row"><span>WebUI</span><span class="status ok">Opérationnel</span></div>
+              <div class="service-row"><span>Base de données</span><span class="status ok">Opérationnel</span></div>
+              <div class="service-row"><span>Proxy (Traefik)</span><span class="status ok">Opérationnel</span></div>
+              <div class="service-row"><span>Réseau</span><span class="status ok">Opérationnel</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- BACKUPS -->
+      <section class="page" id="page-backups">
+        <div class="page-head"><div><h1 class="page-title">Sauvegardes</h1><div class="page-sub">Sauvegardez et restaurez vos données.</div></div><button class="btn primary">↓ Lancer une sauvegarde</button></div>
+        <div class="grid-2 cards">
+          <div class="card card-pad">
+            <h3 class="section-title">Historique des sauvegardes</h3>
+            <div class="keyvals">
+              <div class="kv"><span>17/09/2026 02:00</span><div><strong>Sauvegarde complète</strong><div class="small muted">1,2 Go · Succès</div></div></div>
+              <div class="kv"><span>16/09/2026 02:00</span><div><strong>Sauvegarde applications</strong><div class="small muted">845 Mo · Succès</div></div></div>
+              <div class="kv"><span>15/09/2026 02:00</span><div><strong>Sauvegarde complète</strong><div class="small muted">1,1 Go · Succès</div></div></div>
+            </div>
+          </div>
+          <div class="cards">
+            <div class="card card-pad"><h3 class="section-title">Dernière sauvegarde</h3><div class="status ok">Succès</div><div class="keyvals" style="margin-top:10px"><div class="kv"><span>Date</span><strong>17/09/2026 02:00:12</strong></div><div class="kv"><span>Taille</span><strong>1,2 Go</strong></div><div class="kv"><span>Durée</span><strong>3 min 24 s</strong></div></div></div>
+            <div class="card card-pad"><h3 class="section-title">Restaurer une sauvegarde</h3><div class="callout">La restauration n’est pas encore exposée par SSDV2.</div><div class="toolbar"><select class="select" disabled><option>Sélectionner une sauvegarde…</option></select><button class="btn" disabled>Restaurer</button></div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- DIAGNOSTICS -->
+      <section class="page" id="page-diagnostics">
+        <div class="page-head"><div><h1 class="page-title">Diagnostics</h1><div class="page-sub">Vérifiez l'état de votre instance et réparez les problèmes courants.</div></div><button class="btn primary">⌁ Lancer un diagnostic</button></div>
+        <div class="grid-4 cards">
+          <div class="card card-pad"><span class="status err">2</span><h3>Registres manquants</h3><div class="muted small">Applications sans registre</div><button class="btn small" style="margin-top:12px">Régénérer les registres</button></div>
+          <div class="card card-pad"><span class="status warn">1</span><h3>Conteneurs orphelins</h3><div class="muted small">Conteneur non référencé</div><button class="btn small" style="margin-top:12px">Supprimer les orphelins</button></div>
+          <div class="card card-pad"><span class="status warn">3</span><h3>Volumes orphelins</h3><div class="muted small">Volumes non utilisés</div><button class="btn small" style="margin-top:12px">Nettoyer les volumes</button></div>
+          <div class="card card-pad"><span class="status ok">OK</span><h3>Configurations</h3><div class="muted small">Aucun problème détecté</div></div>
+        </div>
+        <div class="grid-2 cards" style="margin-top:16px">
+          <div class="card card-pad"><h3 class="section-title">Dernier diagnostic</h3><div class="status ok">Succès</div><div class="keyvals" style="margin-top:10px"><div class="kv"><span>Date</span><strong>17/09/2026 10:22:14</strong></div><div class="kv"><span>Durée</span><strong>12 s</strong></div><div class="kv"><span>Vérifications</span><strong>5</strong></div></div></div>
+          <div class="card card-pad"><h3 class="section-title">Historique</h3><div class="notice"><span class="status ok">Succès</span><div class="notice-main"><div class="notice-title">17/09/2026 10:22</div></div></div><div class="notice"><span class="status warn">Avertissement</span><div class="notice-main"><div class="notice-title">15/09/2026 11:03</div></div></div></div>
+        </div>
+      </section>
+
+      <!-- UPDATES -->
+      <section class="page" id="page-updates">
+        <div class="page-head">
+          <div><h1 class="page-title">Centre de mises à jour</h1><div class="page-sub">Maintenez votre infrastructure à jour et sécurisée.</div></div>
+          <button class="btn primary">⇩ Tout mettre à jour</button>
+        </div>
+
+        <div class="update-summary">
+          <div class="card update-card"><div class="health-head"><strong>SSDV2 Core</strong><span class="status warn">Disponible</span></div><div class="version">v2.0.0 → <strong style="color:var(--blue)">v2.1.0</strong></div></div>
+          <div class="card update-card"><div class="health-head"><strong>WebUI</strong><span class="status ok">À jour</span></div><div class="version">v2.0.0</div></div>
+          <div class="card update-card"><div class="health-head"><strong>Images Docker</strong><span class="status warn">3 mises à jour</span></div><div class="version">Images plus récentes disponibles</div></div>
+          <div class="card update-card"><div class="health-head"><strong>Applications</strong><span class="status warn">2 mises à jour</span></div><div class="version">Dozzle · Prowlarr</div></div>
+        </div>
+
+        <div class="tabs"><div class="tab active">Composants <span class="muted">9</span></div><div class="tab">Applications <span class="muted">12</span></div><div class="tab">Historique</div></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Composant</th><th>Version actuelle</th><th>Version disponible</th><th>Type</th><th>Statut</th><th>Action</th></tr></thead>
+            <tbody>
+              <tr><td><strong>SSDV2 Core</strong></td><td>v2.0.0</td><td style="color:var(--blue);font-weight:800">v2.1.0</td><td>Système</td><td><span class="status warn">Mise à jour disponible</span></td><td><button class="btn small">Mettre à jour</button></td></tr>
+              <tr><td><strong>WebUI</strong></td><td>v2.0.0</td><td>—</td><td>Interface</td><td><span class="status ok">À jour</span></td><td>—</td></tr>
+              <tr><td><strong>Docker Engine</strong></td><td>29.6.1</td><td>29.7.0</td><td>Système</td><td><span class="status err">Critique</span></td><td><button class="btn small">Mettre à jour</button></td></tr>
+              <tr><td><strong>Base système (Ubuntu)</strong></td><td>24.04 LTS</td><td>24.04.4 LTS</td><td>Système</td><td><span class="status warn">Mise à jour disponible</span></td><td><button class="btn small">Mettre à jour</button></td></tr>
+              <tr><td><strong>Dozzle</strong></td><td>v6.8.3</td><td style="color:var(--blue);font-weight:800">v6.9.1</td><td>Application</td><td><span class="status warn">Mise à jour disponible</span></td><td><button class="btn small">Mettre à jour</button></td></tr>
+              <tr><td><strong>Prowlarr</strong></td><td>v1.14.0</td><td style="color:var(--blue);font-weight:800">v1.15.2</td><td>Application</td><td><span class="status warn">Mise à jour disponible</span></td><td><button class="btn small">Mettre à jour</button></td></tr>
+              <tr><td><strong>Authelia</strong></td><td>v4.38.6</td><td>—</td><td>Application</td><td><span class="status ok">À jour</span></td><td>—</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card card-pad release-notes" style="margin-top:16px">
+          <div style="display:flex;align-items:start;justify-content:space-between;gap:16px">
+            <div><h3 class="section-title" style="margin-bottom:4px">Nouveautés SSDV2 Core v2.1.0</h3><div class="small muted">Publié le 16/09/2026</div></div>
+            <button class="btn small">Voir le changelog complet</button>
+          </div>
+          <ul>
+            <li>Amélioration de la stabilité et des performances.</li>
+            <li>Support étendu pour les sauvegardes incrémentielles.</li>
+            <li>Correction de problèmes de réseau et de résolution DNS.</li>
+            <li>Nouvelles vérifications de santé système.</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- AUTH -->
+      <section class="page" id="page-authentication">
+        <div class="page-head"><div><h1 class="page-title">Authentification des applications</h1><div class="page-sub">Gérez la protection des applications exposées.</div></div></div>
+        <div class="card card-pad">
+          <div class="toolbar" style="margin-top:0"><select class="select"><option>oauth2-proxy</option><option>authelia</option><option>basique</option><option>aucune</option></select><button class="btn primary">Appliquer à la sélection</button></div>
+          <div class="table-wrap"><table><thead><tr><th></th><th>Application</th><th>Authentification</th><th>Domaine</th></tr></thead><tbody>
+            <tr><td>□</td><td><strong>crowdsec</strong></td><td><span class="status">aucune</span></td><td>—</td></tr>
+            <tr><td>□</td><td><strong>dozzle</strong></td><td><span class="status ok">oauth2-proxy</span></td><td>dozzle.exemple.tld</td></tr>
+            <tr><td>□</td><td><strong>prowlarr</strong></td><td><span class="status ok">oauth2-proxy</span></td><td>prowlarr.exemple.tld</td></tr>
+            <tr><td>□</td><td><strong>streamfusion</strong></td><td><span class="status">aucune</span></td><td>streamfusion.exemple.tld</td></tr>
+          </tbody></table></div>
+        </div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section class="page" id="page-settings">
+        <div class="page-head"><div><h1 class="page-title">Paramètres</h1><div class="page-sub">Configurez votre instance SSDV2.</div></div></div>
+        <div class="tabs"><div class="tab">Général</div><div class="tab active">Authentification</div><div class="tab">Réseau</div><div class="tab">Sauvegardes</div><div class="tab">Avancé</div></div>
+        <div class="settings-grid">
+          <div class="card card-pad"><h3 class="section-title">Authentification interne</h3><div class="setting-row"><div><strong>Activer l'authentification interne</strong><div class="small muted">Permet la connexion avec un compte local.</div></div><div class="toggle on"></div></div></div>
+          <div class="card card-pad"><h3 class="section-title">Proxy amont</h3><div class="setting-row"><div><strong>Utiliser un proxy amont</strong><div class="small muted">Redirige l'authentification vers un fournisseur externe.</div></div><div class="toggle on"></div></div><div class="small muted">URL du proxy</div><input class="input" style="width:100%;margin-top:8px" value="http://oauth2-proxy:4180" /></div>
+          <div class="card card-pad"><h3 class="section-title">Clé de session</h3><div class="small muted">Clé utilisée pour signer les sessions.</div><input class="input mono" style="width:100%;margin:12px 0" value="••••••••••••••••••••••••••••••••" /><button class="btn">Générer</button></div>
+          <div class="card card-pad"><h3 class="section-title">Accès administrateur</h3><div class="setting-row"><div><strong>admin</strong><div class="small muted">Compte administrateur principal.</div></div><button class="btn">Modifier le mot de passe</button></div></div>
+        </div>
+        <div class="card card-pad danger-zone" style="margin-top:16px"><h3 class="section-title" style="color:var(--red)">Zone sensible</h3><div class="page-sub">Les actions ci-dessous affectent directement la sécurité de la WebUI.</div><div class="toolbar"><button class="btn danger">Désactiver l'authentification interne</button></div></div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<nav class="mobile-bottom">
+  <button data-page="dashboard" class="active">⌂<span>Dashboard</span></button>
+  <button data-page="applications">▦<span>Apps</span></button>
+  <button data-page="health">♥<span>Santé</span></button>
+  <button data-page="updates">⇩<span>Mises à jour</span></button>
+</nav>
+
+<script>
+const apps = [
+ {name:"dozzle",desc:"Visualisation des logs Docker",icon:"›_",status:"En marche",cls:"ok",domain:"dozzle.exemple.tld",image:"amir20/dozzle:latest",c:1,a:0},
+ {name:"wallos",desc:"Suivi d'abonnements",icon:"▥",status:"En marche",cls:"ok",domain:"wallos.exemple.tld",image:"bellamy/wallos:latest",c:1,a:0},
+ {name:"authelia",desc:"Authentification des applications Web",icon:"◇",status:"En marche",cls:"ok",domain:"—",image:"authelia/authelia:latest",c:1,a:1},
+ {name:"bazarr",desc:"Gestion de sous-titres Sonarr/Radarr",icon:"◉",status:"Arrêtée",cls:"err",domain:"—",image:"linuxserver/bazarr:latest",c:0,a:0},
+ {name:"bookstack",desc:"Wiki gratuit et open source",icon:"▣",status:"Non installé",cls:"",domain:"—",image:"linuxserver/bookstack:latest",c:0,a:0},
+ {name:"prowlarr",desc:"Indexeur pour *arr",icon:"⌕",status:"En marche",cls:"ok",domain:"—",image:"linuxserver/prowlarr:latest",c:1,a:0},
+ {name:"streamfusion",desc:"Streaming média",icon:"▶",status:"Non installé",cls:"",domain:"—",image:"—",c:0,a:0},
+ {name:"speedtesttracker",desc:"Suivi des tests de vitesse internet",icon:"◔",status:"En marche",cls:"ok",domain:"—",image:"lscr.io/linuxserver/speedtest-tracker",c:1,a:0},
+];
+const jobs = [
+ ["Sauvegarde système","Succès","ok","Il y a 2 heures"],["Mise à jour des applications","Succès","ok","Il y a 6 heures"],["Nettoyage des logs","Succès","ok","Il y a 1 jour"],["Redémarrage wallos","Échec","err","17/09/2026 15:47"],["Vérification des mises à jour","Succès","ok","16/09/2026 03:00"]
+];
+
+function renderApps(filter=""){
+ const list=apps.filter(a=>(a.name+" "+a.desc).toLowerCase().includes(filter.toLowerCase()));
+ document.getElementById("appsTable").innerHTML=list.map(a=>`<tr>
+  <td><div class="appcell"><div class="app-icon">${a.icon}</div><div><div class="app-title"><a href="#" data-page="app-detail">${a.name}</a></div><div class="app-desc">${a.desc}</div></div></div></td>
+  <td><span class="status ${a.cls}">${a.status}</span></td><td>${a.domain}</td><td class="mono small">${a.image}</td><td>${a.c}</td><td>${a.a?`<span class="status err">${a.a}</span>`:"0"}</td><td><button class="btn ghost small">⋮</button></td></tr>`).join("");
+ document.getElementById("appsMobile").innerHTML=list.map(a=>`<div class="card card-pad" data-page="${a.name==="dozzle"?"app-detail":""}"><div class="appcell"><div class="app-icon">${a.icon}</div><div><div class="app-title">${a.name}</div><div class="app-desc">${a.desc}</div></div><span class="spacer"></span><span class="status ${a.cls}">${a.status}</span></div></div>`).join("");
+ bindPageLinks();
+}
+function renderJobs(){
+ document.getElementById("jobList").innerHTML=jobs.map((j,i)=>`<div class="notice ${i===3?"unread":""}"><span class="status ${j[2]}">${j[1]}</span><div class="notice-main"><div class="notice-title">${j[0]}</div><div class="notice-time">${j[3]}</div></div><button class="btn ghost small">⋮</button></div>`).join("");
+}
+function gotoPage(name){
+ const target=document.getElementById("page-"+name); if(!target)return;
+ document.querySelectorAll(".page").forEach(p=>p.classList.remove("active")); target.classList.add("active");
+ document.querySelectorAll(".nav-item").forEach(n=>n.classList.toggle("active",n.dataset.page===name || ((name==="app-detail"||name==="app-history")&&n.dataset.page==="applications")));
+ document.querySelectorAll(".mobile-bottom button").forEach(n=>n.classList.toggle("active",n.dataset.page===name || ((name==="app-detail"||name==="app-history")&&n.dataset.page==="applications")));
+ document.getElementById("sidebar").classList.remove("open");
+ window.scrollTo({top:0,behavior:"smooth"});
+ location.hash=name;
+}
+function bindPageLinks(){
+ document.querySelectorAll("[data-page]").forEach(el=>{
+   el.onclick=(e)=>{e.preventDefault();gotoPage(el.dataset.page)}
+ });
+}
+renderApps(); renderJobs(); bindPageLinks();
+document.getElementById("appSearch").addEventListener("input",e=>renderApps(e.target.value));
+document.getElementById("themeBtn").onclick=()=>{
+ const root=document.documentElement; root.dataset.theme=root.dataset.theme==="dark"?"":"dark";
+};
+document.getElementById("menuBtn").onclick=()=>document.getElementById("sidebar").classList.toggle("open");
+if(location.hash) gotoPage(location.hash.slice(1));
+</script>
+</body>
+</html>

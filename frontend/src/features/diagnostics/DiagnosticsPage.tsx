@@ -2,6 +2,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { DiagnosticsActions } from '@/features/diagnostics/DiagnosticsActions'
 import { useDiagnostics } from '@/features/system/useSystem'
+import { PageHeader } from '@/components/app/page-header'
 import { fr } from '@/i18n/fr'
 import type { Diagnostics } from '@/api/types'
 
@@ -24,7 +25,10 @@ export function DiagnosticsView({
 }: Pick<Diagnostics, 'checks' | 'warnings'>) {
   return (
     <div className="space-y-4">
-      <h1 className="text-lg font-semibold">{fr.diagnostics.title}</h1>
+      <PageHeader
+        title={fr.diagnostics.title}
+        subtitle="Vérifiez l'état de votre instance et réparez les problèmes courants."
+      />
 
       {warnings.length > 0 && (
         <Alert variant="destructive">

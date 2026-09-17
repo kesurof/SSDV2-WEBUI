@@ -87,7 +87,9 @@ agent), §72 (décisions à trancher), §75 (stack).
 - Mode dégradé obligatoire : démarrer et afficher l'erreur si Docker/SSDV2/SQLite
   indisponibles, sans crash-loop.
 - UI en français, textes hors des composants (i18n ultérieure) ; admin dense orientée
-  desktop (type Portainer/Coolify), pas de galerie de cartes.
+  desktop (type Portainer/Coolify), pas de galerie de cartes. Suivre la maquette de
+  référence `docs/SSDV2_WEBUI_MOCKUP_FINAL_UI.html` : tokens clair/sombre, icônes Lucide,
+  composants transverses (`src/components/app/`).
 
 ## Documentation et synchronisation
 

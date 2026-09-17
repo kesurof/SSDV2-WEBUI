@@ -1,9 +1,11 @@
+from datetime import datetime
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
 RuntimeStatus = Literal["running", "partial", "stopped", "unknown", "not_installed"]
 AuthType = Literal["aucune", "basique", "authelia", "oauth", "oauth2-proxy"]
+HistoryKind = Literal["job", "audit", "notification", "backup"]
 
 SUBDOMAIN_PATTERN = r"^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$"
 
@@ -67,3 +69,43 @@ class AppInstallRequest(BaseModel):
 
 class AppRemoveRequest(BaseModel):
     delete_data: bool = False
+
+
+class AppHistoryEvent(BaseModel):
+    kind: HistoryKind
+    at: datetime
+    actor: str | None = None
+    label: str
+    result: str
+    job_id: int | None = None
+
+
+class AppHistoryOut(BaseModel):
+    schema_version: int = 1
+    app: str
+    events: list[AppHistoryEvent]
+
+
+class ContainerStatsOut(BaseModel):
+    name: str
+    cpu_percent: float | None = None
+    memory_used_bytes: int | None = None
+    memory_limit_bytes: int | None = None
+    memory_percent: float | None = None
+
+
+class AppStatsOut(BaseModel):
+    schema_version: int = 1
+    app: str
+    containers: list[ContainerStatsOut]
+
+
+class AppEnvVarOut(BaseModel):
+    name: str
+    value: str
+
+
+class AppEnvOut(BaseModel):
+    schema_version: int = 1
+    app: str
+    variables: list[AppEnvVarOut]

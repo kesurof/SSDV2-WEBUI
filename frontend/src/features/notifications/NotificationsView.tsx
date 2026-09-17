@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { PageHeader } from '@/components/app/page-header'
 import { fr } from '@/i18n/fr'
 import type { Notification } from '@/api/types'
 
@@ -32,19 +33,23 @@ export function NotificationsView({
 }) {
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-lg font-semibold">
-          {fr.notifications.title}{' '}
-          {unread > 0 && (
-            <span className="text-sm font-normal text-muted-foreground">
-              ({unread} {fr.notifications.unread})
-            </span>
-          )}
-        </h1>
-        <Button size="sm" variant="outline" disabled={unread === 0 || busy} onClick={onReadAll}>
-          {fr.notifications.markAllRead}
-        </Button>
-      </div>
+      <PageHeader
+        title={
+          <>
+            {fr.notifications.title}{' '}
+            {unread > 0 && (
+              <span className="text-sm font-normal text-muted-foreground">
+                ({unread} {fr.notifications.unread})
+              </span>
+            )}
+          </>
+        }
+        actions={
+          <Button size="sm" variant="outline" disabled={unread === 0 || busy} onClick={onReadAll}>
+            {fr.notifications.markAllRead}
+          </Button>
+        }
+      />
 
       {items.length === 0 ? (
         <p className="text-sm text-muted-foreground">{fr.notifications.empty}</p>

@@ -1,6 +1,19 @@
+import { useState } from 'react'
+import {
+  Boxes,
+  Cpu,
+  ExternalLink,
+  Globe,
+  Link2,
+  MemoryStick,
+  TriangleAlert,
+} from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { TriangleAlert } from 'lucide-react'
 
+import { StatusPill } from '@/components/app/status-pill'
+import type { StatusTone } from '@/components/app/status-pill'
+import { KeyValueList } from '@/components/app/key-value-list'
+import { ProgressBar } from '@/components/app/progress-bar'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -12,10 +25,14 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import type { AppDetail, AppHistoryEvent, AppStats, Backup, Container } from '@/api/types'
+import { AppHistoryView } from '@/features/apps/AppHistoryView'
+import type { HistoryFilter } from '@/features/apps/AppHistoryView'
 import { AppLogsTab } from '@/features/apps/AppLogsTab'
 import { StatusBadge } from '@/features/apps/StatusBadge'
+import { jobTypeLabel } from '@/features/jobs/JobsView'
 import { fr } from '@/i18n/fr'
-import type { AppDetail, Container } from '@/api/types'
+import { formatBytes, formatDate, formatPercent } from '@/lib/format'
 
 function warningLabel(code: string): string {
   return fr.warnings[code as keyof typeof fr.warnings] ?? code
@@ -32,13 +49,10 @@ function healthLabel(health: string | null): string {
   return fr.containerHealth[health as keyof typeof fr.containerHealth] ?? health
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <div className="text-xs text-muted-foreground">{label}</div>
-      <div className="text-sm">{children}</div>
-    </div>
-  )
+function containerTone(container: Container): StatusTone {
+  if (container.state !== 'running') return 'muted'
+  if (container.health === 'unhealthy') return 'err'
+  return 'ok'
 }
 
 function ContainerTable({ containers }: { containers: Container[] }) {
@@ -46,7 +60,7 @@ function ContainerTable({ containers }: { containers: Container[] }) {
     return <p className="text-sm text-muted-foreground">{fr.apps.emptyList}</p>
   }
   return (
-    <div className="rounded-md border">
+    <div className="overflow-hidden rounded-xl border">
       <Table>
         <TableHeader>
           <TableRow>
@@ -86,27 +100,68 @@ function List({ values }: { values: string[] }) {
   )
 }
 
-export function AppDetailView({ app, auth }: { app: AppDetail; auth: string | null }) {
+function Card({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-2xl border bg-card p-5">
+      <h3 className="mb-3 text-sm font-semibold">{title}</h3>
+      {children}
+    </div>
+  )
+}
+
+function filterHistory(events: AppHistoryEvent[], filter: HistoryFilter): AppHistoryEvent[] {
+  if (filter === 'all') return events
+  if (filter === 'errors') {
+    return events.filter((event) => ['failed', 'error', 'cancelled'].includes(event.result))
+  }
+  return events.filter((event) => event.kind === filter)
+}
+
+export function AppDetailView({
+  app,
+  auth,
+  stats,
+  backups,
+  history,
+  env,
+}: {
+  app: AppDetail
+  auth: string | null
+  stats?: AppStats
+  backups?: Backup[]
+  history?: AppHistoryEvent[]
+  env?: Array<{ name: string; value: string }>
+}) {
+  const [historyFilter, setHistoryFilter] = useState<HistoryFilter>('all')
+  const companions = app.container_list.filter((container) => container.name !== app.name)
+  const appBackups = (backups ?? []).filter((backup) => backup.app === app.name)
+  const lastBackup = appBackups[0]
+  const lastJob = (history ?? []).find((event) => event.kind === 'job')
+  const envVariables = stats?.containers ?? []
+
+  const registryUrl = app.image?.includes('ghcr.io')
+    ? `https://${app.image.split('/').slice(0, 2).join('/')}`
+    : app.image
+      ? `https://hub.docker.com/r/${app.image.split(':')[0].replace(/^docker\.io\//, '')}`
+      : null
+
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <Link
-            to="/apps"
-            className="text-xs text-muted-foreground hover:underline"
-          >
-            {fr.apps.back}
-          </Link>
-          <h1 className="text-lg font-semibold">{app.name}</h1>
-          <p className="text-sm text-muted-foreground">{app.description}</p>
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="grid size-14 place-items-center rounded-2xl bg-primary text-primary-foreground">
+          <Boxes className="size-7" aria-hidden />
         </div>
-        <div className="flex items-center gap-2">
-          {app.warnings.length > 0 && (
-            <Badge variant="outline" className="border-amber-500 text-amber-600">
-              <TriangleAlert className="size-3" /> {app.warnings.length}
-            </Badge>
-          )}
-          <StatusBadge status={app.runtime_status} />
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-2xl font-bold tracking-tight">{app.name}</h1>
+            <StatusBadge status={app.runtime_status} />
+            {app.warnings.length > 0 && (
+              <Badge variant="outline" className="border-warning text-warning">
+                <TriangleAlert className="size-3" aria-hidden /> {app.warnings.length}
+              </Badge>
+            )}
+          </div>
+          <p className="mt-1 text-sm text-muted-foreground">{app.description}</p>
         </div>
       </div>
 
@@ -132,28 +187,173 @@ export function AppDetailView({ app, auth }: { app: AppDetail; auth: string | nu
           <TabsTrigger value="logs">{fr.apps.tabs.logs}</TabsTrigger>
           <TabsTrigger value="volumes">{fr.apps.tabs.volumes}</TabsTrigger>
           <TabsTrigger value="network">{fr.apps.tabs.network}</TabsTrigger>
+          <TabsTrigger value="variables">{fr.apps.tabs.variables}</TabsTrigger>
+          <TabsTrigger value="history">{fr.apps.tabs.history}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="pt-4">
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            <Field label={fr.apps.fields.url}>
-              {app.url ? (
-                <a
-                  href={app.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-primary hover:underline"
-                >
-                  {app.url}
-                </a>
+          <div className="grid gap-4 lg:grid-cols-3">
+            <Card title={fr.apps.detail.info}>
+              <KeyValueList
+                items={[
+                  { label: fr.apps.fields.image, value: <span className="font-mono text-xs">{app.image ?? '—'}</span> },
+                  { label: fr.apps.detail.type, value: app.available ? 'Application Docker' : '—' },
+                  { label: fr.apps.fields.status, value: <StatusBadge status={app.runtime_status} /> },
+                  {
+                    label: fr.apps.detail.containerId,
+                    value: (
+                      <span className="font-mono text-xs">
+                        {app.container_list.find((container) => container.name === app.name)?.name ?? '—'}
+                      </span>
+                    ),
+                  },
+                  { label: fr.apps.fields.subdomain, value: app.ssddb?.subdomain ?? '—' },
+                ]}
+              />
+            </Card>
+
+            <Card title={fr.apps.detail.access}>
+              <KeyValueList
+                items={[
+                  {
+                    label: fr.apps.fields.url,
+                    value: app.url ? (
+                      <a href={app.url} target="_blank" rel="noreferrer" className="text-primary hover:underline">
+                        {app.url}
+                      </a>
+                    ) : (
+                      '—'
+                    ),
+                  },
+                  { label: fr.apps.fields.auth, value: auth ?? '—' },
+                  { label: fr.apps.fields.port, value: app.ssddb?.port ?? '—' },
+                  {
+                    label: fr.apps.detail.tls,
+                    value: app.url?.startsWith('https') ? (
+                      <StatusPill tone="ok">{fr.health.tlsValid}</StatusPill>
+                    ) : (
+                      '—'
+                    ),
+                  },
+                  { label: 'DNS', value: app.registries.dns.length > 0 ? <List values={app.registries.dns} /> : '—' },
+                ]}
+              />
+            </Card>
+
+            <Card title={fr.apps.detail.companions}>
+              {companions.length === 0 ? (
+                <p className="text-sm text-muted-foreground">{fr.apps.detail.noCompanions}</p>
               ) : (
-                '—'
+                <div className="space-y-2">
+                  {companions.map((container) => (
+                    <div
+                      key={container.name}
+                      className="flex items-center justify-between gap-3 border-b py-2 text-sm last:border-b-0"
+                    >
+                      <span className="min-w-0">
+                        <span className="block truncate font-medium">{container.name}</span>
+                        <span className="block truncate text-xs text-muted-foreground">
+                          {container.image ?? '—'}
+                        </span>
+                      </span>
+                      <StatusPill tone={containerTone(container)}>
+                        {stateLabel(container.state)}
+                      </StatusPill>
+                    </div>
+                  ))}
+                </div>
               )}
-            </Field>
-            <Field label={fr.apps.fields.image}>{app.image ?? '—'}</Field>
-            <Field label={fr.apps.fields.auth}>{auth ?? '—'}</Field>
-            <Field label={fr.apps.fields.subdomain}>{app.ssddb?.subdomain ?? '—'}</Field>
-            <Field label={fr.apps.fields.port}>{app.ssddb?.port ?? '—'}</Field>
+            </Card>
+
+            <Card title={fr.apps.detail.resources}>
+              {envVariables.length === 0 ? (
+                <p className="text-sm text-muted-foreground">{fr.common.none}</p>
+              ) : (
+                <div className="space-y-4">
+                  {envVariables.map((container) => (
+                    <div key={container.name}>
+                      <div className="mb-1.5 flex items-center justify-between text-xs">
+                        <span className="flex items-center gap-1.5 font-medium">
+                          <Cpu className="size-3.5 text-muted-foreground" aria-hidden />
+                          {container.name}
+                        </span>
+                        <span className="font-semibold">{formatPercent(container.cpu_percent)}</span>
+                      </div>
+                      <ProgressBar value={container.cpu_percent ?? 0} />
+                      <div className="mt-1.5 flex items-center justify-between text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1.5">
+                          <MemoryStick className="size-3.5" aria-hidden />
+                          {formatBytes(container.memory_used_bytes)}
+                        </span>
+                        <span>{formatPercent(container.memory_percent)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
+
+            <Card title={fr.apps.detail.backups}>
+              {lastBackup ? (
+                <KeyValueList
+                  items={[
+                    { label: fr.apps.detail.lastBackup, value: formatDate(lastBackup.created_at) },
+                    { label: fr.apps.detail.size, value: formatBytes(lastBackup.size) },
+                    { label: fr.apps.detail.result, value: <StatusPill tone="ok">{fr.jobs.status.success}</StatusPill> },
+                  ]}
+                />
+              ) : (
+                <p className="text-sm text-muted-foreground">{fr.backups.empty}</p>
+              )}
+            </Card>
+
+            <Card title={fr.apps.detail.deployment}>
+              {lastJob ? (
+                <KeyValueList
+                  items={[
+                    { label: fr.apps.detail.lastDeploy, value: formatDate(lastJob.at) },
+                    { label: fr.apps.detail.result, value: <StatusPill tone={lastJob.result === 'success' ? 'ok' : 'err'}>{lastJob.result}</StatusPill> },
+                    { label: fr.apps.detail.type, value: jobTypeLabel(lastJob.label) },
+                  ]}
+                />
+              ) : (
+                <p className="text-sm text-muted-foreground">{fr.common.none}</p>
+              )}
+            </Card>
+
+            <Card title={fr.apps.detail.links}>
+              <div className="space-y-1">
+                {app.url ? (
+                  <a
+                    href={app.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center justify-between gap-2 border-b py-2 text-sm hover:text-primary"
+                  >
+                    {fr.apps.detail.openApp}
+                    <ExternalLink className="size-3.5" aria-hidden />
+                  </a>
+                ) : null}
+                {registryUrl ? (
+                  <a
+                    href={registryUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center justify-between gap-2 border-b py-2 text-sm hover:text-primary"
+                  >
+                    {fr.apps.detail.dockerHub}
+                    <Link2 className="size-3.5" aria-hidden />
+                  </a>
+                ) : null}
+                <Link
+                  to={`/apps/${app.name}/history`}
+                  className="flex items-center justify-between gap-2 py-2 text-sm hover:text-primary"
+                >
+                  {fr.apps.tabs.history}
+                  <Globe className="size-3.5" aria-hidden />
+                </Link>
+              </div>
+            </Card>
           </div>
         </TabsContent>
 
@@ -166,11 +366,43 @@ export function AppDetailView({ app, auth }: { app: AppDetail; auth: string | nu
         </TabsContent>
 
         <TabsContent value="volumes" className="pt-4">
-          <List values={app.registries.volumes} />
+          <Card title={fr.apps.tabs.volumes}>
+            <List values={app.registries.volumes} />
+          </Card>
         </TabsContent>
 
         <TabsContent value="network" className="pt-4">
-          <List values={app.registries.dns} />
+          <Card title={fr.apps.tabs.network}>
+            <List values={app.registries.dns} />
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="variables" className="pt-4">
+          <Card title={fr.apps.detail.env}>
+            <p className="mb-3 text-xs text-muted-foreground">
+              Seules les variables non sensibles sont affichées.
+            </p>
+            {!env || env.length === 0 ? (
+              <p className="text-sm text-muted-foreground">{fr.common.none}</p>
+            ) : (
+              <KeyValueList
+                items={env.map((variable) => ({
+                  label: variable.name,
+                  value: <span className="font-mono text-xs">{variable.value}</span>,
+                }))}
+              />
+            )}
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="history" className="pt-4">
+          <AppHistoryView
+            app={app.name}
+            events={filterHistory(history ?? [], historyFilter)}
+            filter={historyFilter}
+            onFilterChange={setHistoryFilter}
+            compact
+          />
         </TabsContent>
       </Tabs>
     </div>

@@ -6,6 +6,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { PageHeader } from '@/components/app/page-header'
 import { fr } from '@/i18n/fr'
 import type { Backup } from '@/api/types'
 
@@ -27,7 +28,7 @@ function formatSize(bytes: number): string {
 export function BackupsView({ backups }: { backups: Backup[] }) {
   return (
     <div className="space-y-4">
-      <h1 className="text-lg font-semibold">{fr.backups.title}</h1>
+      <PageHeader title={fr.backups.title} subtitle={fr.backups.hint} />
       <p className="text-xs text-muted-foreground">{fr.backups.hint}</p>
       {backups.length === 0 ? (
         <p className="text-sm text-muted-foreground">{fr.backups.empty}</p>

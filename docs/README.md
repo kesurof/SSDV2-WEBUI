@@ -10,6 +10,7 @@ recopie aucun contenu ; il oriente vers le document de référence.
 | État actuel vérifié du dépôt | [`ARCHITECTURE-CURRENT.md`](ARCHITECTURE-CURRENT.md) |
 | Cible architecturale (non implémentée) | [`ARCHITECTURE-TARGET.md`](ARCHITECTURE-TARGET.md) |
 | Conception détaillée / spécification source | [`SSDV2_WEBUI_PROJECT_BRIEF.md`](SSDV2_WEBUI_PROJECT_BRIEF.md) |
+| Maquette de référence UI (design) | [`SSDV2_WEBUI_MOCKUP_FINAL_UI.html`](SSDV2_WEBUI_MOCKUP_FINAL_UI.html) |
 | Décisions architecturales (ADR) | [`DECISIONS.md`](DECISIONS.md) |
 | Roadmap et phases | [`ROADMAP.md`](ROADMAP.md) |
 | Chantier en cours | [`PROGRESS.md`](PROGRESS.md) |

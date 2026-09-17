@@ -431,6 +431,41 @@ pointe vers son remplaçant. Une décision non tranchée reste dans « Décision
   supprimé (perte de la voie de développement locale).
 - **Références** : ADR-0020 ; brief §75.
 
+## ADR-0022 — Observabilité, historique par application et mises à jour d'images
+
+- **Statut** : acceptée — 2026-09-17
+- **Contexte** : la maquette finale (`docs/SSDV2_WEBUI_MOCKUP_FINAL_UI.html`) introduit
+  une page Santé (métriques hôte, contrôles), un historique par application, les
+  ressources des conteneurs, l'affichage des variables non sensibles et un centre de
+  mises à jour ; le brief limite le MVP aux opérations applicatives (pas d'opérations
+  hôte).
+- **Décision** :
+  - métriques hôte (CPU/RAM) lues depuis `/proc/stat` et `/proc/meminfo` montés en
+    lecture seule dans l'application SSDV2 (`/host/proc/...`) ; disque via
+    `shutil.disk_usage` sur les montages SSDV2 ; conteneurs via l'instantané Docker
+    groupé ;
+  - `GET /api/v1/system/health` : contrôles de services, sauvegardes, jobs, alertes,
+    résolution DNS et sonde TLS du domaine public (cache 5 min, « inconnu » en cas
+    d'échec) ;
+  - `GET /api/v1/apps/{app}/history` : agrégation jobs + audit + notifications +
+    sauvegardes, filtrable (`job|audit|notification|backup|errors`) ;
+  - `GET /api/v1/apps/{app}/stats` (CPU/RAM par conteneur, cache 15 s) et
+    `GET /api/v1/apps/{app}/env` limité à une **allowlist stricte** (TZ, PUID, PGID,
+    UMASK, LANG, LC_ALL, préfixe `DOZZLE_`) avec refus de tout nom contenant un marqueur
+    sensible (PASSWORD, TOKEN, SECRET, KEY, VAULT…) ;
+  - `GET /api/v1/updates` : comparaison digest local / digest registre par image
+    d'application installée (cache 30 min, statut `unknown` en cas d'échec) ; l'action
+    « Mettre à jour » réutilise le job `app_recreate` (pull + recreate) ;
+  - le système (Docker Engine, OS, SSDV2 Core), la restauration de sauvegarde et les
+    paramètres éditables restent hors périmètre (Phase 5).
+- **Conséquences** : la définition SSDV2 monte `/proc/stat` et `/proc/meminfo` en lecture
+  seule ; les appels Docker stats/registre sont mis en cache et jamais faits dans la
+  table des applications ; la maquette devient la référence de design versionnée.
+- **Alternatives écartées** : métriques limitées aux conteneurs (imprécises) ; historique
+  côté client uniquement (appels multiples) ; affichage des variables sans allowlist
+  (risque de fuite de secret, règle 6) ; mises à jour système depuis la WebUI (règle 7).
+- **Références** : ADR-0004, ADR-0020 ; brief §62, §75 ; règles 6 et 7 (`AGENTS.md`).
+
 ## Décisions ouvertes
 
 À trancher explicitement puis consigner en ADR (voir brief §72) :

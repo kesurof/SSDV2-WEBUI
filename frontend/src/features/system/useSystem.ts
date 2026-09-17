@@ -1,7 +1,19 @@
 import { useQuery } from '@tanstack/react-query'
 
 import { ApiError, apiFetch } from '@/api/client'
-import type { AppDetail, AppState, Diagnostics, Health, SystemSummary } from '@/api/types'
+import type {
+  AppDetail,
+  AppEnv,
+  AppHistory,
+  AppState,
+  AppStats,
+  Diagnostics,
+  Health,
+  HostMetrics,
+  SystemHealth,
+  SystemSummary,
+  Updates,
+} from '@/api/types'
 
 export function useApps() {
   return useQuery<AppState[]>({
@@ -20,11 +32,58 @@ export function useApp(app: string) {
   })
 }
 
+export function useAppHistory(app: string, kind: string | null) {
+  const suffix = kind ? `?kind=${kind}` : ''
+  return useQuery<AppHistory>({
+    queryKey: ['apps', app, 'history', kind],
+    queryFn: () => apiFetch<AppHistory>(`/apps/${app}/history${suffix}`),
+  })
+}
+
+export function useAppStats(app: string) {
+  return useQuery<AppStats>({
+    queryKey: ['apps', app, 'stats'],
+    queryFn: () => apiFetch<AppStats>(`/apps/${app}/stats`),
+    refetchInterval: 15_000,
+  })
+}
+
+export function useAppEnv(app: string) {
+  return useQuery<AppEnv>({
+    queryKey: ['apps', app, 'env'],
+    queryFn: () => apiFetch<AppEnv>(`/apps/${app}/env`),
+  })
+}
+
 export function useHealth() {
   return useQuery<Health>({
     queryKey: ['health'],
     queryFn: () => apiFetch<Health>('/health'),
     refetchInterval: 30_000,
+  })
+}
+
+export function useSystemHealth() {
+  return useQuery<SystemHealth>({
+    queryKey: ['system', 'health'],
+    queryFn: () => apiFetch<SystemHealth>('/system/health'),
+    refetchInterval: 60_000,
+  })
+}
+
+export function useMetrics() {
+  return useQuery<HostMetrics>({
+    queryKey: ['system', 'metrics'],
+    queryFn: () => apiFetch<HostMetrics>('/system/metrics'),
+    refetchInterval: 30_000,
+  })
+}
+
+export function useUpdates() {
+  return useQuery<Updates>({
+    queryKey: ['updates'],
+    queryFn: () => apiFetch<Updates>('/updates'),
+    refetchInterval: 15 * 60_000,
   })
 }
 

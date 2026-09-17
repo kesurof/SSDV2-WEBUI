@@ -10,6 +10,30 @@ Aucun.
 
 ## Derniers chantiers terminés (2026-09-17)
 
+**Refonte UI (maquette finale) et pages d'exploitation (ADR-0022)**.
+
+- Design system : tokens clair/sombre (palette de la maquette), icônes Lucide, shell
+  (sidebar Pilotage/Exploitation/Configuration, recherche globale ⌘K, menu utilisateur),
+  composants transverses (StatusPill, MetricCard, KeyValueList, ProgressBar, EmptyState).
+- Pages : dashboard (santé, compteurs, jobs récents, alertes, bandeau mises à jour), table
+  des applications (filtres + pagination 20/page), détail d'application (cartes
+  Informations, Accès et réseau, Compagnons, Ressources, Sauvegardes, Déploiement, Liens ;
+  onglets Variables et Historique), pages **Santé**, **Mises à jour** et **Historique par
+  application**, responsive de base.
+- Backend : `GET /system/metrics` (CPU/RAM hôte via `/host/proc`, disque, conteneurs),
+  `GET /system/health` (services, sauvegardes, jobs, alertes, DNS, sonde TLS avec cache),
+  `GET /apps/{app}/history` (jobs + audit + notifications + sauvegardes, filtrable),
+  `GET /apps/{app}/stats` (CPU/RAM par conteneur, cache 15 s), `GET /apps/{app}/env`
+  (allowlist stricte, marqueurs sensibles refusés), `GET /updates` (digest local vs
+  registre, cache 30 min) ; définition SSDV2 enrichie des montages `/proc/stat` et
+  `/proc/meminfo` en lecture seule.
+- Preuves : 143 tests pytest et 51 tests Vitest verts, lint/typecheck/build verts ;
+  vérification réelle sous Docker Desktop (image locale) — `/health` dégradé attendu,
+  login 200, `metrics` (CPU/RAM hôte, 6 conteneurs, avertissement stockage absent),
+  `health` (services, DNS/TLS « inconnu » sur 127.0.0.1), `updates` vide, SPA servie,
+  aucune erreur dans les journaux.
+- Maquette neutralisée et versionnée comme référence de design (`docs/README.md`).
+
 **Dépôt public assaini et industrialisé (ADR-0021)**.
 
 - Données personnelles purgées de l'arbre et de l'historique (domaine, chemins, IP,

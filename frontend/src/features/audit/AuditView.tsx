@@ -6,6 +6,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { PageHeader } from '@/components/app/page-header'
 import { fr } from '@/i18n/fr'
 import type { AuditEvent } from '@/api/types'
 
@@ -17,7 +18,10 @@ function formatDate(value: string): string {
 export function AuditView({ events }: { events: AuditEvent[] }) {
   return (
     <div className="space-y-4">
-      <h1 className="text-lg font-semibold">{fr.audit.title}</h1>
+      <PageHeader
+        title={fr.audit.title}
+        subtitle="Historique des actions sensibles et changements administratifs."
+      />
       {events.length === 0 ? (
         <p className="text-sm text-muted-foreground">{fr.audit.empty}</p>
       ) : (
