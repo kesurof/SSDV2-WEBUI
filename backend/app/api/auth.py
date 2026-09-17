@@ -16,6 +16,7 @@ from app.core.security import (
 from app.db.models import User, UserSession, utcnow
 from app.deps import CurrentUser, DbDep, SettingsDep, require_csrf
 from app.schemas.auth import LoginRequest, UserOut
+from app.services import audit
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -36,8 +37,10 @@ def login(payload: LoginRequest, response: Response, db: DbDep, settings: Settin
         )
     user = db.scalar(select(User).where(User.username == payload.username))
     if user is None or not verify_password(user.password_hash, payload.password):
+        audit.record("login", "failed", username=payload.username)
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Identifiants invalides")
     limiter.reset(key)
+    audit.record("login", "success", username=user.username)
 
     token = new_token()
     expires_at = utcnow() + timedelta(hours=settings.session_ttl_hours)
@@ -80,6 +83,7 @@ def logout(
         if session is not None:
             db.delete(session)
             db.commit()
+    audit.record("logout", "success", username=_user.username)
     response.delete_cookie(SESSION_COOKIE, path="/")
     response.delete_cookie(CSRF_COOKIE, path="/")
 

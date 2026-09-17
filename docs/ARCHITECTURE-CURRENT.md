@@ -19,7 +19,9 @@
   SQLite), `GET /api/v1/jobs/{id}/events` (SSE) et `POST /api/v1/jobs/{id}/cancel`,
   `GET /api/v1/system/summary` (hôte via Docker info, branche/commit SSDV2, compteurs),
   `GET /api/v1/diagnostics` et `POST /api/v1/diagnostics/rebuild-registries|
-  cleanup-orphan-containers|cleanup-dangling-volumes` (jobs de réparation) ; le tout via
+  `GET /api/v1/notifications` (liste + non-lues), `PATCH /notifications/{id}/read`,
+  `POST /notifications/read-all`, `GET /notifications/events` (SSE),
+  `GET /api/v1/audit` (journal des actions) ; le tout via
   l'adaptateur `ssdv2ctl` (`app/adapters/ssdv2_cli.py`, commandes allowlistées,
   `shell=False`, `SSDV2CTL_PATH`/`SSDV2CTL_TIMEOUT`).
 - `frontend/` : React 19 + Vite 8 + TypeScript 5.9 + Tailwind 4 + shadcn/ui +
@@ -28,7 +30,8 @@
   dégradé), page de détail d'application (vue générale avec authentification, conteneurs,
   logs avec suivi SSE, volumes, réseau/DNS, actions installer/démarrer/arrêter/redémarrer/
   recréer/réinstaller/supprimer avec confirmations graduées), page Jobs (liste + détail
-  avec événements SSE), page Diagnostics (contrôles + actions de réparation avec
+  avec événements SSE), page Notifications (badge non-lues, marquage lu, liens vers les
+  jobs), page Audit, page Diagnostics (contrôles + actions de réparation avec
   confirmation forte).
 - `Dockerfile` : multi-stage Node 22 → `python:3.13-slim`, entrypoint PUID/PGID
   (`setpriv --init-groups`, ADR-0017), frontend compilé servi par FastAPI, healthcheck
@@ -60,9 +63,8 @@
 
 ## Ce qui n'existe pas (à ce jour)
 
-- Aucune notification persistante, aucun audit, aucun backup, aucune commande
-  `ssdv2ctl config` (reportés en Phase 4).
-- Aucune sauvegarde, page Docker/réseau, command palette, thème, aucun confort de logs
+- Aucun backup, aucune commande `ssdv2ctl config`, aucun réglage applicatif (Phase 4).
+- Aucune page Docker/réseau, command palette, thème, aucun confort de logs
   (recherche, pause).
 - Aucune exposition publique (Traefik), aucune image publiée sur GHCR, aucun multiarch.
 - Aucune migration de schéma hors micro-migrations additives (ADR-0016).

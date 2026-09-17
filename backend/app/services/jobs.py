@@ -9,10 +9,26 @@ from sqlalchemy import select, update
 from app.adapters.ssdv2_cli import Ssdv2CtlError, Ssdv2CtlRunner
 from app.db.models import Job, JobEvent, utcnow
 from app.db.session import get_session_factory
+from app.services import audit, notifications
 
 logger = logging.getLogger(__name__)
 
 TERMINAL_STATUSES = ("success", "failed", "cancelled", "interrupted")
+
+JOB_LABELS = {
+    "app_install": "Installation",
+    "app_remove": "Suppression",
+    "app_reinstall": "Réinstallation",
+    "app_recreate": "Recréation",
+    "app_start": "Démarrage",
+    "app_stop": "Arrêt",
+    "app_restart": "Redémarrage",
+    "diagnostics_rebuild_registries": "Régénération des registres",
+    "diagnostics_cleanup_containers": "Nettoyage des conteneurs orphelins",
+    "diagnostics_cleanup_volumes": "Nettoyage des volumes orphelins",
+}
+
+NOTIFY_JOB_TYPES = ("app_install", "app_remove", "app_reinstall", "app_recreate")
 
 JOB_TYPE_ACTIONS = {
     "app_start": "start",
@@ -183,6 +199,45 @@ class JobManager:
                 job.message = message
                 job.finished_at = utcnow()
                 session.commit()
+                finished = {
+                    "username": job.created_by,
+                    "type": job.type,
+                    "target": job.target,
+                    "message": job.message,
+                }
+            else:
+                finished = None
+
+        if finished is not None:
+            self._publish_outcome(job_id, status, finished)
+
+    def _publish_outcome(self, job_id: int, status: str, finished: dict) -> None:
+        job_type = finished["type"]
+        target = finished["target"]
+        label = JOB_LABELS.get(job_type, job_type)
+        audit.record(
+            action=job_type,
+            status=status,
+            username=finished["username"],
+            target=target,
+            detail=finished["message"],
+        )
+        if status == "failed":
+            notifications.create_notification(
+                severity="error",
+                title=f"Échec : {label} {target}",
+                message=finished["message"],
+                source="jobs",
+                link=f"/jobs/{job_id}",
+            )
+        elif status == "success" and job_type in NOTIFY_JOB_TYPES:
+            notifications.create_notification(
+                severity="success",
+                title=f"{label} terminée : {target}",
+                message=None,
+                source="jobs",
+                link=f"/jobs/{job_id}",
+            )
 
     def events_after(self, job_id: int, last_id: int) -> tuple[list[JobEvent], Job | None]:
         with get_session_factory()() as session:

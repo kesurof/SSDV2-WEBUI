@@ -9,6 +9,8 @@ export const fr = {
     dashboard: 'Dashboard',
     apps: 'Applications',
     jobs: 'Jobs',
+    notifications: 'Notifications',
+    audit: 'Audit',
     diagnostics: 'Diagnostics',
   },
   login: {
@@ -159,6 +161,25 @@ export const fr = {
     recreateConfirm: 'Recréer les conteneurs de {app} (image mise à jour, données conservées) ?',
     reinstallConfirm:
       'Réinstaller {app} depuis la configuration source (données conservées) ?',
+  },
+  notifications: {
+    title: 'Notifications',
+    empty: 'Aucune notification.',
+    markAllRead: 'Tout marquer comme lu',
+    markRead: 'Marquer comme lu',
+    open: 'Ouvrir',
+    unread: 'non lues',
+  },
+  audit: {
+    title: 'Audit',
+    empty: 'Aucun événement.',
+    columns: {
+      date: 'Date',
+      user: 'Utilisateur',
+      action: 'Action',
+      target: 'Cible',
+      status: 'Statut',
+    },
   },
   dashboard: {
     title: 'Dashboard',

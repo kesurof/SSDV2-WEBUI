@@ -2,7 +2,7 @@ import pytest
 from sqlalchemy import select
 
 from app.adapters.ssdv2_cli import Ssdv2CtlError
-from app.db.models import Job, JobEvent, utcnow
+from app.db.models import AuditEvent, Job, JobEvent, Notification, utcnow
 from app.db.session import get_session_factory, init_db
 from app.services.jobs import JobManager, build_job_args
 from tests.conftest import FakeStreamingRunner
@@ -159,3 +159,54 @@ def test_reset_interrupted() -> None:
     stored = stored_job(job.id)
     assert stored.status == "interrupted"
     assert stored.finished_at is not None
+
+
+def test_run_job_publishes_notification_and_audit() -> None:
+    manager, _ = make_manager()
+    job = manager.submit("app_install", "wallos", "admin")
+
+    manager.run_job(job.id)
+
+    with get_session_factory()() as session:
+        notification = session.scalars(
+            select(Notification).order_by(Notification.id.desc())
+        ).first()
+        assert notification is not None
+        assert notification.severity == "success"
+        assert "wallos" in notification.title
+        assert notification.link == f"/jobs/{job.id}"
+
+        audit_row = session.scalars(select(AuditEvent).order_by(AuditEvent.id.desc())).first()
+        assert audit_row is not None
+        assert audit_row.action == "app_install"
+        assert audit_row.status == "success"
+        assert audit_row.username == "admin"
+        assert audit_row.target == "wallos"
+
+
+def test_run_job_failure_publishes_error_notification() -> None:
+    manager, _ = make_manager(exit_code=1)
+    job = manager.submit("app_remove", "wallos", "admin")
+
+    manager.run_job(job.id)
+
+    with get_session_factory()() as session:
+        notification = session.scalars(
+            select(Notification).order_by(Notification.id.desc())
+        ).first()
+        assert notification is not None
+        assert notification.severity == "error"
+        assert "wallos" in notification.title
+
+
+def test_run_job_actions_do_not_notify() -> None:
+    manager, _ = make_manager()
+    with get_session_factory()() as session:
+        before = session.scalars(select(Notification)).all()
+    job = manager.submit("app_restart", "sonarr", "admin")
+
+    manager.run_job(job.id)
+
+    with get_session_factory()() as session:
+        after = session.scalars(select(Notification)).all()
+        assert len(after) == len(before)

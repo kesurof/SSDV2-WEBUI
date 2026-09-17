@@ -1,8 +1,12 @@
+import { useEffect } from 'react'
 import { Navigate, NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { useLogout, useMe } from '@/features/auth/useAuth'
+import { useNotifications } from '@/features/notifications/useNotifications'
 import { useHealth } from '@/features/system/useSystem'
 import { fr } from '@/i18n/fr'
 
@@ -10,14 +14,35 @@ const NAV_ITEMS = [
   { to: '/dashboard', label: fr.nav.dashboard },
   { to: '/apps', label: fr.nav.apps },
   { to: '/jobs', label: fr.nav.jobs },
+  { to: '/notifications', label: fr.nav.notifications },
+  { to: '/audit', label: fr.nav.audit },
   { to: '/diagnostics', label: fr.nav.diagnostics },
 ]
+
+type NotificationEventPayload = {
+  id?: number
+}
 
 export function Layout() {
   const me = useMe()
   const health = useHealth()
+  const notifications = useNotifications()
   const logout = useLogout()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
+
+  useEffect(() => {
+    const source = new EventSource('/api/v1/notifications/events')
+    source.onmessage = (event) => {
+      const payload = JSON.parse(event.data as string) as NotificationEventPayload
+      if (payload.id) {
+        queryClient.invalidateQueries({ queryKey: ['notifications'] })
+      }
+    }
+    return () => {
+      source.close()
+    }
+  }, [queryClient])
 
   if (me.isPending) {
     return <div className="p-8 text-sm text-muted-foreground">{fr.common.loading}</div>
@@ -32,6 +57,8 @@ export function Layout() {
     navigate('/login', { replace: true })
   }
 
+  const unread = notifications.data?.unread ?? 0
+
   return (
     <div className="flex min-h-svh">
       <aside className="flex w-56 flex-col border-r bg-muted/20 p-3">
@@ -42,12 +69,17 @@ export function Layout() {
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
-                `block rounded-md px-2 py-1.5 text-sm ${
+                `flex items-center justify-between rounded-md px-2 py-1.5 text-sm ${
                   isActive ? 'bg-accent font-medium' : 'text-muted-foreground hover:bg-accent/50'
                 }`
               }
             >
-              {item.label}
+              <span>{item.label}</span>
+              {item.to === '/notifications' && unread > 0 && (
+                <Badge variant="outline" className="border-transparent bg-sky-600 text-white">
+                  {unread}
+                </Badge>
+              )}
             </NavLink>
           ))}
         </nav>
