@@ -2,10 +2,21 @@
 
 ## État du dépôt
 
-Greenfield : aucun code, manifeste, test, CI, Dockerfile ou commande vérifiable. La
-documentation et la conception existent (`README.md`, `docs/`), versionnées avec Git.
-Ne pas inventer de commande. Dès qu'un outillage est ajouté, documenter ici les commandes
-réelles et mettre à jour `docs/ARCHITECTURE-CURRENT.md`.
+M1 (lecture seule) déployé sur le serveur de test. Backend `backend/` (FastAPI + pytest),
+frontend `frontend/` (React/Vite/shadcn/TanStack), `Dockerfile` multi-stage,
+`compose.yaml`, CI self-hosted `.github/workflows/ci.yml`. Détails :
+`docs/ARCHITECTURE-CURRENT.md`.
+
+## Commandes
+
+- Tests backend (Python 3.13, identique à la CI, depuis la racine) :
+  `docker run --rm -v "$PWD/backend:/src:ro" -v ssdv2-webui-pip-cache:/root/.cache/pip -w / python:3.13-slim sh -c "cp -r /src /work && cd /work && pip install -q -e '.[dev]' && ruff check . && ruff format --check . && pytest"`
+- Frontend (depuis `frontend/`) : `npm ci && npm run lint && npm run typecheck && npm run test && npm run build`
+- Types API : régénérer `backend/openapi.json` (`python -m app.export_openapi`, même
+  conteneur que les tests) puis `npm run gen:api` — les deux fichiers sont versionnés.
+- Image : `docker build -t ssdv2-webui:local .`
+- Serveur de test : `ssh utilisateur@198.51.100.10 "cd ~/ssdv2-webui && git pull && docker compose up -d --build"` ;
+  UI sur `127.0.0.1:8800` uniquement (tunnel : `ssh -L 8800:127.0.0.1:8800 utilisateur@198.51.100.10`).
 
 ## Documentation
 
