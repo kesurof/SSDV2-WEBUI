@@ -62,12 +62,28 @@ aucun push — ADR-0010 ; dernière révision `444b9681`).
   `app_restart` `queued` puis `success` (code 0) ; événements SSE réels ; `dozzle`
   effectivement redémarré (`Up 3 seconds`) ; `GET /api/v1/jobs` renvoie l'historique.
 
+**Phase 3b — cycle de vie complet (install/remove/reinstall/recreate)**.
+
+- Image : `ansible-core` 2.21.0 + collections/rôles SSDV2, outils CLI (`jq`, `sqlite3`,
+  `curl`, `gettext`, `htpasswd`, `pigz`), entrypoint PUID/PGID avec `sudo` interne et
+  groupe Docker conservé, inventaire/groupe Vault montés (ADR-0015, ADR-0017) ; ~442 Mo.
+- Backend : jobs `app_install`/`app_remove`/`app_reinstall`/`app_recreate` avec paramètres
+  (sous-domaine, auth, `delete_data`), micro-migration SQL idempotente (ADR-0016) ;
+  85 tests pytest verts.
+- Frontend : bouton Installer (dialogue sous-domaine + auth), menu d'actions
+  Recréer/Réinstaller/Supprimer avec confirmation graduée (saisie du nom pour la
+  suppression des données) ; 23 tests Vitest verts.
+- Preuves : CI verte ; sur le serveur, cycle complet en jobs — `remove --delete-data`
+  (job 13 `success`), `install` (job 14 `success`, conteneur `wallos` healthy, registres
+  + `ssddb` + DNS), `recreate` (job 15 `success`), `remove --delete-data` final (job 16
+  `success`) avec nettoyage vérifié (conteneur, registres, `ssddb`, dossier de données,
+  DNS `dig @1.1.1.1` vide).
+
 ## Prochains chantiers pressentis
 
-1. Phase 3b : enrichir l'image (`ansible-core`, `community.docker`, `kwoodson.yedit`)
-   puis exposer install/remove/reinstall/recreate en jobs (décision déjà prise).
-2. Phase 4 : notifications persistantes, audit, backups, diagnostics réparateurs,
+1. Phase 4 : notifications persistantes, audit, backups, diagnostics réparateurs,
    `ssdv2ctl config`.
+2. Polish : confort des logs (recherche, pause), exposition Traefik, multiarch/GHCR.
 
 ## Points d'attention détectés
 
@@ -79,12 +95,9 @@ aucun push — ADR-0010 ; dernière révision `444b9681`).
 - **Entrées `ssddb` hors catalogue** : `traefik`, `boostsuitev2` et `appname` (donnée de
   test) ne sont pas listées par la WebUI, pilotée par le catalogue ; exposées par
   `diagnostics run` (registres manquants), à traiter en Phase 4.
-- **Runtime des mutations** : `start`/`stop`/`restart` et `diagnostics` fonctionnent dans
-  le conteneur (vérifié : `app status dozzle` → conteneur détecté, `auth get` correct).
-  `install`/`remove`/`reinstall`/`recreate` exigent ansible ; le venv SSDV2 monté n'est
-  pas exécutable dans le conteneur (`venv/bin/python` → `/usr/bin/python3` absent).
-  Options : enrichir l'image (`ansible-core` + `community.docker` + `kwoodson.yedit`,
-  ~50 Mo) ou reporter les mutations. Décision ouverte (ADR-0014).
+- **Runtime des mutations** : résolu (ADR-0015/0017) — ansible et outils CLI embarqués,
+  conteneur exécuté en PUID/PGID avec `sudo` interne. Maintenir la parité des collections
+  avec le serveur lors des mises à jour SSDV2.
 - **Logs bruts** : les journaux des applications peuvent contenir des secrets
   applicatifs (observé : clés d'API dans des URLs de `streamfusion`) ; l'accès est réservé
   à l'admin authentifié mais aucune redaction n'est appliquée. Une redaction best-effort

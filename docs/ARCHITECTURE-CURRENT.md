@@ -27,10 +27,12 @@
   logs avec suivi SSE, volumes, réseau/DNS, actions installer/démarrer/arrêter/redémarrer/
   recréer/réinstaller/supprimer avec confirmations graduées), page Jobs (liste + détail
   avec événements SSE), page Diagnostics.
-- `Dockerfile` : multi-stage Node 22 → `python:3.13-slim`, utilisateur non root
-  (`uid 10001`), frontend compilé servi par FastAPI, healthcheck `/health`, runtime
-  ansible (`ansible-core` 2.21.0, collections `community.docker`/`community.general`/
-  `ansible.posix`, rôles `kwoodson.yedit`/`geerlingguy.docker` dans `/opt/ansible`).
+- `Dockerfile` : multi-stage Node 22 → `python:3.13-slim`, entrypoint PUID/PGID
+  (`setpriv --init-groups`, ADR-0017), frontend compilé servi par FastAPI, healthcheck
+  `/health`, runtime SSDV2 : ansible (`ansible-core` 2.21.0, collections
+  `community.docker`/`community.general`/`ansible.posix`, rôles `kwoodson.yedit`/
+  `geerlingguy.docker` dans `/opt/ansible`), outils CLI `jq`, `sqlite3`, `curl`,
+  `gettext`, `htpasswd`, `pigz`, `sudo` (image ~442 Mo).
 - `compose.yaml` : conteneur unique `ssdv2-webui` lié à `127.0.0.1:8800`, exécuté avec
   l'UID/GID de l'utilisateur SSDV2 (`SSD_UID`/`SSD_GID`, ADR-0017), socket Docker,
   binaire Docker de l'hôte monté, `SSDV2CTL_PATH` et `HOME` pointant vers l'utilisateur
