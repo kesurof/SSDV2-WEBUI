@@ -52,7 +52,10 @@ describe('AppsTable', () => {
     expect(screen.getByText('En marche')).toBeInTheDocument()
     expect(screen.getByText('wallos')).toBeInTheDocument()
     expect(screen.getByText('Non installé')).toBeInTheDocument()
-    expect(screen.getByText('https://sonarr.example.com')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Ouvrir l\'application sonarr' })).toHaveAttribute(
+      'href',
+      'https://sonarr.example.com',
+    )
   })
 
   it('links application names to the detail page', () => {

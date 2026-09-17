@@ -1,5 +1,5 @@
 import { createColumnHelper, tableFeatures, useTable } from '@tanstack/react-table'
-import { TriangleAlert } from 'lucide-react'
+import { ExternalLink, TriangleAlert } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import {
@@ -10,6 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { buttonVariants } from '@/components/ui/button'
 import { AppRowActions, AppRowUpdate } from '@/features/apps/AppRowActions'
 import { StatusBadge } from '@/features/apps/StatusBadge'
 import { fr } from '@/i18n/fr'
@@ -41,15 +42,28 @@ function buildColumns(updatesByApp?: Record<string, UpdateEntry>) {
     header: fr.apps.columns.status,
     cell: (ctx) => <StatusBadge status={ctx.getValue()} />,
   }),
-  columnHelper.accessor((row) => row.url ?? '—', {
+  columnHelper.accessor((row) => row.url, {
     id: 'url',
     header: fr.apps.columns.url,
-    cell: (ctx) => <span className="text-sm">{ctx.getValue()}</span>,
-  }),
-  columnHelper.accessor((row) => row.image ?? '—', {
-    id: 'image',
-    header: fr.apps.columns.image,
-    cell: (ctx) => <span className="font-mono text-xs">{ctx.getValue()}</span>,
+    cell: (ctx) => {
+      const url = ctx.getValue()
+      if (!url) {
+        return <span className="text-muted-foreground">{fr.common.none}</span>
+      }
+      return (
+        <a
+          href={url}
+          target="_blank"
+          rel="noreferrer"
+          title={url}
+          aria-label={`${fr.apps.detail.openApp} ${ctx.row.original.name}`}
+          className={buttonVariants({ variant: 'outline', size: 'sm' })}
+        >
+          <ExternalLink className="size-3.5" aria-hidden />
+          {fr.common.open}
+        </a>
+      )
+    },
   }),
   columnHelper.accessor('containers', {
     header: fr.apps.columns.containers,

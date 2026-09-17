@@ -142,4 +142,10 @@
   html {
     @apply font-sans;
     }
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']),
+  [role='menuitem'],
+  [role='tab'] {
+    cursor: pointer;
+    }
 }
