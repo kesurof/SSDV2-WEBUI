@@ -272,14 +272,17 @@ aucun push — ADR-0010).
 
 **Application de l'authentification en masse (ADR-0024)**.
 
-- Le job `auth_bulk` écrit (`auth set-many`) puis recrée automatiquement les applications
-  dont l'auth a changé (`app recreate`, timeout 1800 s chacune) : l'action `/auth` est
-  appliquée en un geste, progression SSE dans `/jobs/{id}` ; les applications déjà à jour
-  ne sont pas recréées ; échecs partiels agrégés dans le statut du job.
-- Frontend : confirmation et hint mis à jour (« les applications modifiées seront
+- Le job `auth_bulk` écrit (`auth set-many`) puis recrée automatiquement **toutes les
+  applications sélectionnées** sans erreur d'écriture (`app recreate`, timeout 1800 s
+  chacune) : l'action `/auth` converge toujours vers l'état demandé, progression SSE dans
+  `/jobs/{id}` ; échecs partiels agrégés dans le statut du job.
+- La recréation n'est pas conditionnée à `changed` (qui ne reflète que `account.yml`) :
+  constat le 2026-09-18 d'un `grocy` dont `account.yml` valait `aucune` alors que le
+  conteneur portait toujours `chain-oauth2-proxy@file`.
+- Frontend : confirmation et hint mis à jour (« les applications sélectionnées seront
   recréées »).
-- Backend : `_run_auth_bulk` dans `JobManager` ; tests `auth_bulk` (chaînage, apps
-  inchangées, échec partiel).
+- Backend : `_run_auth_bulk` dans `JobManager` ; tests `auth_bulk` (recréation
+  systématique, erreur d'écriture, échec partiel).
 
 ## Prochains chantiers pressentis
 

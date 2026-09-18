@@ -229,7 +229,7 @@ def make_auth_manager(
     return manager, runner
 
 
-def test_run_job_auth_bulk_recreates_only_changed_apps() -> None:
+def test_run_job_auth_bulk_recreates_selected_apps() -> None:
     manager, runner = make_auth_manager(
         payload={
             "results": [
@@ -251,9 +251,11 @@ def test_run_job_auth_bulk_recreates_only_changed_apps() -> None:
     assert runner.calls == [
         ["auth", "set-many", "authelia", "sonarr", "radarr"],
         ["app", "recreate", "sonarr"],
+        ["app", "recreate", "radarr"],
     ]
     events = stored_events(job.id)
     assert any("sonarr" in line and "Recréation" in line for line in events)
+    assert any("radarr" in line and "Recréation" in line for line in events)
 
 
 def test_run_job_auth_bulk_reports_partial_failure() -> None:

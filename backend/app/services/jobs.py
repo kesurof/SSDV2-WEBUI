@@ -177,7 +177,7 @@ class JobManager:
         if not isinstance(results, list):
             raise Ssdv2CtlError("ssdv2ctl_invalid_output", "sortie auth set-many inattendue")
 
-        changed: list[str] = []
+        to_recreate: list[str] = []
         failed: list[str] = []
         for result in results:
             app = str(result.get("app", ""))
@@ -186,14 +186,15 @@ class JobManager:
                 self._add_event(
                     job_id, f"Échec de l'authentification pour {app} : {result['error']}"
                 )
-            elif result.get("changed"):
-                changed.append(app)
+                continue
+            if result.get("changed"):
                 self._add_event(job_id, f"Authentification modifiée pour {app}")
             else:
                 self._add_event(job_id, f"Authentification déjà à jour pour {app}")
+            to_recreate.append(app)
 
         recreate_timeout = ACTION_TIMEOUTS["app_recreate"]
-        for app in changed:
+        for app in to_recreate:
             self._add_event(job_id, f"Recréation de {app} pour appliquer l'authentification")
             recreate_args = build_job_args("app_recreate", app, {})
             code = runner.run_streaming(

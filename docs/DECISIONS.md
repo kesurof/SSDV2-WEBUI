@@ -503,22 +503,28 @@ pointe vers son remplaçant. Une décision non tranchée reste dans « Décision
   chaque application et la recréer manuellement, ce qui n'est pas acceptable en UX.
 - **Décision** :
   - le job `auth_bulk` devient composite : il exécute d'abord
-    `ssdv2ctl auth set-many <auth> <apps…>`, lit le JSON `results[]` et ne recrée
-    (`ssdv2ctl app recreate <app>`, timeout 1800 s par application) que les applications
-    dont l'auth a réellement changé (`changed: true`) ;
-  - les applications déjà à jour ne sont pas recréées ; une erreur d'écriture ou de
-    recréation n'interrompt pas les suivantes ; le job est `failed` si au moins une
-    application a échoué, avec la liste des applications fautives dans `message` ;
+    `ssdv2ctl auth set-many <auth> <apps…>`, puis recrée
+    (`ssdv2ctl app recreate <app>`, timeout 1800 s par application) **toutes les
+    applications sélectionnées** qui n'ont pas d'erreur d'écriture ;
+  - le recréation n'est pas conditionnée à `changed` : `ssdv2ctl` compare la cible à la
+    valeur déjà présente dans `account.yml`, pas à l'état réellement appliqué au
+    conteneur ; une écriture passée non appliquée (ancienne version) laisserait sinon
+    `account.yml` et le runtime diverger sans jamais converger ;
+  - une erreur d'écriture ou de recréation n'interrompt pas les suivantes ; le job est
+    `failed` si au moins une application a échoué, avec la liste des applications fautives
+    dans `message` ;
   - le job reste unique (un seul worker, ADR-0007) et la progression est visible via les
     événements SSE existants (`/jobs/{id}/events`) ;
   - aucun nouvel endpoint : `POST /api/v1/auth/bulk` conserve son contrat.
-- **Conséquences** : l'action `/auth` est appliquée en un geste ; la recréation étant
-  interruptive, la confirmation UI le mentionne explicitement ; un lot de N applications
-  peut être long (N × recreate).
-- **Alternatives écartées** : conserver l'application manuelle par application ; recréer
-  toutes les applications sélectionnées même inchangées (interruption inutile) ; jobs
-  `app_recreate` séparés soumis par le frontend (état « à recréer » à persister, plus
-  complexe).
+- **Conséquences** : l'action `/auth` converge toujours vers l'état demandé ; la
+  recréation étant interruptive, la confirmation UI l'indique (« les applications
+  sélectionnées seront recréées ») ; un lot de N applications peut être long
+  (N × recreate) et recrée aussi les applications déjà à jour.
+- **Alternatives écartées** : conserver l'application manuelle par application ; ne
+  recréer que les applications `changed` (laisse une dérive `account.yml`/runtime non
+  résorbée, constatée le 2026-09-18 sur `grocy`) ; comparer le label Traefik du conteneur
+  à l'auth cible (plus fin mais couplé au nommage SSDV2 et fragile) ; jobs `app_recreate`
+  séparés soumis par le frontend (état « à recréer » à persister, plus complexe).
 - **Références** : ADR-0007, ADR-0013 ; `ARCHITECTURE-CURRENT.md`.
 
 ## Décisions ouvertes

@@ -49,7 +49,7 @@ describe('AuthAppsView', () => {
     await user.click(screen.getByRole('button', { name: /Appliquer/ }))
     expect(
       screen.getByText(
-        'Changer l’authentification de 2 application(s) vers « oauth2-proxy » ? Les applications modifiées seront recréées pour appliquer le changement.',
+        'Changer l’authentification de 2 application(s) vers « oauth2-proxy » ? Les applications sélectionnées seront recréées pour appliquer le changement.',
       ),
     ).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Confirmer' }))

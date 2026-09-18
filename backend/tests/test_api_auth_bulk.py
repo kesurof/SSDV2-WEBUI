@@ -60,7 +60,7 @@ def test_bulk_auth_creates_job(auth_client):
             "ok": True,
             "results": [
                 {"app": "sonarr", "changed": True, "error": None},
-                {"app": "radarr", "changed": True, "error": None},
+                {"app": "radarr", "changed": False, "error": None},
             ],
         },
         lines=("changement",),

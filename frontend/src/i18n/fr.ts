@@ -267,12 +267,12 @@ export const fr = {
   },
   authApps: {
     title: 'Authentification des applications',
-    hint: 'Le changement est écrit dans account.yml puis appliqué automatiquement en recréant les applications modifiées.',
+    hint: 'Le changement est écrit dans account.yml puis appliqué automatiquement en recréant les applications sélectionnées.',
     target: 'Nouvelle authentification',
     apply: 'Appliquer',
     selectAll: 'Tout sélectionner',
     confirm:
-      'Changer l’authentification de {count} application(s) vers « {auth} » ? Les applications modifiées seront recréées pour appliquer le changement.',
+      'Changer l’authentification de {count} application(s) vers « {auth} » ? Les applications sélectionnées seront recréées pour appliquer le changement.',
   },
   security: {
     title: 'Authentification interne',
