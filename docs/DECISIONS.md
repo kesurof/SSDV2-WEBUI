@@ -494,6 +494,33 @@ pointe vers son remplaçant. Une décision non tranchée reste dans « Décision
   dépôt est public).
 - **Références** : ADR-0021 ; `AGENTS.md`.
 
+## ADR-0024 — Application de l'authentification en masse (auth puis recreate)
+
+- **Statut** : acceptée — 2026-09-18
+- **Contexte** : ADR-0013 sépare volontairement l'écriture (`auth set`/`set-many`,
+  `applied: false`) de l'application (`app recreate`). La page `/auth` écrivait donc la
+  nouvelle valeur dans `account.yml` sans l'appliquer : l'utilisateur devait ensuite ouvrir
+  chaque application et la recréer manuellement, ce qui n'est pas acceptable en UX.
+- **Décision** :
+  - le job `auth_bulk` devient composite : il exécute d'abord
+    `ssdv2ctl auth set-many <auth> <apps…>`, lit le JSON `results[]` et ne recrée
+    (`ssdv2ctl app recreate <app>`, timeout 1800 s par application) que les applications
+    dont l'auth a réellement changé (`changed: true`) ;
+  - les applications déjà à jour ne sont pas recréées ; une erreur d'écriture ou de
+    recréation n'interrompt pas les suivantes ; le job est `failed` si au moins une
+    application a échoué, avec la liste des applications fautives dans `message` ;
+  - le job reste unique (un seul worker, ADR-0007) et la progression est visible via les
+    événements SSE existants (`/jobs/{id}/events`) ;
+  - aucun nouvel endpoint : `POST /api/v1/auth/bulk` conserve son contrat.
+- **Conséquences** : l'action `/auth` est appliquée en un geste ; la recréation étant
+  interruptive, la confirmation UI le mentionne explicitement ; un lot de N applications
+  peut être long (N × recreate).
+- **Alternatives écartées** : conserver l'application manuelle par application ; recréer
+  toutes les applications sélectionnées même inchangées (interruption inutile) ; jobs
+  `app_recreate` séparés soumis par le frontend (état « à recréer » à persister, plus
+  complexe).
+- **Références** : ADR-0007, ADR-0013 ; `ARCHITECTURE-CURRENT.md`.
+
 ## Décisions ouvertes
 
 À trancher explicitement puis consigner en ADR (voir brief §72) :

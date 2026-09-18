@@ -53,7 +53,18 @@ def test_auth_apps_adapter_failure(auth_client):
 
 
 def test_bulk_auth_creates_job(auth_client):
-    runner = FakeRunner(lines=("changement",))
+    runner = FakeRunner(
+        payload={
+            "schema": 1,
+            "auth": "authelia",
+            "ok": True,
+            "results": [
+                {"app": "sonarr", "changed": True, "error": None},
+                {"app": "radarr", "changed": True, "error": None},
+            ],
+        },
+        lines=("changement",),
+    )
     job_manager.configure(lambda: runner)
 
     response = auth_client.post(
@@ -65,7 +76,11 @@ def test_bulk_auth_creates_job(auth_client):
     assert job["type"] == "auth_bulk"
     finished = wait_for_job(auth_client, job["id"])
     assert finished["status"] == "success"
-    assert runner.calls == [["auth", "set-many", "authelia", "sonarr", "radarr"]]
+    assert runner.calls == [
+        ["auth", "set-many", "authelia", "sonarr", "radarr"],
+        ["app", "recreate", "sonarr"],
+        ["app", "recreate", "radarr"],
+    ]
 
 
 def test_bulk_auth_validations(auth_client):

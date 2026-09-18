@@ -5,7 +5,7 @@ from app.adapters.ssdv2_cli import Ssdv2CtlError
 from app.db.models import AuditEvent, Job, JobEvent, Notification, utcnow
 from app.db.session import get_session_factory, init_db
 from app.services.jobs import JobManager, build_job_args
-from tests.conftest import FakeStreamingRunner
+from tests.conftest import FakeRunner, FakeStreamingRunner
 
 
 def test_build_job_args_install() -> None:
@@ -217,3 +217,64 @@ def test_run_job_actions_do_not_notify() -> None:
     with get_session_factory()() as session:
         after = session.scalars(select(Notification)).all()
         assert len(after) == len(before)
+
+
+def make_auth_manager(
+    payload: dict | None = None, exit_code: int = 0
+) -> tuple[JobManager, FakeRunner]:
+    init_db()
+    manager = JobManager()
+    runner = FakeRunner(payload=payload, exit_code=exit_code)
+    manager.configure(lambda: runner)
+    return manager, runner
+
+
+def test_run_job_auth_bulk_recreates_only_changed_apps() -> None:
+    manager, runner = make_auth_manager(
+        payload={
+            "results": [
+                {"app": "sonarr", "changed": True, "error": None},
+                {"app": "radarr", "changed": False, "error": None},
+            ]
+        }
+    )
+    job = manager.submit(
+        "auth_bulk",
+        "authelia",
+        "admin",
+        {"apps": ["sonarr", "radarr"], "auth": "authelia"},
+    )
+
+    manager.run_job(job.id)
+
+    assert stored_job(job.id).status == "success"
+    assert runner.calls == [
+        ["auth", "set-many", "authelia", "sonarr", "radarr"],
+        ["app", "recreate", "sonarr"],
+    ]
+    events = stored_events(job.id)
+    assert any("sonarr" in line and "Recréation" in line for line in events)
+
+
+def test_run_job_auth_bulk_reports_partial_failure() -> None:
+    manager, runner = make_auth_manager(
+        payload={
+            "results": [
+                {"app": "sonarr", "changed": True, "error": None},
+                {"app": "lidarr", "changed": False, "error": "n'est pas installé"},
+            ]
+        }
+    )
+    job = manager.submit(
+        "auth_bulk",
+        "authelia",
+        "admin",
+        {"apps": ["sonarr", "lidarr"], "auth": "authelia"},
+    )
+
+    manager.run_job(job.id)
+
+    stored = stored_job(job.id)
+    assert stored.status == "failed"
+    assert "lidarr" in (stored.message or "")
+    assert any("lidarr" in line and "pas installé" in line for line in stored_events(job.id))

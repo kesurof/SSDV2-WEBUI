@@ -167,6 +167,45 @@ class JobManager:
             session.add(JobEvent(job_id=job_id, line=line))
             session.commit()
 
+    def _run_auth_bulk(
+        self, job_id: int, runner: Ssdv2CtlRunner, params: dict, timeout: int
+    ) -> tuple[int, str | None]:
+        auth = str(params.get("auth", ""))
+        args = build_job_args("auth_bulk", auth, params)
+        payload = runner.run(args, timeout)
+        results = payload.get("results") if isinstance(payload, dict) else None
+        if not isinstance(results, list):
+            raise Ssdv2CtlError("ssdv2ctl_invalid_output", "sortie auth set-many inattendue")
+
+        changed: list[str] = []
+        failed: list[str] = []
+        for result in results:
+            app = str(result.get("app", ""))
+            if result.get("error"):
+                failed.append(app)
+                self._add_event(
+                    job_id, f"Échec de l'authentification pour {app} : {result['error']}"
+                )
+            elif result.get("changed"):
+                changed.append(app)
+                self._add_event(job_id, f"Authentification modifiée pour {app}")
+            else:
+                self._add_event(job_id, f"Authentification déjà à jour pour {app}")
+
+        recreate_timeout = ACTION_TIMEOUTS["app_recreate"]
+        for app in changed:
+            self._add_event(job_id, f"Recréation de {app} pour appliquer l'authentification")
+            recreate_args = build_job_args("app_recreate", app, {})
+            code = runner.run_streaming(
+                recreate_args, lambda line: self._add_event(job_id, line), recreate_timeout
+            )
+            if code != 0:
+                failed.append(app)
+
+        if failed:
+            return 1, "échec pour : " + ", ".join(failed)
+        return 0, None
+
     def run_job(self, job_id: int) -> None:
         with get_session_factory()() as session:
             job = session.get(Job, job_id)
@@ -184,18 +223,22 @@ class JobManager:
         try:
             if self._runner_provider is None:
                 raise Ssdv2CtlError("jobs_unavailable", "gestionnaire de jobs non configuré")
-            args = build_job_args(job_type, target, params)
             timeout = ACTION_TIMEOUTS.get(job_type, DEFAULT_TIMEOUT)
             self._add_event(job_id, f"Job {job_type} sur {target} démarré")
             runner = self._runner_provider()
-            exit_code = runner.run_streaming(
-                args, lambda line: self._add_event(job_id, line), timeout
-            )
+            if job_type == "auth_bulk":
+                exit_code, message = self._run_auth_bulk(job_id, runner, params, timeout)
+            else:
+                args = build_job_args(job_type, target, params)
+                exit_code = runner.run_streaming(
+                    args, lambda line: self._add_event(job_id, line), timeout
+                )
             if exit_code == 0:
                 status = "success"
             else:
                 status = "failed"
-                message = f"ssdv2ctl a retourné le code {exit_code}"
+                if message is None:
+                    message = f"ssdv2ctl a retourné le code {exit_code}"
             self._add_event(job_id, f"Job terminé (code {exit_code})")
         except Ssdv2CtlError as exc:
             status = "failed"

@@ -268,7 +268,18 @@ aucun push — ADR-0010).
   `WEBUI_ADMIN_PASSWORD`) — statut `required:true`, jeton lu dans les journaux
   (fichier en 0600), jeton invalide refusé, setup → compte créé + session auto +
   `instance_name` appliqué, jeton supprimé, second setup → 409, login OK ; conteneur
-  et volume supprimés. Déploiement principal inchangé (`required:false`).
+   et volume supprimés. Déploiement principal inchangé (`required:false`).
+
+**Application de l'authentification en masse (ADR-0024)**.
+
+- Le job `auth_bulk` écrit (`auth set-many`) puis recrée automatiquement les applications
+  dont l'auth a changé (`app recreate`, timeout 1800 s chacune) : l'action `/auth` est
+  appliquée en un geste, progression SSE dans `/jobs/{id}` ; les applications déjà à jour
+  ne sont pas recréées ; échecs partiels agrégés dans le statut du job.
+- Frontend : confirmation et hint mis à jour (« les applications modifiées seront
+  recréées »).
+- Backend : `_run_auth_bulk` dans `JobManager` ; tests `auth_bulk` (chaînage, apps
+  inchangées, échec partiel).
 
 ## Prochains chantiers pressentis
 
