@@ -97,6 +97,10 @@ RULES: tuple[tuple[re.Pattern[str], PromptSpec], ...] = (
         PromptSpec("generic.secret", "Valeur", kind="secret", secret=True),
     ),
     _rule(r"login|username|identifiant|utilisateur", PromptSpec("generic.text", "Identifiant")),
+    _rule(
+        r"Entrez|Enter |Choisir|Choose|Saisir|Votre |Your ",
+        PromptSpec("generic.prompt", "Saisie requise"),
+    ),
 )
 
 
@@ -119,7 +123,11 @@ def detect(text: str) -> PromptSpec | None:
         return None
     _, _, spec, matched = best
     if spec.id.startswith("generic"):
-        label = matched.strip()[:120] or spec.label
+        if spec.id == "generic.prompt":
+            lines = [line.strip() for line in cleaned.splitlines() if line.strip()]
+            label = (lines[-1] if lines else matched.strip())[:160] or spec.label
+        else:
+            label = matched.strip()[:120] or spec.label
         spec = PromptSpec(spec.id, label, spec.kind, spec.secret, spec.default, spec.options)
     if not spec.secret and SECRET_HINT.search(cleaned):
         spec = replace(spec, secret=True)

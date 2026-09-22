@@ -168,6 +168,14 @@ def test_reset_interrupted() -> None:
     assert stored.finished_at is not None
 
 
+def test_redact_secret_values() -> None:
+    manager = JobManager()
+    manager._secrets[1] = ["s3cret"]
+    assert manager._redact(1, "echo s3cret here") == "echo *** here"
+    assert manager._redact(1, "s3") == "s3"
+    assert manager._redact(2, "no secret") == "no secret"
+
+
 def test_run_job_publishes_notification_and_audit() -> None:
     manager, _ = make_manager()
     job = manager.submit("app_backup", "wallos", "admin")

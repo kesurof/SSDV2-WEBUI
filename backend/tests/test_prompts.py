@@ -41,6 +41,14 @@ def test_detect_returns_none_on_plain_output():
     assert detect("changed: [127.0.0.1]") is None
 
 
+def test_detect_alfred_path_prompt():
+    spec = detect("Entrez le chemin pour SYMLINK_DIR (ex: /home/ubuntu/Medias):")
+    assert spec is not None
+    assert spec.id == "generic.prompt"
+    assert spec.secret is False
+    assert "SYMLINK_DIR" in spec.label
+
+
 def test_specific_prompt_promoted_to_secret():
     password = detect("Entrer le password Alldebrid")
     assert password is not None

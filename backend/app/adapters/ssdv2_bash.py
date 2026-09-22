@@ -89,6 +89,9 @@ def _bash_environment(settings: Settings) -> dict[str, str]:
     environment = os.environ.copy()
     environment["SETTINGS_SOURCE"] = str(settings.ssdv2_source)
     environment["SETTINGS_STORAGE"] = str(settings.ssdv2_storage)
+    if not environment.get("USER"):
+        home = environment.get("HOME", str(Path.home()))
+        environment["USER"] = Path(home).name
     venv_bin = _usable_venv_bin(settings)
     if venv_bin is not None:
         environment["PATH"] = f"{venv_bin}{os.pathsep}{environment.get('PATH', '')}"

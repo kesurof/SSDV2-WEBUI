@@ -322,6 +322,11 @@ aucun push — ADR-0010).
 - Correctif : le venv SSDV2 n'est ajouté au `PATH` **que s'il est utilisable** (comme
   `ssdv2ctl`) — le venv du serveur est cassé dans le conteneur (`venv/bin/python` →
   `/usr/bin/python3` absent), ce qui faisait échouer `manage_account_yml`/`suppression_appli`.
+- Correctif : `USER` est défini dans l'environnement transmis (sinon `lookup('env','USER')`
+  est vide dans le conteneur → `chown failed: failed to look up user`, constaté sur `ygege`).
+- Correctif : détection générique des invites Ansible non répertoriées (ex. chemins
+  d'`alfred`), et **redaction** des valeurs secrètes échotées (`echo: yes` côté SSDV2, ex.
+  mot de passe `ygege`) avant stockage dans les journaux du job.
 - Correctif : la détection d'échec ne considère plus les erreurs Ansible **ignorées**
   (`[ERROR] … ignoring`) comme un échec ; marqueurs retenus : `fatal:`, `action_failed`,
   `failed=[1-9]` (PLAY RECAP). L'installation `plex` (dont les tâches `lxml`/`pip` échouent

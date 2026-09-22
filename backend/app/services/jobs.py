@@ -120,6 +120,7 @@ class JobManager:
         self._processes: dict[int, InteractiveProcess] = {}
         self._prompts: dict[int, dict] = {}
         self._prompt_seq: dict[int, int] = {}
+        self._secrets: dict[int, list[str]] = {}
 
     def configure(self, runner_provider: Callable[[], Ssdv2CtlRunner]) -> None:
         self._runner_provider = runner_provider
@@ -138,9 +139,19 @@ class JobManager:
             if prompt is None or process is None or prompt["id"] != prompt_id:
                 return False
             self._prompts.pop(job_id, None)
+            if prompt.get("secret"):
+                self._secrets.setdefault(job_id, []).append(value)
         process.write(value)
         self._add_event(job_id, f"Réponse fournie ({prompt['label']})")
         return True
+
+    def _redact(self, job_id: int, line: str) -> str:
+        with self._interactive_lock:
+            secrets = list(self._secrets.get(job_id, ()))
+        for value in secrets:
+            if len(value) >= 3:
+                line = line.replace(value, "***")
+        return line
 
     def cancel_running(self, job_id: int) -> bool:
         with self._interactive_lock:
@@ -257,8 +268,11 @@ class JobManager:
         runner = self._bash_provider()
         steps = self._build_steps(job_type, target, params, runner)
         state: dict[str, object] = {"failure": False, "timeout": None}
+        with self._interactive_lock:
+            self._secrets.pop(job_id, None)
 
         def on_line(line: str) -> None:
+            line = self._redact(job_id, line)
             if FAILURE_PATTERN.search(line):
                 state["failure"] = True
             self._add_event(job_id, line)
@@ -393,6 +407,11 @@ class JobManager:
             status = "failed"
             message = str(exc)
             self._add_event(job_id, f"Échec inattendu : {exc}")
+        finally:
+            with self._interactive_lock:
+                self._secrets.pop(job_id, None)
+                self._prompts.pop(job_id, None)
+                self._processes.pop(job_id, None)
 
         with get_session_factory()() as session:
             job = session.get(Job, job_id)

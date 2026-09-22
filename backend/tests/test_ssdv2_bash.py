@@ -52,6 +52,15 @@ def test_bash_environment_omits_broken_venv(settings, tmp_path, monkeypatch):
     assert str(venv_bin) not in environment["PATH"].split(":")
 
 
+def test_bash_environment_sets_user_from_home(settings, monkeypatch):
+    monkeypatch.delenv("USER", raising=False)
+    monkeypatch.setenv("HOME", "/home/kesurof")
+    monkeypatch.setattr(ssdv2_bash, "_usable_venv_bin", lambda _settings: None)
+
+    environment = ssdv2_bash._bash_environment(settings)
+    assert environment["USER"] == "kesurof"
+
+
 def test_open_pty_disables_echo():
     master, slave = _open_pty()
     try:
