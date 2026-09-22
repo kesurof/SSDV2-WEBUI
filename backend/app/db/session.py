@@ -17,6 +17,10 @@ def get_engine() -> Engine:
     return create_engine(
         f"sqlite:///{settings.webui_db_file}",
         connect_args={"check_same_thread": False},
+        pool_size=10,
+        max_overflow=20,
+        pool_timeout=20,
+        pool_pre_ping=True,
     )
 
 

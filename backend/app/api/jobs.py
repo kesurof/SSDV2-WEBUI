@@ -7,6 +7,7 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy import select
 
 from app.db.models import Job, utcnow
+from app.db.session import get_session_factory
 from app.deps import CurrentUser, DbDep
 from app.schemas.job import JobInputRequest, JobOut
 from app.services.jobs import TERMINAL_STATUSES, job_manager
@@ -57,9 +58,12 @@ def submit_job_input(job_id: int, payload: JobInputRequest, db: DbDep, _user: Cu
 
 
 @router.get("/{job_id}/events")
-def job_events(job_id: int, db: DbDep, _user: CurrentUser) -> StreamingResponse:
-    if db.get(Job, job_id) is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, f"job inconnu: {job_id}")
+def job_events(job_id: int, _user: CurrentUser) -> StreamingResponse:
+    # Vérification d'existence via une session courte : ne jamais conserver une
+    # connexion du pool pendant toute la durée du flux SSE (sinon épuisement).
+    with get_session_factory()() as session:
+        if session.get(Job, job_id) is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, f"job inconnu: {job_id}")
 
     def stream() -> Iterator[str]:
         last_id = 0

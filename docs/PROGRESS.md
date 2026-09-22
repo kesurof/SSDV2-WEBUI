@@ -322,6 +322,11 @@ aucun push — ADR-0010).
 - Correctif : le venv SSDV2 n'est ajouté au `PATH` **que s'il est utilisable** (comme
   `ssdv2ctl`) — le venv du serveur est cassé dans le conteneur (`venv/bin/python` →
   `/usr/bin/python3` absent), ce qui faisait échouer `manage_account_yml`/`suppression_appli`.
+- Incident : `/jobs/{id}/events` (SSE) conservait une session SQLAlchemy (`DbDep`) pendant
+  toute la durée du flux ; un job interactif en attente gardait donc une connexion et, avec
+  les reconnexions, épuisait le pool (`QueuePool limit reached`) → UI inaccessible. La
+  vérification d'existence utilise désormais une session courte (plus de connexion tenue
+  pendant le stream) et le pool SQLite est élargi (10+20).
 - Correctif : `USER` est défini dans l'environnement transmis (sinon `lookup('env','USER')`
   est vide dans le conteneur → `chown failed: failed to look up user`, constaté sur `ygege`).
 - Correctif : détection générique des invites Ansible non répertoriées (ex. chemins
