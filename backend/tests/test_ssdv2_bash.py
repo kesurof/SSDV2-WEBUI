@@ -1,8 +1,13 @@
+import os
+import sys
+import termios
+
 import pytest
 
 from app.adapters import ssdv2_bash
-from app.adapters.ssdv2_bash import Ssdv2BashRunner
+from app.adapters.ssdv2_bash import Ssdv2BashRunner, _open_pty
 from app.adapters.ssdv2_cli import Ssdv2CtlError
+from app.services.prompts import detect
 
 
 def test_usable_venv_bin_absent(settings, tmp_path, monkeypatch):
@@ -45,6 +50,46 @@ def test_bash_environment_omits_broken_venv(settings, tmp_path, monkeypatch):
 
     environment = ssdv2_bash._bash_environment(settings)
     assert str(venv_bin) not in environment["PATH"].split(":")
+
+
+def test_open_pty_disables_echo():
+    master, slave = _open_pty()
+    try:
+        attrs = termios.tcgetattr(slave)
+        assert not (attrs[3] & termios.ECHO)
+    finally:
+        os.close(master)
+        os.close(slave)
+
+
+def test_interactive_process_pty_prompt_and_no_echo():
+    child = (
+        "import sys; "
+        "sys.stdout.write('Votre password Plex : '); sys.stdout.flush(); "
+        "line = sys.stdin.readline().strip(); "
+        "print('MATCH' if line == 's3cret' else 'NO')"
+    )
+    process = ssdv2_bash.InteractiveProcess([sys.executable, "-c", child], os.environ.copy())
+    lines: list[str] = []
+    prompts: list = []
+
+    def on_prompt(spec, _raw):
+        prompts.append(spec)
+        process.write("s3cret")
+
+    exit_code = process.run(
+        on_line=lines.append,
+        on_prompt=on_prompt,
+        detect_prompt=detect,
+        timeout=10,
+        idle_timeout=5,
+    )
+
+    assert exit_code == 0
+    assert any(spec.id == "plex.password" for spec in prompts)
+    joined = "\n".join(lines)
+    assert "MATCH" in joined
+    assert "s3cret" not in joined
 
 
 def test_spawn_rejects_unknown_function(settings):

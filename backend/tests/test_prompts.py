@@ -39,3 +39,13 @@ def test_detect_generic_secret():
 
 def test_detect_returns_none_on_plain_output():
     assert detect("changed: [127.0.0.1]") is None
+
+
+def test_specific_prompt_promoted_to_secret():
+    password = detect("Entrer le password Alldebrid")
+    assert password is not None
+    assert password.secret is True
+
+    api_key = detect("Entre ta clé API AllDebrid")
+    assert api_key is not None
+    assert api_key.secret is True

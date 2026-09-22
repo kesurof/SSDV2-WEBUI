@@ -1,8 +1,12 @@
 import codecs
+import fcntl
 import os
+import pty
 import re
 import select
+import struct
 import subprocess
+import termios
 import threading
 import time
 from collections.abc import Callable
@@ -86,16 +90,36 @@ def _bash_environment(settings: Settings) -> dict[str, str]:
     return environment
 
 
+def _open_pty() -> tuple[int, int]:
+    master, slave = pty.openpty()
+    attrs = termios.tcgetattr(slave)
+    attrs[3] &= ~termios.ECHO
+    termios.tcsetattr(slave, termios.TCSANOW, attrs)
+    try:
+        fcntl.ioctl(slave, termios.TIOCSWINSZ, struct.pack("HHHH", 50, 200, 0, 0))
+    except OSError:
+        pass
+    return master, slave
+
+
 class InteractiveProcess:
     def __init__(self, argv: list[str], environment: dict[str, str]) -> None:
-        self._process = subprocess.Popen(
-            argv,
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            bufsize=0,
-            env=environment,
-        )
+        master, slave = _open_pty()
+        self._master = master
+        self._closed = False
+        try:
+            self._process = subprocess.Popen(
+                argv,
+                stdin=slave,
+                stdout=slave,
+                stderr=slave,
+                bufsize=0,
+                env=environment,
+                start_new_session=True,
+                close_fds=True,
+            )
+        finally:
+            os.close(slave)
         self._lock = threading.Lock()
         self._prompt_pending = False
         self._killed = False
@@ -103,18 +127,25 @@ class InteractiveProcess:
     def write(self, value: str) -> None:
         with self._lock:
             self._prompt_pending = False
-        if self._process.stdin is None:
-            return
         try:
-            self._process.stdin.write((value + "\n").encode("utf-8"))
-            self._process.stdin.flush()
-        except (BrokenPipeError, OSError):
+            os.write(self._master, (value + "\n").encode("utf-8"))
+        except OSError:
             pass
 
     def kill(self) -> None:
         self._killed = True
         try:
             self._process.kill()
+        except OSError:
+            pass
+        self._close_master()
+
+    def _close_master(self) -> None:
+        if self._closed:
+            return
+        self._closed = True
+        try:
+            os.close(self._master)
         except OSError:
             pass
 
@@ -138,8 +169,6 @@ class InteractiveProcess:
         timeout: float,
         idle_timeout: float,
     ) -> int:
-        assert self._process.stdout is not None
-        fd = self._process.stdout.fileno()
         decoder = codecs.getincrementaldecoder("utf-8")(errors="replace")
         buffer = ""
         last_prompt_segment: str | None = None
@@ -151,9 +180,7 @@ class InteractiveProcess:
             if not buffer.strip():
                 return
             spec = detect_prompt(buffer)
-            if spec is None:
-                return
-            if buffer == last_prompt_segment:
+            if spec is None or buffer == last_prompt_segment:
                 return
             last_prompt_segment = buffer
             self._mark_prompt()
@@ -161,13 +188,18 @@ class InteractiveProcess:
 
         try:
             while True:
-                now = time.monotonic()
-                if now > deadline:
+                if time.monotonic() > deadline:
                     self.kill()
                     raise PromptTimeout("global")
-                readable, _, _ = select.select([fd], [], [], POLL_INTERVAL)
+                try:
+                    readable, _, _ = select.select([self._master], [], [], POLL_INTERVAL)
+                except (OSError, ValueError):
+                    break
                 if readable:
-                    chunk = os.read(fd, READ_CHUNK_SIZE)
+                    try:
+                        chunk = os.read(self._master, READ_CHUNK_SIZE)
+                    except OSError:
+                        break
                     if not chunk:
                         break
                     last_activity = time.monotonic()
@@ -186,11 +218,7 @@ class InteractiveProcess:
                 on_line(buffer)
             return self._process.wait()
         finally:
-            if self._process.stdin is not None:
-                try:
-                    self._process.stdin.close()
-                except OSError:
-                    pass
+            self._close_master()
 
 
 class Ssdv2BashRunner:

@@ -577,8 +577,14 @@ pointe vers son remplaçant. Une décision non tranchée reste dans « Décision
 - **Décision** :
   - pour les **mutations longues/interactives** (`app_install`, `app_reinstall`,
     `app_recreate`), la WebUI n'appelle plus `ssdv2ctl` mais le **dispatcher SSDV2
-    existant** (`includes/config/scripts/generique.sh <fonction> <args>`) avec
-    `stdin=PIPE`, sortie **streamée** et lecture **non bufferisée** (invites sans newline) ;
+    existant** (`includes/config/scripts/generique.sh <fonction> <args>`), sortie
+    **streamée** et lecture **non bufferisée** (invites sans newline) ;
+  - transport par **pseudo-terminal (PTY) avec écho coupé** (`termios ~ECHO`) : c'est le
+    seul moyen de faire attendre `ansible.builtin.pause`, qui refuse de lire quand `stdin`
+    n'est pas un TTY (`Not waiting for response to prompt as stdin is not interactive`) ;
+    les invites **bash** (`read`) continuent de fonctionner ; l'écho coupé garantit qu'un
+    secret saisi n'apparaît jamais dans les journaux du job ; le PTY est attaché au **seul
+    dispatcher allowlisté** — aucun shell ni terminal libre n'est exposé (modèle guidé) ;
   - `ssdv2ctl` reste la frontière pour tout le **structuré** (`status`, `auth`, `config`,
     `diagnostics`, `start/stop/restart`, `remove`, `backup`) ;
   - **garde-fous** : allowlist stricte `(fonction, arité)` — `relance_container`,
@@ -596,9 +602,12 @@ pointe vers son remplaçant. Une décision non tranchée reste dans « Décision
   global (30 min). Un enrichissement SSDV2 (marqueurs d'invite structurés) pourra rendre la
   détection robuste ultérieurement, sans changer le contrat WebUI.
 - **Alternatives écartées** : modifier `ssdv2ctl` pour streamer (refusé : changement SSDV2) ;
-  terminal PTY plein écran (viole la règle 9 « pas de terminal shell web », surface
-  d'attaque hôte) ; pré-saisie de toutes les valeurs avant lancement (ne couvre pas les
-  invites imprévues) ; corriger `ssdv2ctl`/`autoinstall.sh` (ne corrige pas l'interactif).
+  terminal PTY **plein écran** exposé à l'utilisateur (viole la règle 9 « pas de terminal
+  shell web ») — un PTY **interne, sans écho et sans shell**, piloté par invites guidées,
+  est en revanche retenu ; pré-saisie de toutes les valeurs avant lancement (ne couvre pas
+  les invites imprévues ni les `pause` inconditionnels) ; pipe simple seul (insuffisant :
+  Ansible `pause` n'attend pas) ; corriger `ssdv2ctl`/`autoinstall.sh` (ne corrige pas
+  l'interactif).
 - **Références** : ADR-0007, ADR-0010, ADR-0013 ; `ARCHITECTURE-CURRENT.md`,
   `PROGRESS.md`, `AGENTS.md` (règle 10).
 

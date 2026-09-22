@@ -307,8 +307,10 @@ aucun push — ADR-0010).
 - Cause : `ssdv2ctl` bufferise (`capture_output`) et ferme l'entrée (`stdin=DEVNULL`) →
   aucun log en direct ni saisie possible ; incident `plex` (claim interactif → faux succès).
 - Backend : `app/adapters/ssdv2_bash.py` (dispatcher SSDV2 direct, allowlist stricte,
-  streaming non bufferisé + stdin) ; `app/services/prompts.py` (détection heuristique des
-  invites) ; jobs `install`/`reinstall`/`recreate` interactifs, événement SSE `prompt`,
+  **PTY interne à écho coupé** — indispensable car `ansible.builtin.pause` refuse de lire
+  hors TTY ; streaming non bufferisé) ; `app/services/prompts.py` (détection heuristique des
+  invites, promotion en secret dès qu'un mot-clé sensible apparaît) ; jobs
+  `install`/`reinstall`/`recreate` interactifs, événement SSE `prompt`,
   `POST /api/v1/jobs/{id}/input`, annulation d'un job en cours, timeout d'inactivité 15 min,
   détection d'échec malgré code retour nul, secrets jamais persistés.
 - Frontend : panneau « Action requise » dans le détail de job (texte/mot de passe/oui-non/
@@ -321,9 +323,12 @@ aucun push — ADR-0010).
   (`[ERROR] … ignoring`) comme un échec ; marqueurs retenus : `fatal:`, `action_failed`,
   `failed=[1-9]` (PLAY RECAP). L'installation `plex` (dont les tâches `lxml`/`pip` échouent
   mais sont ignorées) est désormais `success`.
-- Preuves : `ruff`/`pytest` verts ; `npm run lint|typecheck|test|build` verts ; sur le
-  serveur, installation `plex` par l'UI avec saisie guidée (login + mot de passe Plex),
-  conteneur `plex` démarré et DNS `plex.<domaine>` enregistré.
+- Preuves : `ruff`/`pytest` verts (dont test PTY : invite détectée, réponse transmise,
+  secret absent des lignes capturées) ; `npm run lint|typecheck|test|build` verts ; sur le
+  serveur, installation `plex` par l'UI avec saisie guidée (login + mot de passe Plex,
+  invites **bash**), conteneur `plex` démarré et DNS enregistré. Constat serveur : les
+  invites **Ansible `pause`** ne sont pas alimentables via un pipe
+  (`Not waiting for response to prompt as stdin is not interactive`) → transport PTY.
 
 ## Prochains chantiers pressentis
 

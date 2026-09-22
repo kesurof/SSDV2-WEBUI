@@ -66,8 +66,9 @@ agent), §72 (décisions à trancher), §75 (stack).
    `--privileged`, `/:/host`, `nsenter` sans décision architecturale explicite.
 8. Opérations longues = jobs non bloquants (worker de mutation unique, file en mémoire +
    état SQLite, SSE) ; au démarrage, les jobs `running` repassent à `interrupted`.
-9. Actions destructrices : confirmation graduée (§53) ; pas de terminal shell web (la
-   saisie guidée d'invites connues via `/jobs/{id}/input` est autorisée — ADR-0026).
+9. Actions destructrices : confirmation graduée (§53) ; pas de terminal shell web. La
+   saisie guidée d'invites connues via `/jobs/{id}/input` est autorisée — ADR-0026 : PTY
+   interne au dispatcher allowlisté, écho coupé, jamais de shell ni de terminal exposé.
 10. `ssdv2ctl` (non interactif, JSON) est la frontière avec SSDV2 pour le structuré ;
     inspecter le mécanisme SSDV2 existant avant toute modification, ne pas réinventer
     depuis un nom de fonction. **Exception encadrée (ADR-0026)** : les mutations

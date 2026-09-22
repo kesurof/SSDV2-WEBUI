@@ -1,7 +1,8 @@
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 ANSI_PATTERN = re.compile(r"\x1b\[[0-9;?]*[ -/]*[@-~]")
+SECRET_HINT = re.compile(r"password|mot de passe|passphrase|secret|token|api[ _]?key|clé", re.I)
 
 
 @dataclass(frozen=True)
@@ -119,7 +120,9 @@ def detect(text: str) -> PromptSpec | None:
     _, _, spec, matched = best
     if spec.id.startswith("generic"):
         label = matched.strip()[:120] or spec.label
-        return PromptSpec(spec.id, label, spec.kind, spec.secret, spec.default, spec.options)
+        spec = PromptSpec(spec.id, label, spec.kind, spec.secret, spec.default, spec.options)
+    if not spec.secret and SECRET_HINT.search(cleaned):
+        spec = replace(spec, secret=True)
     return spec
 
 
