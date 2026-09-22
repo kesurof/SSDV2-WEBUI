@@ -21,9 +21,11 @@ publication GHCR si vert — ADR-0023). Détails : `docs/ARCHITECTURE-CURRENT.md
   (image `ghcr.io/kesurof/ssdv2-webui:latest`, définition
   `includes/dockerapps/vars/ssdv2webui.yml` côté SSDV2, données sous
   `~/seedbox/docker/<utilisateur>/ssdv2webui/data`). Mise à jour : pousser sur `main`
-  (publication automatique si la CI est verte), puis
-  `docker pull ghcr.io/kesurof/ssdv2-webui:latest` et `ssdv2ctl app recreate ssdv2webui`. Le compose local reste la voie de développement
-  (voir `.env.example`).
+  (publication automatique si la CI est verte), puis sur le serveur
+  `relance_container ssdv2webui` (fonction SSDV2 chargée au login via `profile.sh` ;
+  recrée le conteneur et pull `:latest` via `generique.yml`, `pull` par défaut).
+  `ssdv2ctl` n'est présent que dans l'image, pas sur l'hôte. Le compose local reste la
+  voie de développement (voir `.env.example`).
 - `ssdv2ctl` (Phase 0 complète, clone local `~/Developer/ssdv2`, branche `wip/ssdv2ctl`,
   jamais de push — ADR-0010) : tests
   `docker run --rm -v "$PWD:/src:ro" -w / python:3.13-slim sh -c "cp -r /src /work && cd /work && python3 -m unittest discover -s tests/python"` ;
