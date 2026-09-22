@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { AuthAppsView } from '@/features/auth/AuthAppsView'
 import type { AppState } from '@/api/types'
 
-function makeApp(name: string): AppState {
+function makeApp(name: string, domain: string | null = null): AppState {
   return {
     name,
     description: '',
@@ -13,14 +13,15 @@ function makeApp(name: string): AppState {
     installed: true,
     runtime_status: 'running',
     healthy: true,
-    url: null,
+    url: domain ? `https://${domain}` : null,
+    domain,
     image: null,
     containers: 1,
     warnings: [],
   }
 }
 
-const APPS = [makeApp('sonarr'), makeApp('radarr')]
+const APPS = [makeApp('sonarr', 'sonarr.example.com'), makeApp('radarr')]
 
 describe('AuthAppsView', () => {
   it('applies the selected auth after confirmation', async () => {
@@ -43,6 +44,10 @@ describe('AuthAppsView', () => {
     )
 
     expect(screen.getByRole('cell', { name: 'authelia' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'sonarr.example.com' })).toHaveAttribute(
+      'href',
+      'https://sonarr.example.com',
+    )
     await user.click(screen.getByRole('checkbox', { name: 'sonarr' }))
     expect(onToggle).toHaveBeenCalledWith('sonarr')
 

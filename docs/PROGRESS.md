@@ -283,6 +283,22 @@ aucun push — ADR-0010).
   recréées »).
 - Backend : `_run_auth_bulk` dans `JobManager` ; tests `auth_bulk` (recréation
   systématique, erreur d'écriture, échec partiel).
+- Preuves : CI verte (`2a7fd1b`) ; sur le serveur, après `relance_container ssdv2webui`,
+  changement d'auth sur `grocy` appliqué par le job (écriture **puis** recréation, label
+  Traefik convergé) ; plus de déconnexion oauth2-proxy constatée.
+
+**Domaine applicatif affiché (ADR-0025)**.
+
+- Cause : `ssddb.seedbox_params.domain` n'existe pas sur le serveur de test (l'installation
+  automatisée SSDV2 ne l'écrit pas) → `url` nul → « — » dans « Accès et réseau » et le
+  tableau. Vérifié le 2026-09-22 (`maintainerr`, `seedbox_params` = `installed` seul).
+- Backend : `app/services/domain.py` (`ssdv2ctl config get user.domain`, cache TTL 300 s,
+  repli `ssddb`) ; `AppStateOut`/`AppDetailOut` exposent `domain` (FQDN) en plus de `url`.
+- Frontend : « Domaine » cliquable dans la vue détail, le tableau des applications et la
+  page d'authentification en masse.
+- Preuves : `ruff` + `pytest` verts ; `npm run lint|typecheck|test|build` verts ; source
+  serveur confirmée (`config get user.domain` → domaine réel, label Traefik
+  `Host(<app>.<domaine>)`). Validation UI à confirmer après déploiement.
 
 ## Prochains chantiers pressentis
 

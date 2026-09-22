@@ -11,6 +11,7 @@ function app(partial: Partial<AppState> & { name: string }): AppState {
     runtime_status: 'not_installed',
     healthy: null,
     url: null,
+    domain: null,
     image: null,
     containers: 0,
     warnings: [],

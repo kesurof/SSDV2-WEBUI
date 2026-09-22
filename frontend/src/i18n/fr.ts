@@ -110,7 +110,6 @@ export const fr = {
       recreate: "Recréer l'application",
     },
     fields: {
-      url: 'URL',
       image: 'Image',
       runtime: 'Exécution',
       auth: 'Authentification',
@@ -140,7 +139,7 @@ export const fr = {
     columns: {
       name: 'Application',
       status: 'État',
-      url: 'Domaine',
+      domain: 'Domaine',
       image: 'Image',
       containers: 'Conteneurs',
       warnings: 'Alertes',

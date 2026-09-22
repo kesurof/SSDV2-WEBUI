@@ -14,6 +14,7 @@ const APP: AppDetail = {
   runtime_status: 'partial',
   healthy: false,
   url: 'https://sonarr.example.com',
+  domain: 'sonarr.example.com',
   image: 'linuxserver/sonarr:latest',
   containers: 2,
   warnings: ['unhealthy'],
@@ -83,7 +84,10 @@ describe('AppDetailView', () => {
 
     expect(screen.getByRole('heading', { name: 'sonarr' })).toBeInTheDocument()
     expect(screen.getAllByText('Partiel').length).toBeGreaterThan(0)
-    expect(screen.getByRole('link', { name: 'https://sonarr.example.com' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'sonarr.example.com' })).toHaveAttribute(
+      'href',
+      'https://sonarr.example.com',
+    )
     expect(screen.getByText('Conteneur en mauvaise santé')).toBeInTheDocument()
     expect(screen.getByText('8989')).toBeInTheDocument()
     expect(screen.getByText('authelia')).toBeInTheDocument()

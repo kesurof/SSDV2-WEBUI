@@ -15,6 +15,7 @@ const APPS: AppState[] = [
     runtime_status: 'running',
     healthy: true,
     url: 'https://sonarr.example.com',
+    domain: 'sonarr.example.com',
     image: 'linuxserver/sonarr:latest',
     containers: 1,
     warnings: [],
@@ -27,6 +28,7 @@ const APPS: AppState[] = [
     runtime_status: 'not_installed',
     healthy: null,
     url: null,
+    domain: null,
     image: null,
     containers: 0,
     warnings: [],
@@ -52,6 +54,10 @@ describe('AppsTable', () => {
     expect(screen.getByText('En marche')).toBeInTheDocument()
     expect(screen.getByText('wallos')).toBeInTheDocument()
     expect(screen.getByText('Non installé')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'sonarr.example.com' })).toHaveAttribute(
+      'href',
+      'https://sonarr.example.com',
+    )
     expect(screen.getByRole('link', { name: 'Ouvrir l\'application sonarr' })).toHaveAttribute(
       'href',
       'https://sonarr.example.com',

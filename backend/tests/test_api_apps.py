@@ -35,11 +35,44 @@ def test_apps_aggregation(
     assert states["sonarr"]["runtime_status"] == "running"
     assert states["sonarr"]["healthy"] is True
     assert states["sonarr"]["url"] == "https://sonarr.example.com"
+    assert states["sonarr"]["domain"] == "sonarr.example.com"
 
     assert states["radarr"]["runtime_status"] == "stopped"
 
     assert states["wallos"]["installed"] is False
     assert states["wallos"]["runtime_status"] == "not_installed"
+
+
+def test_apps_domain_from_config(
+    auth_client,
+    write_catalogue,
+    write_ssddb,
+    write_registry,
+    fake_containers,
+):
+    from app.deps import get_ssdv2ctl
+    from app.main import app
+    from app.services.domain import clear_domain_cache
+    from tests.conftest import FakeRunner
+
+    write_catalogue("sonarr - Gestion Séries\n")
+    write_ssddb([("sonarr", 2, "sonarr", 8989)], domain=None)
+    write_registry("sonarr", "containers", ["sonarr"])
+
+    from tests.conftest import FakeContainer
+
+    fake_containers.append(FakeContainer(name="sonarr", health="healthy"))
+    clear_domain_cache()
+    app.dependency_overrides[get_ssdv2ctl] = lambda: FakeRunner(
+        payload={"schema": 1, "key": "user.domain", "value": "configured.tld"}
+    )
+
+    response = auth_client.get("/api/v1/apps")
+
+    assert response.status_code == 200
+    states = {app["name"]: app for app in response.json()}
+    assert states["sonarr"]["domain"] == "sonarr.configured.tld"
+    assert states["sonarr"]["url"] == "https://sonarr.configured.tld"
 
 
 def test_apps_warns_when_ssddb_unreadable(
@@ -87,6 +120,7 @@ def test_app_detail(
     assert body["name"] == "sonarr"
     assert body["runtime_status"] == "partial"
     assert body["url"] == "https://sonarr.example.com"
+    assert body["domain"] == "sonarr.example.com"
     assert body["ssddb"] == {"status": 2, "subdomain": "sonarr", "port": 8989}
     assert body["registries"]["volumes"] == ["sonarr-config"]
     assert body["registries"]["dns"] == ["sonarr.example.com"]

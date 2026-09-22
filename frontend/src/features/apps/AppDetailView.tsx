@@ -252,10 +252,15 @@ export function AppDetailView({
               <KeyValueList
                 items={[
                   {
-                    label: fr.apps.fields.url,
-                    value: app.url ? (
-                      <a href={app.url} target="_blank" rel="noreferrer" className="text-primary hover:underline">
-                        {app.url}
+                    label: fr.apps.detail.domain,
+                    value: app.domain ? (
+                      <a
+                        href={app.url ?? `https://${app.domain}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-primary hover:underline"
+                      >
+                        {app.domain}
                       </a>
                     ) : (
                       '—'

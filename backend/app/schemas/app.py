@@ -18,6 +18,7 @@ class AppStateOut(BaseModel):
     runtime_status: RuntimeStatus
     healthy: bool | None
     url: str | None
+    domain: str | None
     image: str | None
     containers: int
     warnings: list[str]

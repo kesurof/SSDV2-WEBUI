@@ -527,6 +527,42 @@ pointe vers son remplaçant. Une décision non tranchée reste dans « Décision
   séparés soumis par le frontend (état « à recréer » à persister, plus complexe).
 - **Références** : ADR-0007, ADR-0013 ; `ARCHITECTURE-CURRENT.md`.
 
+## ADR-0025 — Domaine applicatif lu via `ssdv2ctl config` (et non `ssddb`)
+
+- **Statut** : acceptée — 2026-09-22
+- **Contexte** : le domaine public de chaque application était déduit de
+  `ssddb.seedbox_params` (`param='domain'`). Vérification sur le serveur de test
+  (`maintainerr`, 2026-09-22) : cette ligne **n'existe pas**. Côté SSDV2,
+  `update_seedbox_param "domain"` n'est appelé que par `get_infos.sh` (saisie interactive),
+  et uniquement lorsque `user.domain` est `notfound` ; l'installation automatisée
+  (`autoinstall.sh`) renseigne `user.domain` dans `account.yml` sans jamais écrire dans
+  `ssddb`. Le registre `<app>.dns` ne contient que le **sous-domaine**. Le résultat était
+  `url = null` → « — » dans la vue « Accès et réseau » et le tableau des applications.
+- **Décision** :
+  - le domaine global est obtenu via `ssdv2ctl config get user.domain` — `account.yml` est
+    la source de vérité SSDV2 (règle 10) ;
+  - la valeur est mise en cache en mémoire (TTL 300 s) pour éviter un subprocess par
+    requête ; en cas d'échec de `ssdv2ctl`, repli sur `ssddb.seedbox_params.domain` ;
+    si aucun domaine n'est disponible, `domain` et `url` restent `null` (mode dégradé) ;
+  - `AppStateOut`/`AppDetailOut` exposent `domain` (FQDN calculé
+    `sous-domaine` ou `sous-domaine.domaine`) en plus de `url` (`https://<fqdn>`) ;
+  - l'UI affiche « Domaine » (lien cliquable) dans la vue détail, le tableau des
+    applications et la page d'authentification en masse.
+  - Aucune modification SSDV2 : la correction est entièrement côté WebUI et couvre déjà
+    les installations existantes.
+- **Conséquences** : le domaine est correct même quand `ssddb` ne le stocke pas ; une
+  clé `user.domain` absente ou `ssdv2ctl` indisponible retombe sur l'ancien comportement
+  sans casser l'affichage ; le TTL de 300 s introduit un délai max de 5 min après un
+  changement de domaine côté SSDV2.
+- **Alternatives écartées** : corriger `ssdv2ctl`/`autoinstall.sh` pour repeupler
+  `ssddb.seedbox_params.domain` (plan SSDV2 séparé, ne corrige pas les installations
+  existantes et reste soumis à ADR-0010) ; lire directement
+  `~/seedbox/.account.cache.json` (contourne la frontière `ssdv2ctl`, fichier interne
+  changeant et porteur de secrets) ; parser le label Traefik `Host(...)` des conteneurs
+  (couplé au reverse proxy, absent quand l'app n'est pas exposée).
+- **Références** : ADR-0010, ADR-0011, ADR-0024 ; `ARCHITECTURE-CURRENT.md`,
+  `PROGRESS.md`, brief §35.
+
 ## Décisions ouvertes
 
 À trancher explicitement puis consigner en ADR (voir brief §72) :

@@ -37,6 +37,7 @@ def test_running_app_matched_by_label():
     assert app.runtime_status == "running"
     assert app.healthy is True
     assert app.url == "https://sonarr.example.com"
+    assert app.domain == "sonarr.example.com"
     assert app.warnings == []
 
 
@@ -94,4 +95,18 @@ def test_not_installed_app():
     assert app.installed is False
     assert app.runtime_status == "not_installed"
     assert app.url is None
+    assert app.domain is None
     assert app.image is None
+
+
+def test_explicit_domain_used_when_ssddb_domain_missing():
+    states = build_app_states(
+        [ENTRY],
+        _ssddb("sonarr", domain=None),
+        {"sonarr": Registry(containers=["sonarr"])},
+        DockerSnapshot([_container("sonarr")], None),
+        "configured.tld",
+    )
+    app = states[0]
+    assert app.domain == "sonarr.configured.tld"
+    assert app.url == "https://sonarr.configured.tld"

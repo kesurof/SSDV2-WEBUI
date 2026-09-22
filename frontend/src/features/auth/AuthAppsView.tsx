@@ -93,6 +93,7 @@ export function AuthAppsView({
               </TableHead>
               <TableHead>{fr.apps.columns.name}</TableHead>
               <TableHead>{fr.apps.fields.auth}</TableHead>
+              <TableHead>{fr.apps.columns.domain}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -108,6 +109,20 @@ export function AuthAppsView({
                 </TableCell>
                 <TableCell className="font-medium">{app.name}</TableCell>
                 <TableCell>{authByApp[app.name] ?? '—'}</TableCell>
+                <TableCell>
+                  {app.domain && app.url ? (
+                    <a
+                      href={app.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="hover:underline"
+                    >
+                      {app.domain}
+                    </a>
+                  ) : (
+                    '—'
+                  )}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>

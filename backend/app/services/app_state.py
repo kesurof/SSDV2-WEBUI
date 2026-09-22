@@ -13,13 +13,13 @@ WARNING_CATALOGUE_UNAVAILABLE = "catalogue_unavailable"
 WARNING_SSDDB_UNAVAILABLE = "ssddb_unavailable"
 
 
-def _build_url(subdomain: str | None, domain: str | None) -> str | None:
+def _build_fqdn(subdomain: str | None, domain: str | None) -> str | None:
     if not subdomain:
         return None
     if "." in subdomain:
-        return f"https://{subdomain}"
+        return subdomain
     if domain:
-        return f"https://{subdomain}.{domain}"
+        return f"{subdomain}.{domain}"
     return None
 
 
@@ -71,6 +71,7 @@ def build_app_state(
         else:
             runtime_status = "stopped"
 
+    fqdn = _build_fqdn(app_ssddb.subdomain if app_ssddb else None, domain)
     return AppStateOut(
         name=entry.name,
         description=entry.description,
@@ -78,7 +79,8 @@ def build_app_state(
         installed=installed,
         runtime_status=runtime_status,
         healthy=healthy,
-        url=_build_url(app_ssddb.subdomain if app_ssddb else None, domain),
+        url=f"https://{fqdn}" if fqdn else None,
+        domain=fqdn,
         image=containers[0].image if containers else None,
         containers=len(containers),
         warnings=warnings,
@@ -90,7 +92,9 @@ def build_app_states(
     ssddb: SsddbData,
     registries: dict[str, Registry],
     snapshot: DockerSnapshot,
+    domain: str | None = None,
 ) -> list[AppStateOut]:
+    effective_domain = domain if domain is not None else ssddb.domain
     states = []
     for entry in entries:
         registry = registries.get(entry.name)
@@ -102,7 +106,7 @@ def build_app_states(
                 registry,
                 containers,
                 snapshot.error,
-                ssddb.domain,
+                effective_domain,
             )
         )
     return states
@@ -113,10 +117,14 @@ def build_app_detail(
     ssddb: SsddbData,
     registry: Registry | None,
     snapshot: DockerSnapshot,
+    domain: str | None = None,
 ) -> AppDetailOut:
     containers = _matching_containers(entry.name, registry, snapshot.containers)
     app_ssddb = ssddb.applications.get(entry.name)
-    state = build_app_state(entry, app_ssddb, registry, containers, snapshot.error, ssddb.domain)
+    effective_domain = domain if domain is not None else ssddb.domain
+    state = build_app_state(
+        entry, app_ssddb, registry, containers, snapshot.error, effective_domain
+    )
     return AppDetailOut(
         **state.model_dump(),
         container_list=[

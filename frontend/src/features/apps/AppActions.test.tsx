@@ -16,6 +16,7 @@ function makeApp(overrides: Partial<AppDetail> = {}): AppDetail {
     runtime_status: 'running',
     healthy: true,
     url: null,
+    domain: null,
     image: null,
     containers: 1,
     warnings: [],

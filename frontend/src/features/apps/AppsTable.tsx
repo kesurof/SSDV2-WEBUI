@@ -42,26 +42,38 @@ function buildColumns(updatesByApp?: Record<string, UpdateEntry>) {
     header: fr.apps.columns.status,
     cell: (ctx) => <StatusBadge status={ctx.getValue()} />,
   }),
-  columnHelper.accessor((row) => row.url, {
-    id: 'url',
-    header: fr.apps.columns.url,
+  columnHelper.accessor((row) => row.domain, {
+    id: 'domain',
+    header: fr.apps.columns.domain,
     cell: (ctx) => {
-      const url = ctx.getValue()
-      if (!url) {
+      const domain = ctx.getValue()
+      const url = ctx.row.original.url
+      if (!domain || !url) {
         return <span className="text-muted-foreground">{fr.common.none}</span>
       }
       return (
-        <a
-          href={url}
-          target="_blank"
-          rel="noreferrer"
-          title={url}
-          aria-label={`${fr.apps.detail.openApp} ${ctx.row.original.name}`}
-          className={buttonVariants({ variant: 'outline', size: 'sm' })}
-        >
-          <ExternalLink className="size-3.5" aria-hidden />
-          {fr.common.open}
-        </a>
+        <div className="flex items-center gap-2">
+          <a
+            href={url}
+            target="_blank"
+            rel="noreferrer"
+            title={url}
+            className="hover:underline"
+          >
+            {domain}
+          </a>
+          <a
+            href={url}
+            target="_blank"
+            rel="noreferrer"
+            title={url}
+            aria-label={`${fr.apps.detail.openApp} ${ctx.row.original.name}`}
+            className={buttonVariants({ variant: 'outline', size: 'sm' })}
+          >
+            <ExternalLink className="size-3.5" aria-hidden />
+            {fr.common.open}
+          </a>
+        </div>
       )
     },
   }),

@@ -221,13 +221,18 @@ def fake_containers() -> list[FakeContainer]:
 @pytest.fixture
 def client(fake_containers: list[FakeContainer]) -> Iterator[TestClient]:
     from app.api.auth import login_limiter
-    from app.deps import get_docker_client
+    from app.deps import get_docker_client, get_ssdv2ctl
     from app.main import app
+    from app.services.domain import clear_domain_cache
     from app.services.jobs import job_manager
 
+    clear_domain_cache()
     login_limiter()._attempts.clear()
     job_manager.configure(lambda: FakeStreamingRunner())
     app.dependency_overrides[get_docker_client] = lambda: FakeDockerClient(fake_containers)
+    app.dependency_overrides[get_ssdv2ctl] = lambda: FakeRunner(
+        payload={"schema": 1, "key": "user.domain", "value": "example.com"}
+    )
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()

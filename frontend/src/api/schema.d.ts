@@ -839,6 +839,8 @@ export interface components {
             healthy: boolean | null;
             /** Url */
             url: string | null;
+            /** Domain */
+            domain: string | null;
             /** Image */
             image: string | null;
             /** Containers */
@@ -939,6 +941,8 @@ export interface components {
             healthy: boolean | null;
             /** Url */
             url: string | null;
+            /** Domain */
+            domain: string | null;
             /** Image */
             image: string | null;
             /** Containers */

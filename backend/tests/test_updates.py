@@ -41,6 +41,7 @@ def _state(name: str, image: str | None) -> AppStateOut:
         runtime_status="running",
         healthy=True,
         url=None,
+        domain=None,
         image=image,
         containers=1,
         warnings=[],

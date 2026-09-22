@@ -31,6 +31,7 @@ from app.services.docker_state import (
     read_container_logs,
     stream_container_logs,
 )
+from app.services.domain import get_global_domain
 from app.services.jobs import job_manager
 from app.services.registries import read_registries
 from app.services.ssddb import read_ssddb
@@ -42,9 +43,12 @@ router = APIRouter(prefix="/apps", tags=["apps"])
 def list_apps(
     settings: SettingsDep,
     docker_client: DockerDep,
+    runner: Ssdv2CtlDep,
     _user: CurrentUser,
 ) -> list[AppStateOut]:
-    return load_app_states(settings, docker_client)
+    ssddb = read_ssddb(settings.ssddb_file)
+    domain = get_global_domain(runner, ssddb.domain)
+    return load_app_states(settings, docker_client, domain)
 
 
 @router.get("/{app}", response_model=AppDetailOut)
@@ -52,6 +56,7 @@ def get_app(
     app: str,
     settings: SettingsDep,
     docker_client: DockerDep,
+    runner: Ssdv2CtlDep,
     _user: CurrentUser,
 ) -> AppDetailOut:
     entries, catalogue_error = read_catalogue(settings.catalogue_file)
@@ -62,9 +67,10 @@ def get_app(
         raise HTTPException(status.HTTP_404_NOT_FOUND, f"application inconnue: {app}")
 
     ssddb = read_ssddb(settings.ssddb_file)
+    domain = get_global_domain(runner, ssddb.domain)
     registries = read_registries(settings.registries_dir)
     snapshot = collect_containers(docker_client)
-    detail = build_app_detail(entry, ssddb, registries.get(app), snapshot)
+    detail = build_app_detail(entry, ssddb, registries.get(app), snapshot, domain)
     if ssddb.warnings:
         detail.warnings.append(WARNING_SSDDB_UNAVAILABLE)
     return detail

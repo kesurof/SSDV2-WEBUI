@@ -9,8 +9,9 @@
 - `backend/` : FastAPI (Python 3.13), configuration par variables d'environnement,
   `GET /health` et `/api/v1/health`, auth admin (Argon2id, sessions serveur en SQLite,
   CSRF double-submit, rate limiting en mémoire), `GET /api/v1/apps` agrégeant catalogue,
-  `ssddb`, registres `.containers/.volumes/.dns` et Docker SDK (un appel groupé),
-  `GET /api/v1/apps/{app}` (détail : conteneurs, registres, entrée `ssddb`),
+  `ssddb`, registres `.containers/.volumes/.dns`, domaine via `ssdv2ctl config get
+  user.domain` (cache 300 s, ADR-0025) et Docker SDK (un appel groupé),
+  `GET /api/v1/apps/{app}` (détail : conteneurs, registres, entrée `ssddb`, domaine),
   `GET /api/v1/apps/{app}/auth` (type d'authentification via `ssdv2ctl auth get`),
   `GET /api/v1/apps/{app}/logs` (conteneur rattaché à l'application, lignes, horodatage)
   et `GET /api/v1/apps/{app}/logs/stream` (SSE, suivi en direct),

@@ -1862,6 +1862,17 @@
             ],
             "title": "Url"
           },
+          "domain": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Domain"
+          },
           "image": {
             "anyOf": [
               {
@@ -1914,6 +1925,7 @@
           "runtime_status",
           "healthy",
           "url",
+          "domain",
           "image",
           "containers",
           "warnings",
@@ -2144,6 +2156,17 @@
             ],
             "title": "Url"
           },
+          "domain": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Domain"
+          },
           "image": {
             "anyOf": [
               {
@@ -2176,6 +2199,7 @@
           "runtime_status",
           "healthy",
           "url",
+          "domain",
           "image",
           "containers",
           "warnings"

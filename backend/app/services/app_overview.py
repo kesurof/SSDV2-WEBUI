@@ -14,13 +14,15 @@ from app.services.ssddb import read_ssddb
 
 
 def load_app_states(
-    settings: Settings, docker_client: docker.DockerClient | None
+    settings: Settings,
+    docker_client: docker.DockerClient | None,
+    domain: str | None = None,
 ) -> list[AppStateOut]:
     entries, catalogue_error = read_catalogue(settings.catalogue_file)
     ssddb = read_ssddb(settings.ssddb_file)
     registries = read_registries(settings.registries_dir)
     snapshot = collect_containers(docker_client)
-    states = build_app_states(entries, ssddb, registries, snapshot)
+    states = build_app_states(entries, ssddb, registries, snapshot, domain)
 
     extra_warnings: list[str] = []
     if catalogue_error:
