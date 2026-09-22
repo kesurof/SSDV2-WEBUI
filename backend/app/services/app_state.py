@@ -23,7 +23,7 @@ def _build_fqdn(subdomain: str | None, domain: str | None) -> str | None:
     return None
 
 
-def _matching_containers(
+def matching_containers(
     name: str, registry: Registry | None, containers: list[ContainerInfo]
 ) -> list[ContainerInfo]:
     return [
@@ -98,7 +98,7 @@ def build_app_states(
     states = []
     for entry in entries:
         registry = registries.get(entry.name)
-        containers = _matching_containers(entry.name, registry, snapshot.containers)
+        containers = matching_containers(entry.name, registry, snapshot.containers)
         states.append(
             build_app_state(
                 entry,
@@ -119,7 +119,7 @@ def build_app_detail(
     snapshot: DockerSnapshot,
     domain: str | None = None,
 ) -> AppDetailOut:
-    containers = _matching_containers(entry.name, registry, snapshot.containers)
+    containers = matching_containers(entry.name, registry, snapshot.containers)
     app_ssddb = ssddb.applications.get(entry.name)
     effective_domain = domain if domain is not None else ssddb.domain
     state = build_app_state(

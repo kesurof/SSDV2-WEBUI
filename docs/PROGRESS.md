@@ -369,6 +369,19 @@ aucun push — ADR-0010).
   maximum autorisé par l'API (`/jobs?limit=200`, `/notifications?limit=200`,
   `/audit?limit=500`).
 
+**Diagnostics : explications et nettoyage des fiches obsolètes**.
+
+- La page Diagnostics explique désormais chaque contrôle (à quoi il correspond, cause
+  probable, action conseillée) et chaque bouton (effet, risque). `stale_apps` distingue les
+  applications **sans conteneur** (fiches obsolètes) des applications réelles à réparer.
+- Nouvelle action **« Nettoyer les fiches obsolètes »** : liste à cocher, résumé de ce qui
+  est supprimé (fiche SSDV2, DNS, registres, sous-domaine ; données en option), confirmation
+  forte (`SUPPRIMER`). Exécution via `suppression_appli` (adaptateur bash allowlisté) dans un
+  job interactif ; **garde-fou** : refus si un conteneur existe encore (409).
+- Backend : `app/services/diagnostics.py` (classification), `POST /diagnostics/purge-apps`,
+  job `diagnostics_purge_apps`. Aucune modification SSDV2.
+- Preuves : `ruff`/`pytest` verts ; `npm run lint|typecheck|test|build` verts.
+
 ## Prochains chantiers pressentis
 
 1. Phase 5 : mise à jour SSDV2/Git, patches, Docker avancé, fonctions hôte (nécessite des

@@ -44,8 +44,32 @@ def test_diagnostics_returns_checks(auth_client):
     body = response.json()
     assert body["schema"] == 1
     assert body["checks"]["missing_registries"] == ["appname"]
+    assert body["checks"]["stale_apps"] == ["appname"]
     assert body["checks"]["dangling_volumes"] == 2
     assert runner.calls == [["diagnostics", "run"]]
+
+
+def test_diagnostics_stale_apps_excludes_apps_with_containers(
+    auth_client, write_registry, fake_containers
+):
+    from tests.conftest import FakeContainer
+
+    payload = {
+        "schema": 1,
+        "checks": {
+            "missing_registries": ["sonarr", "hermes"],
+            "orphan_containers": [],
+            "dangling_volumes": 0,
+        },
+        "warnings": [],
+    }
+    app.dependency_overrides[get_ssdv2ctl] = lambda: FakeRunner(payload=payload)
+    write_registry("sonarr", "containers", ["sonarr"])
+    fake_containers.append(FakeContainer(name="sonarr"))
+
+    response = auth_client.get("/api/v1/diagnostics")
+
+    assert response.json()["checks"]["stale_apps"] == ["hermes"]
 
 
 def test_diagnostics_unavailable(auth_client):
@@ -101,3 +125,59 @@ def test_diagnostics_repair_jobs(auth_client):
         ["diagnostics", "cleanup-orphan-containers"],
         ["diagnostics", "cleanup-dangling-volumes"],
     ]
+
+
+def test_purge_apps_submits_job(auth_client, settings):
+    from tests.conftest import FakeBashRunner
+
+    runner = FakeBashRunner(settings=settings)
+    job_manager.configure_bash(lambda: runner)
+
+    response = auth_client.post(
+        "/api/v1/diagnostics/purge-apps",
+        json={"apps": ["hermes", "webtop"], "delete_data": False},
+    )
+
+    assert response.status_code == 202
+    job = response.json()
+    assert job["type"] == "diagnostics_purge_apps"
+    assert wait_for_job(auth_client, job["id"])["status"] == "success"
+    assert runner.calls == [
+        ("suppression_appli", ["hermes", "0"]),
+        ("suppression_appli", ["webtop", "0"]),
+    ]
+
+
+def test_purge_apps_delete_data(auth_client, settings):
+    from tests.conftest import FakeBashRunner
+
+    runner = FakeBashRunner(settings=settings)
+    job_manager.configure_bash(lambda: runner)
+
+    response = auth_client.post(
+        "/api/v1/diagnostics/purge-apps",
+        json={"apps": ["hermes"], "delete_data": True},
+    )
+    wait_for_job(auth_client, response.json()["id"])
+
+    assert runner.calls == [("suppression_appli", ["hermes", "1"])]
+
+
+def test_purge_apps_rejects_apps_with_containers(auth_client, fake_containers):
+    from tests.conftest import FakeContainer
+
+    fake_containers.append(FakeContainer(name="plex"))
+
+    response = auth_client.post(
+        "/api/v1/diagnostics/purge-apps", json={"apps": ["plex"], "delete_data": False}
+    )
+
+    assert response.status_code == 409
+    assert "plex" in response.json()["detail"]
+
+
+def test_purge_apps_rejects_invalid_name(auth_client):
+    response = auth_client.post(
+        "/api/v1/diagnostics/purge-apps", json={"apps": ["Bad Name"], "delete_data": False}
+    )
+    assert response.status_code == 422

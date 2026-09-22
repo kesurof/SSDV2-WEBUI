@@ -1,6 +1,7 @@
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { DiagnosticsActions } from '@/features/diagnostics/DiagnosticsActions'
+import { DiagnosticsStaleApps } from '@/features/diagnostics/DiagnosticsStaleApps'
 import { useDiagnostics } from '@/features/system/useSystem'
 import { PageHeader } from '@/components/app/page-header'
 import { fr } from '@/i18n/fr'
@@ -23,12 +24,17 @@ export function DiagnosticsView({
   checks,
   warnings,
 }: Pick<Diagnostics, 'checks' | 'warnings'>) {
+  const stale = checks.stale_apps ?? []
+  const repairable = checks.missing_registries.filter((app) => !stale.includes(app))
+
   return (
     <div className="space-y-4">
       <PageHeader
         title={fr.diagnostics.title}
         subtitle="Vérifiez l'état de votre instance et réparez les problèmes courants."
       />
+
+      <p className="text-sm text-muted-foreground">{fr.diagnostics.intro}</p>
 
       {warnings.length > 0 && (
         <Alert variant="destructive">
@@ -48,24 +54,32 @@ export function DiagnosticsView({
           <CardHeader>
             <CardTitle className="text-sm">{fr.diagnostics.missingRegistries}</CardTitle>
           </CardHeader>
-          <CardContent>
-            <ValueList values={checks.missing_registries} />
+          <CardContent className="space-y-2">
+            <p className="text-xs text-muted-foreground">{fr.diagnostics.missingRegistriesHelp}</p>
+            <p className="text-xs text-muted-foreground">{fr.diagnostics.missingRegistriesCause}</p>
+            <ValueList values={repairable} />
+            <p className="text-xs text-primary">{fr.diagnostics.missingRegistriesAction}</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
             <CardTitle className="text-sm">{fr.diagnostics.orphanContainers}</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-2">
+            <p className="text-xs text-muted-foreground">{fr.diagnostics.orphanContainersHelp}</p>
+            <p className="text-xs text-muted-foreground">{fr.diagnostics.orphanContainersCause}</p>
             <ValueList values={checks.orphan_containers} />
+            <p className="text-xs text-primary">{fr.diagnostics.orphanContainersAction}</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
             <CardTitle className="text-sm">{fr.diagnostics.danglingVolumes}</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-2">
+            <p className="text-xs text-muted-foreground">{fr.diagnostics.danglingVolumesHelp}</p>
             <p className="text-2xl font-semibold">{checks.dangling_volumes}</p>
+            <p className="text-xs text-primary">{fr.diagnostics.danglingVolumesAction}</p>
           </CardContent>
         </Card>
       </div>
@@ -92,6 +106,7 @@ export function DiagnosticsPage() {
   return (
     <div className="space-y-4">
       <DiagnosticsView checks={diagnostics.data.checks} warnings={diagnostics.data.warnings} />
+      <DiagnosticsStaleApps apps={diagnostics.data.checks.stale_apps ?? []} />
       <DiagnosticsActions />
     </div>
   )

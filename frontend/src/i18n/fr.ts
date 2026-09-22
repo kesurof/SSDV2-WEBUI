@@ -172,14 +172,37 @@ export const fr = {
   },
   diagnostics: {
     title: 'Diagnostics SSDV2',
+    intro:
+      'Cette page vérifie la cohérence entre SSDV2 et Docker, et propose des réparations. Chaque action crée une tâche (job) suivie en direct.',
     missingRegistries: 'Registres de conteneurs manquants',
-    orphanContainers: 'Conteneurs orphelins (label sans application en base)',
+    missingRegistriesHelp:
+      'SSDV2 connaît ces applications, mais la fiche qui liste leurs conteneurs est absente.',
+    missingRegistriesCause:
+      'Cause fréquente : installation ancienne (avant ce mécanisme) ou interrompue.',
+    missingRegistriesAction:
+      'Utilisez « Régénérer les registres » : la fiche est reconstruite à partir des conteneurs existants.',
+    orphanContainers: 'Conteneurs orphelins',
+    orphanContainersHelp:
+      'Conteneurs rattachés à une application que SSDV2 ne connaît plus.',
+    orphanContainersCause: 'Cause fréquente : application supprimée, conteneur resté.',
+    orphanContainersAction:
+      'Utilisez « Supprimer les conteneurs orphelins » (action destructive).',
     danglingVolumes: 'Volumes anonymes orphelins',
+    danglingVolumesHelp: 'Volumes sans conteneur rattaché (restes après suppression).',
+    danglingVolumesAction:
+      'Utilisez « Supprimer les volumes orphelins » (action destructive).',
     none: 'Aucun',
     actions: 'Actions de réparation',
+    actionsHelp:
+      '« Régénérer » ne supprime rien. Les deux suppressions sont définitives et demandent une confirmation.',
     rebuildRegistries: 'Régénérer les registres',
+    rebuildRegistriesHelp:
+      'Reconstruit les fiches manquantes à partir des conteneurs existants. Ne modifie ni les conteneurs ni les données.',
     cleanupContainers: 'Supprimer les conteneurs orphelins',
+    cleanupContainersHelp:
+      'Supprime définitivement les conteneurs rattachés à une application inconnue.',
     cleanupVolumes: 'Supprimer les volumes orphelins',
+    cleanupVolumesHelp: 'Supprime définitivement les volumes anonymes détachés.',
     rebuildConfirm:
       'Régénérer les registres de conteneurs manquants à partir du label ssdv2.app ?',
     cleanupConfirm:
@@ -187,6 +210,20 @@ export const fr = {
     resourceContainers: 'les conteneurs orphelins détectés',
     resourceVolumes: 'les volumes anonymes orphelins détectés',
     typeToConfirm: 'Tapez « SUPPRIMER » pour confirmer',
+    staleTitle: 'Applications obsolètes',
+    staleHelp:
+      'Applications enregistrées comme installées, mais sans aucun conteneur : ce sont des restes d’anciennes installations.',
+    staleEmpty: 'Aucune application obsolète détectée.',
+    staleSelectAll: 'Tout sélectionner',
+    stalePurge: 'Nettoyer la sélection',
+    staleConfirmTitle: 'Nettoyer les fiches obsolètes',
+    staleWillRemove:
+      'Supprime la fiche SSDV2, le DNS, les registres et le sous-domaine liés à chaque application.',
+    staleWillRemoveData: ' Le dossier de données sera aussi supprimé.',
+    staleDataLabel: 'Données',
+    staleKeepData: 'Conserver les données (recommandé)',
+    staleDeleteData: 'Supprimer aussi les données',
+    staleTypeToConfirm: 'Tapez « SUPPRIMER » pour confirmer',
   },
   jobs: {
     title: 'Jobs',

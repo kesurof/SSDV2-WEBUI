@@ -19,7 +19,12 @@ logger = logging.getLogger(__name__)
 
 TERMINAL_STATUSES = ("success", "failed", "cancelled", "interrupted")
 
-INTERACTIVE_JOB_TYPES = ("app_install", "app_reinstall", "app_recreate")
+INTERACTIVE_JOB_TYPES = (
+    "app_install",
+    "app_reinstall",
+    "app_recreate",
+    "diagnostics_purge_apps",
+)
 PROMPT_IDLE_TIMEOUT = 900
 FAILURE_PATTERN = re.compile(r"fatal:|action_failed|failed=[1-9]")
 
@@ -41,6 +46,7 @@ JOB_LABELS = {
     "diagnostics_rebuild_registries": "Régénération des registres",
     "diagnostics_cleanup_containers": "Nettoyage des conteneurs orphelins",
     "diagnostics_cleanup_volumes": "Nettoyage des volumes orphelins",
+    "diagnostics_purge_apps": "Nettoyage des fiches obsolètes",
 }
 
 NOTIFY_JOB_TYPES = (
@@ -80,6 +86,7 @@ ACTION_TIMEOUTS = {
     "diagnostics_rebuild_registries": 900,
     "diagnostics_cleanup_containers": 600,
     "diagnostics_cleanup_volumes": 600,
+    "diagnostics_purge_apps": 900,
 }
 
 DEFAULT_TIMEOUT = 600
@@ -251,6 +258,10 @@ class JobManager:
                 ("bash", "manage_account_yml", [f"sub.{target}.auth", auth]),
                 ("bash", "launch_service", [target]),
             ]
+        if job_type == "diagnostics_purge_apps":
+            delete = "1" if params.get("delete_data") else "0"
+            apps = [str(app) for app in params.get("apps", [])]
+            return [("bash", "suppression_appli", [app, delete]) for app in apps]
         raise Ssdv2CtlError("unknown_job_type", f"type de job inconnu: {job_type}")
 
     def _remove_overrides(self, runner: Ssdv2BashRunner, target: str) -> None:

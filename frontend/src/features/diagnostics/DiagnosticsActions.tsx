@@ -22,20 +22,28 @@ import { fr } from '@/i18n/fr'
 
 const CONFIRM_PHRASE = 'SUPPRIMER'
 
-const ACTIONS: { action: DiagnosticsAction; label: string; destructive: boolean }[] = [
+const ACTIONS: {
+  action: DiagnosticsAction
+  label: string
+  help: string
+  destructive: boolean
+}[] = [
   {
     action: 'rebuild-registries',
     label: fr.diagnostics.rebuildRegistries,
+    help: fr.diagnostics.rebuildRegistriesHelp,
     destructive: false,
   },
   {
     action: 'cleanup-orphan-containers',
     label: fr.diagnostics.cleanupContainers,
+    help: fr.diagnostics.cleanupContainersHelp,
     destructive: true,
   },
   {
     action: 'cleanup-dangling-volumes',
     label: fr.diagnostics.cleanupVolumes,
+    help: fr.diagnostics.cleanupVolumesHelp,
     destructive: true,
   },
 ]
@@ -67,21 +75,32 @@ export function DiagnosticsActions() {
       <CardHeader>
         <CardTitle className="text-sm">{fr.diagnostics.actions}</CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-wrap gap-2">
-        {ACTIONS.map((item) => (
-          <Button
-            key={item.action}
-            size="sm"
-            variant="outline"
-            disabled={mutation.isPending}
-            onClick={() => {
-              setConfirmation('')
-              setPending(item.action)
-            }}
-          >
-            {item.label}
-          </Button>
-        ))}
+      <CardContent className="space-y-3">
+        <p className="text-xs text-muted-foreground">{fr.diagnostics.actionsHelp}</p>
+        <div className="flex flex-wrap gap-2">
+          {ACTIONS.map((item) => (
+            <Button
+              key={item.action}
+              size="sm"
+              variant="outline"
+              disabled={mutation.isPending}
+              onClick={() => {
+                setConfirmation('')
+                setPending(item.action)
+              }}
+            >
+              {item.label}
+            </Button>
+          ))}
+        </div>
+        <ul className="space-y-1">
+          {ACTIONS.map((item) => (
+            <li key={item.action} className="text-xs text-muted-foreground">
+              <span className="font-medium text-foreground">{item.label} : </span>
+              {item.help}
+            </li>
+          ))}
+        </ul>
 
         <AlertDialog
           open={pending !== null}

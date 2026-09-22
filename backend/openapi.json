@@ -1126,6 +1126,47 @@
         }
       }
     },
+    "/api/v1/diagnostics/purge-apps": {
+      "post": {
+        "tags": [
+          "diagnostics"
+        ],
+        "summary": "Purge Apps",
+        "operationId": "purge_apps_api_v1_diagnostics_purge_apps_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DiagnosticsPurgeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/health": {
       "get": {
         "tags": [
@@ -2697,6 +2738,13 @@
           "dangling_volumes": {
             "type": "integer",
             "title": "Dangling Volumes"
+          },
+          "stale_apps": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Stale Apps"
           }
         },
         "type": "object",
@@ -2731,6 +2779,30 @@
           "warnings"
         ],
         "title": "DiagnosticsOut"
+      },
+      "DiagnosticsPurgeRequest": {
+        "properties": {
+          "apps": {
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
+            },
+            "type": "array",
+            "maxItems": 50,
+            "minItems": 1,
+            "title": "Apps"
+          },
+          "delete_data": {
+            "type": "boolean",
+            "title": "Delete Data",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "apps"
+        ],
+        "title": "DiagnosticsPurgeRequest"
       },
       "DiskMetric": {
         "properties": {
