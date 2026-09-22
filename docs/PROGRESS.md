@@ -359,6 +359,16 @@ aucun push — ADR-0010).
   `templates/plex/.../claim_server`, `vars/generique`, `vars/traefik`
   (+ `plex_token.sh`, `functions.sh`). 48 marqueurs au total.
 
+**Pagination des listes (Jobs, Notifications, Audit)**.
+
+- Composant partagé `frontend/src/components/app/pagination.tsx` + hook
+  `frontend/src/hooks/usePageSlice.ts`, repris du fonctionnement de la page Applications
+  (20 par page, « Précédent/Suivant », plage `début–fin / total`) ; `AppsPage` refactoré
+  pour l'utiliser.
+- `Jobs`, `Notifications`, `Audit` paginés côté client ; les hooks récupèrent jusqu'au
+  maximum autorisé par l'API (`/jobs?limit=200`, `/notifications?limit=200`,
+  `/audit?limit=500`).
+
 ## Prochains chantiers pressentis
 
 1. Phase 5 : mise à jour SSDV2/Git, patches, Docker avancé, fonctions hôte (nécessite des

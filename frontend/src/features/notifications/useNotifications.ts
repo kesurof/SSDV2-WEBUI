@@ -6,7 +6,7 @@ import type { AuditEvent, NotificationList } from '@/api/types'
 export function useNotifications() {
   return useQuery<NotificationList>({
     queryKey: ['notifications'],
-    queryFn: () => apiFetch<NotificationList>('/notifications'),
+    queryFn: () => apiFetch<NotificationList>('/notifications?limit=200'),
     refetchInterval: 30_000,
   })
 }
@@ -14,7 +14,7 @@ export function useNotifications() {
 export function useAuditEvents() {
   return useQuery<AuditEvent[]>({
     queryKey: ['audit'],
-    queryFn: () => apiFetch<AuditEvent[]>('/audit'),
+    queryFn: () => apiFetch<AuditEvent[]>('/audit?limit=500'),
     refetchInterval: 30_000,
   })
 }

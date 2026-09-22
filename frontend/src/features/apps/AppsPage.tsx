@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom'
 
 import { MetricCard } from '@/components/app/metric-card'
 import { PageHeader } from '@/components/app/page-header'
+import { Pagination } from '@/components/app/pagination'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -11,6 +12,7 @@ import { AppsTable } from '@/features/apps/AppsTable'
 import { filterApps } from '@/features/apps/filter'
 import type { StatusFilter } from '@/features/apps/filter'
 import { useApps, useUpdates } from '@/features/system/useSystem'
+import { usePageSlice } from '@/hooks/usePageSlice'
 import { fr } from '@/i18n/fr'
 
 const PAGE_SIZE = 20
@@ -36,12 +38,13 @@ export function AppsPage() {
   const [status, setStatus] = useState<StatusFilter>(
     isStatusFilter(initialStatus) ? initialStatus : 'all',
   )
-  const [page, setPage] = useState(0)
 
   const filtered = useMemo(
     () => filterApps(apps.data ?? [], search, status),
     [apps.data, search, status],
   )
+
+  const { page: currentPage, setPage, pageCount, pageItems } = usePageSlice(filtered, PAGE_SIZE)
 
   const counts = useMemo(() => {
     const all = apps.data ?? []
@@ -53,10 +56,6 @@ export function AppsPage() {
       not_installed: all.filter((app) => app.runtime_status === 'not_installed').length,
     }
   }, [apps.data])
-
-  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
-  const currentPage = Math.min(page, pageCount - 1)
-  const pageItems = filtered.slice(currentPage * PAGE_SIZE, currentPage * PAGE_SIZE + PAGE_SIZE)
 
   function changeFilter(value: StatusFilter) {
     setStatus(value)
@@ -153,35 +152,13 @@ export function AppsPage() {
               (updates.data?.entries ?? []).map((entry) => [entry.app, entry]),
             )}
           />
-          <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
-            <span>
-              {filtered.length === 0
-                ? '0'
-                : `${currentPage * PAGE_SIZE + 1}–${Math.min(filtered.length, (currentPage + 1) * PAGE_SIZE)}`}{' '}
-              / {filtered.length}
-            </span>
-            <div className="flex items-center gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={currentPage === 0}
-                onClick={() => setPage((value) => Math.max(0, value - 1))}
-              >
-                {fr.common.previous}
-              </Button>
-              <span>
-                {currentPage + 1} / {pageCount}
-              </span>
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={currentPage >= pageCount - 1}
-                onClick={() => setPage((value) => Math.min(pageCount - 1, value + 1))}
-              >
-                {fr.common.next}
-              </Button>
-            </div>
-          </div>
+          <Pagination
+            page={currentPage}
+            pageCount={pageCount}
+            total={filtered.length}
+            pageSize={PAGE_SIZE}
+            onPageChange={setPage}
+          />
         </>
       )}
     </div>

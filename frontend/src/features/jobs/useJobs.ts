@@ -21,7 +21,7 @@ export type AppActionRequest = {
 export function useJobs() {
   return useQuery<Job[]>({
     queryKey: ['jobs'],
-    queryFn: () => apiFetch<Job[]>('/jobs'),
+    queryFn: () => apiFetch<Job[]>('/jobs?limit=200'),
     refetchInterval: 5_000,
   })
 }

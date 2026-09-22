@@ -3,13 +3,17 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import { EmptyState } from '@/components/app/empty-state'
+import { Pagination } from '@/components/app/pagination'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { JobStatusBadge } from '@/features/jobs/JobStatusBadge'
+import { usePageSlice } from '@/hooks/usePageSlice'
 import { fr } from '@/i18n/fr'
 import { formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import type { Job } from '@/api/types'
+
+const PAGE_SIZE = 20
 
 type StatusFilter = 'all' | 'running' | 'success' | 'failed'
 
@@ -45,6 +49,8 @@ export function JobsView({ jobs, selectedId }: { jobs: Job[]; selectedId?: numbe
     })
   }, [jobs, search, filter])
 
+  const { page, setPage, pageCount, pageItems } = usePageSlice(filtered, PAGE_SIZE)
+
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2">
@@ -55,7 +61,10 @@ export function JobsView({ jobs, selectedId }: { jobs: Job[]; selectedId?: numbe
           />
           <Input
             value={search}
-            onChange={(event) => setSearch(event.target.value)}
+            onChange={(event) => {
+              setSearch(event.target.value)
+              setPage(0)
+            }}
             placeholder={fr.jobs.search}
             className="w-56 pl-8"
             aria-label={fr.jobs.search}
@@ -67,7 +76,10 @@ export function JobsView({ jobs, selectedId }: { jobs: Job[]; selectedId?: numbe
               key={item.value}
               size="sm"
               variant={filter === item.value ? 'default' : 'outline'}
-              onClick={() => setFilter(item.value)}
+              onClick={() => {
+                setFilter(item.value)
+                setPage(0)
+              }}
             >
               {item.label}
             </Button>
@@ -79,7 +91,7 @@ export function JobsView({ jobs, selectedId }: { jobs: Job[]; selectedId?: numbe
         <EmptyState icon={ListChecks} message={fr.jobs.empty} />
       ) : (
         <div className="overflow-hidden rounded-2xl border bg-card">
-          {filtered.map((job) => (
+          {pageItems.map((job) => (
             <Link
               key={job.id}
               to={`/jobs/${job.id}`}
@@ -102,6 +114,14 @@ export function JobsView({ jobs, selectedId }: { jobs: Job[]; selectedId?: numbe
           ))}
         </div>
       )}
+
+      <Pagination
+        page={page}
+        pageCount={pageCount}
+        total={filtered.length}
+        pageSize={PAGE_SIZE}
+        onPageChange={setPage}
+      />
     </div>
   )
 }
