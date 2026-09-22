@@ -1,11 +1,15 @@
-import { RotateCw } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { CircleHelp, RotateCw } from 'lucide-react'
 
 import { KeyValueList } from '@/components/app/key-value-list'
 import { StatusPill } from '@/components/app/status-pill'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { JobStatusBadge } from '@/features/jobs/JobStatusBadge'
 import { jobTypeLabel } from '@/features/jobs/JobsView'
+import type { JobPrompt } from '@/features/jobs/useJobEvents'
 import { fr } from '@/i18n/fr'
 import { formatDate } from '@/lib/format'
 import type { Job } from '@/api/types'
@@ -26,15 +30,95 @@ function formatDuration(job: Job): string {
   return `${Math.floor(seconds / 60)} min ${seconds % 60} s`
 }
 
+function JobPromptPanel({
+  prompt,
+  busy,
+  onSubmit,
+}: {
+  prompt: JobPrompt
+  busy: boolean
+  onSubmit: (value: string) => void
+}) {
+  const [value, setValue] = useState(prompt.default)
+
+  useEffect(() => {
+    setValue(prompt.default)
+  }, [prompt.id, prompt.default])
+
+  return (
+    <div className="rounded-md border border-warning/50 bg-warning/10 p-4">
+      <div className="flex items-center gap-2 text-sm font-medium text-warning">
+        <CircleHelp className="size-4" aria-hidden />
+        {fr.jobs.prompt.title}
+      </div>
+      <p className="mt-1 text-sm">{prompt.label}</p>
+
+      {prompt.kind === 'choice' ? (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {prompt.options.map((option) => (
+            <Button
+              key={option.value}
+              size="sm"
+              variant="outline"
+              disabled={busy}
+              onClick={() => onSubmit(option.value)}
+            >
+              {option.label}
+            </Button>
+          ))}
+        </div>
+      ) : prompt.kind === 'confirm' ? (
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Button size="sm" disabled={busy} onClick={() => onSubmit(prompt.default)}>
+            {prompt.default === 'o' ? fr.jobs.prompt.yes : fr.jobs.prompt.continue}
+          </Button>
+          {prompt.default === 'o' ? (
+            <Button size="sm" variant="outline" disabled={busy} onClick={() => onSubmit('n')}>
+              {fr.jobs.prompt.no}
+            </Button>
+          ) : null}
+        </div>
+      ) : (
+        <form
+          className="mt-3 space-y-2"
+          onSubmit={(event) => {
+            event.preventDefault()
+            onSubmit(value)
+          }}
+        >
+          <Label htmlFor="job-prompt-input" className="sr-only">
+            {prompt.label}
+          </Label>
+          <Input
+            id="job-prompt-input"
+            type={prompt.secret ? 'password' : 'text'}
+            autoComplete="off"
+            autoFocus
+            value={value}
+            onChange={(event) => setValue(event.target.value)}
+          />
+          <Button type="submit" size="sm" disabled={busy}>
+            {fr.jobs.prompt.submit}
+          </Button>
+        </form>
+      )}
+    </div>
+  )
+}
+
 export function JobDetailView({
   job,
   lines,
   done,
+  prompt,
+  onInput,
   onRetry,
 }: {
   job: Job
   lines: string[]
   done: boolean
+  prompt?: JobPrompt | null
+  onInput?: (value: string) => void
   onRetry?: () => void
 }) {
   return (
@@ -63,6 +147,8 @@ export function JobDetailView({
           <AlertDescription>{job.message}</AlertDescription>
         </Alert>
       )}
+
+      {prompt && onInput ? <JobPromptPanel prompt={prompt} busy={false} onSubmit={onInput} /> : null}
 
       <KeyValueList
         items={[

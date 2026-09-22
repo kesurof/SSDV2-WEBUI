@@ -8,6 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy import func, select
 from sqlalchemy.exc import SQLAlchemyError
 
+from app.adapters.ssdv2_bash import Ssdv2BashRunner
 from app.adapters.ssdv2_cli import Ssdv2CtlRunner
 from app.api import (
     apps,
@@ -64,6 +65,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
             if webui_settings.setup_required(db):
                 setup_service.ensure_setup_token(settings.webui_data)
         job_manager.configure(lambda: Ssdv2CtlRunner(settings))
+        job_manager.configure_bash(lambda: Ssdv2BashRunner(settings))
         job_manager.reset_interrupted()
         job_manager.start()
     except (SQLAlchemyError, OSError) as exc:

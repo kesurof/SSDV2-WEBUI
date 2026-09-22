@@ -1,9 +1,14 @@
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 JobStatus = Literal["queued", "running", "success", "failed", "cancelled", "interrupted"]
+
+
+class JobInputRequest(BaseModel):
+    prompt_id: str = Field(min_length=1, max_length=64)
+    value: str = Field(default="", max_length=200)
 
 
 class JobOut(BaseModel):

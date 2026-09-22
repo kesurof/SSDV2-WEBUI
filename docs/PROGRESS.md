@@ -302,6 +302,20 @@ aucun push — ADR-0010).
   ssdv2webui`, le domaine s'affiche dans la vue détail et la colonne « Domaine » du
   tableau (validation serveur 2026-09-22).
 
+**Installation / réinstallation interactives (ADR-0026)**.
+
+- Cause : `ssdv2ctl` bufferise (`capture_output`) et ferme l'entrée (`stdin=DEVNULL`) →
+  aucun log en direct ni saisie possible ; incident `plex` (claim interactif → faux succès).
+- Backend : `app/adapters/ssdv2_bash.py` (dispatcher SSDV2 direct, allowlist stricte,
+  streaming non bufferisé + stdin) ; `app/services/prompts.py` (détection heuristique des
+  invites) ; jobs `install`/`reinstall`/`recreate` interactifs, événement SSE `prompt`,
+  `POST /api/v1/jobs/{id}/input`, annulation d'un job en cours, timeout d'inactivité 15 min,
+  détection d'échec malgré code retour nul, secrets jamais persistés.
+- Frontend : panneau « Action requise » dans le détail de job (texte/mot de passe/oui-non/
+  choix) + logs en direct.
+- Preuves : `ruff`/`pytest` et `npm run lint|typecheck|test|build` verts ; validation serveur
+  à confirmer.
+
 ## Prochains chantiers pressentis
 
 1. Phase 5 : mise à jour SSDV2/Git, patches, Docker avancé, fonctions hôte (nécessite des

@@ -17,7 +17,9 @@
   et `GET /api/v1/apps/{app}/logs/stream` (SSE, suivi en direct),
   `POST /api/v1/apps/{app}/start|stop|restart|install|remove|reinstall|recreate`
   (crée un job, 202), `GET /api/v1/jobs` et `/api/v1/jobs/{id}` (file de jobs, état en
-  SQLite), `GET /api/v1/jobs/{id}/events` (SSE) et `POST /api/v1/jobs/{id}/cancel`,
+  SQLite), `GET /api/v1/jobs/{id}/events` (SSE), `POST /api/v1/jobs/{id}/cancel` et
+  `POST /api/v1/jobs/{id}/input` (saisie guidée ; install/reinstall/recreate exécutent le
+  dispatcher SSDV2 direct avec logs en direct — ADR-0026, `app/adapters/ssdv2_bash.py`),
   `GET /api/v1/system/summary` (hôte via Docker info, branche/commit SSDV2, compteurs),
   `GET /api/v1/system/metrics` (CPU/RAM hôte depuis `/host/proc`, disque, conteneurs),
   `GET /api/v1/system/health` (contrôles de services, sauvegardes, jobs, alertes, DNS,

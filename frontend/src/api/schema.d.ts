@@ -565,6 +565,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/jobs/{job_id}/input": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Submit Job Input */
+        post: operations["submit_job_input_api_v1_jobs__job_id__input_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/jobs/{job_id}/events": {
         parameters: {
             query?: never;
@@ -1216,6 +1233,16 @@ export interface components {
             memory_bytes?: number | null;
             /** Server Version */
             server_version?: string | null;
+        };
+        /** JobInputRequest */
+        JobInputRequest: {
+            /** Prompt Id */
+            prompt_id: string;
+            /**
+             * Value
+             * @default
+             */
+            value: string;
         };
         /** JobOut */
         JobOut: {
@@ -2458,6 +2485,41 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    submit_job_input_api_v1_jobs__job_id__input_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JobInputRequest"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {

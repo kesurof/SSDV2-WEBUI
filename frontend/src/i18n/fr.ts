@@ -201,6 +201,13 @@ export const fr = {
       progress: 'Progression',
       finished: 'Terminé',
     },
+    prompt: {
+      title: 'Action requise',
+      submit: 'Envoyer',
+      continue: 'Continuer',
+      yes: 'Oui',
+      no: 'Non',
+    },
     types: {
       app_start: 'Démarrage',
       app_stop: 'Arrêt',

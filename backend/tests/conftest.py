@@ -1,6 +1,7 @@
 import os
 import sqlite3
 import tempfile
+import threading
 from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
@@ -196,6 +197,74 @@ class FakeStreamingRunner:
         return self.exit_code
 
 
+class FakeInteractiveProcess:
+    def __init__(self, runner: "FakeBashRunner") -> None:
+        self.runner = runner
+        self.written: list[str] = []
+        self._events = [threading.Event() for _ in runner.prompts]
+        self._killed = False
+
+    def write(self, value: str) -> None:
+        self.written.append(value)
+        for event in self._events:
+            if not event.is_set():
+                event.set()
+                break
+
+    def kill(self) -> None:
+        self._killed = True
+        for event in self._events:
+            event.set()
+
+    @property
+    def killed(self) -> bool:
+        return self._killed
+
+    def prompt_pending(self) -> bool:
+        return False
+
+    def run(self, on_line, on_prompt, detect_prompt, timeout, idle_timeout) -> int:
+        if self.runner.error is not None:
+            raise self.runner.error
+        for line in self.runner.lines:
+            on_line(line)
+        for spec, event in zip(self.runner.prompts, self._events, strict=False):
+            on_prompt(spec, spec.label)
+            event.wait(timeout)
+        self.runner.processes.append(self)
+        return self.runner.code
+
+
+class FakeBashRunner:
+    def __init__(
+        self,
+        code: int = 0,
+        lines: tuple[str, ...] = (),
+        prompts: tuple = (),
+        captures: dict | None = None,
+        settings=None,
+        error: Exception | None = None,
+    ) -> None:
+        self.code = code
+        self.lines = tuple(lines)
+        self.prompts = tuple(prompts)
+        self.captures = captures or {}
+        self.settings = settings
+        self.error = error
+        self.calls: list[tuple[str, list[str]]] = []
+        self.processes: list[FakeInteractiveProcess] = []
+
+    def spawn(
+        self, function: str, args: list[str], app: str | None = None
+    ) -> FakeInteractiveProcess:
+        self.calls.append((function, list(args)))
+        return FakeInteractiveProcess(self)
+
+    def capture(self, function: str, args: list[str], timeout: int = 120) -> str:
+        self.calls.append((function, list(args)))
+        return self.captures.get(tuple(args), "sonarr")
+
+
 @pytest.fixture(scope="session")
 def settings():
     from app.core.config import get_settings
@@ -219,7 +288,7 @@ def fake_containers() -> list[FakeContainer]:
 
 
 @pytest.fixture
-def client(fake_containers: list[FakeContainer]) -> Iterator[TestClient]:
+def client(fake_containers: list[FakeContainer], settings) -> Iterator[TestClient]:
     from app.api.auth import login_limiter
     from app.deps import get_docker_client, get_ssdv2ctl
     from app.main import app
@@ -229,6 +298,7 @@ def client(fake_containers: list[FakeContainer]) -> Iterator[TestClient]:
     clear_domain_cache()
     login_limiter()._attempts.clear()
     job_manager.configure(lambda: FakeStreamingRunner())
+    job_manager.configure_bash(lambda: FakeBashRunner(settings=settings))
     app.dependency_overrides[get_docker_client] = lambda: FakeDockerClient(fake_containers)
     app.dependency_overrides[get_ssdv2ctl] = lambda: FakeRunner(
         payload={"schema": 1, "key": "user.domain", "value": "example.com"}

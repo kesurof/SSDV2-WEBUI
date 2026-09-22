@@ -34,6 +34,16 @@ export function useJob(jobId: string) {
   })
 }
 
+export function useSubmitJobInput(jobId: string) {
+  return useMutation({
+    mutationFn: ({ promptId, value }: { promptId: string; value: string }) =>
+      apiFetch<Job>(`/jobs/${jobId}/input`, {
+        method: 'POST',
+        body: JSON.stringify({ prompt_id: promptId, value }),
+      }),
+  })
+}
+
 export function useAppAction(app: string) {
   const queryClient = useQueryClient()
   return useMutation({

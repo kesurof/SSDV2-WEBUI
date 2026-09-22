@@ -1280,6 +1280,58 @@
         }
       }
     },
+    "/api/v1/jobs/{job_id}/input": {
+      "post": {
+        "tags": [
+          "jobs"
+        ],
+        "summary": "Submit Job Input",
+        "operationId": "submit_job_input_api_v1_jobs__job_id__input_post",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JobInputRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/jobs/{job_id}/events": {
       "get": {
         "tags": [
@@ -2947,6 +2999,27 @@
         },
         "type": "object",
         "title": "HostSummary"
+      },
+      "JobInputRequest": {
+        "properties": {
+          "prompt_id": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Prompt Id"
+          },
+          "value": {
+            "type": "string",
+            "maxLength": 200,
+            "title": "Value",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "prompt_id"
+        ],
+        "title": "JobInputRequest"
       },
       "JobOut": {
         "properties": {

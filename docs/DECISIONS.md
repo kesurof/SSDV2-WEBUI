@@ -563,6 +563,45 @@ pointe vers son remplaçant. Une décision non tranchée reste dans « Décision
 - **Références** : ADR-0010, ADR-0011, ADR-0024 ; `ARCHITECTURE-CURRENT.md`,
   `PROGRESS.md`, brief §35.
 
+## ADR-0026 — Pont interactif WebUI→SSDV2 (exécution directe encadrée)
+
+- **Statut** : acceptée — 2026-09-22
+- **Contexte** : `ssdv2ctl` exécute les fonctions SSDV2 avec
+  `capture_output=True` + `stdin=subprocess.DEVNULL` : il **bufferise** toute la sortie
+  et **ferme l'entrée**. Les jobs install/reinstall/recreate n'ont donc ni logs en direct
+  ni possibilité de répondre aux invites (`read -p`, `pause`, `pause:` Ansible). Constat
+  serveur : job `app_install` dont les 60 lignes sont datées de la fin (42 s après le
+  démarrage), et incident `plex` (claim interactif impossible → mise à jour annoncée
+  « success » alors que le conteneur n'était pas recréé). Modifier `ssdv2ctl`/SSDV2 est
+  écarté (code SSDV2 stable, changement lourd).
+- **Décision** :
+  - pour les **mutations longues/interactives** (`app_install`, `app_reinstall`,
+    `app_recreate`), la WebUI n'appelle plus `ssdv2ctl` mais le **dispatcher SSDV2
+    existant** (`includes/config/scripts/generique.sh <fonction> <args>`) avec
+    `stdin=PIPE`, sortie **streamée** et lecture **non bufferisée** (invites sans newline) ;
+  - `ssdv2ctl` reste la frontière pour tout le **structuré** (`status`, `auth`, `config`,
+    `diagnostics`, `start/stop/restart`, `remove`, `backup`) ;
+  - **garde-fous** : allowlist stricte `(fonction, arité)` — `relance_container`,
+    `launch_service`, `suppression_appli`, `manage_account_yml` (clés `sub.<app>.*`
+    uniquement) — apps issues du catalogue, arguments validés, jamais de `shell=True` ;
+  - **contrat minimal côté WebUI** : détection heuristique des invites (registre de motifs)
+    → événement SSE `prompt` (en mémoire, **non persisté**) + `POST /jobs/{id}/input` ;
+    les réponses ne sont **jamais** stockées ni loggées ; timeout d'inactivité 15 min ;
+  - **détection d'échec** malgré un code retour nul (masquage `pause` côté SSDV2) par
+    analyse de la sortie (`FAILED!`, `fatal:`, `[ERROR]`, `failed=[1-9]`) ;
+  - l'annulation d'un job interactif en cours tue le process.
+- **Conséquences** : install/reinstall/recreate offrent logs en direct et saisie guidée ;
+  la WebUI héberge une seconde voie de mutation (à maintenir alignée sur SSDV2) ; un ADR
+  encadre l'exception à la règle 10 ; les invites non reconnues retombent sur le timeout
+  global (30 min). Un enrichissement SSDV2 (marqueurs d'invite structurés) pourra rendre la
+  détection robuste ultérieurement, sans changer le contrat WebUI.
+- **Alternatives écartées** : modifier `ssdv2ctl` pour streamer (refusé : changement SSDV2) ;
+  terminal PTY plein écran (viole la règle 9 « pas de terminal shell web », surface
+  d'attaque hôte) ; pré-saisie de toutes les valeurs avant lancement (ne couvre pas les
+  invites imprévues) ; corriger `ssdv2ctl`/`autoinstall.sh` (ne corrige pas l'interactif).
+- **Références** : ADR-0007, ADR-0010, ADR-0013 ; `ARCHITECTURE-CURRENT.md`,
+  `PROGRESS.md`, `AGENTS.md` (règle 10).
+
 ## Décisions ouvertes
 
 À trancher explicitement puis consigner en ADR (voir brief §72) :

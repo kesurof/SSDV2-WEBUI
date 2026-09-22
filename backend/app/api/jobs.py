@@ -8,7 +8,7 @@ from sqlalchemy import select
 
 from app.db.models import Job, utcnow
 from app.deps import CurrentUser, DbDep
-from app.schemas.job import JobOut
+from app.schemas.job import JobInputRequest, JobOut
 from app.services.jobs import TERMINAL_STATUSES, job_manager
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
@@ -36,11 +36,23 @@ def cancel_job(job_id: int, db: DbDep, _user: CurrentUser) -> Job:
     job = db.get(Job, job_id)
     if job is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, f"job inconnu: {job_id}")
-    if job.status != "queued":
-        raise HTTPException(status.HTTP_409_CONFLICT, "seuls les jobs en attente sont annulables")
-    job.status = "cancelled"
-    job.finished_at = utcnow()
-    db.commit()
+    if job.status == "queued" or (job.status == "running" and job_manager.cancel_running(job_id)):
+        job.status = "cancelled"
+        job.finished_at = utcnow()
+        db.commit()
+        return job
+    raise HTTPException(status.HTTP_409_CONFLICT, "ce job n'est pas annulable")
+
+
+@router.post("/{job_id}/input", response_model=JobOut)
+def submit_job_input(job_id: int, payload: JobInputRequest, db: DbDep, _user: CurrentUser) -> Job:
+    job = db.get(Job, job_id)
+    if job is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, f"job inconnu: {job_id}")
+    if job.status != "running":
+        raise HTTPException(status.HTTP_409_CONFLICT, "ce job n'attend aucune saisie")
+    if not job_manager.submit_input(job_id, payload.prompt_id, payload.value):
+        raise HTTPException(status.HTTP_409_CONFLICT, "aucune saisie attendue pour ce job")
     return job
 
 
@@ -51,12 +63,17 @@ def job_events(job_id: int, db: DbDep, _user: CurrentUser) -> StreamingResponse:
 
     def stream() -> Iterator[str]:
         last_id = 0
+        last_prompt: str | None = None
         while True:
             events, job = job_manager.events_after(job_id, last_id)
             for event in events:
                 last_id = event.id
                 payload = json.dumps({"id": event.id, "line": event.line}, ensure_ascii=False)
                 yield f"data: {payload}\n\n"
+            prompt = job_manager.pending_prompt(job_id)
+            if prompt is not None and prompt["id"] != last_prompt:
+                last_prompt = prompt["id"]
+                yield f"data: {json.dumps({'prompt': prompt}, ensure_ascii=False)}\n\n"
             if job is None or job.status in TERMINAL_STATUSES:
                 done = json.dumps({"status": job.status if job else "unknown", "done": True})
                 yield f"data: {done}\n\n"

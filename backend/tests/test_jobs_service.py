@@ -170,7 +170,7 @@ def test_reset_interrupted() -> None:
 
 def test_run_job_publishes_notification_and_audit() -> None:
     manager, _ = make_manager()
-    job = manager.submit("app_install", "wallos", "admin")
+    job = manager.submit("app_backup", "wallos", "admin")
 
     manager.run_job(job.id)
 
@@ -185,7 +185,7 @@ def test_run_job_publishes_notification_and_audit() -> None:
 
         audit_row = session.scalars(select(AuditEvent).order_by(AuditEvent.id.desc())).first()
         assert audit_row is not None
-        assert audit_row.action == "app_install"
+        assert audit_row.action == "app_backup"
         assert audit_row.status == "success"
         assert audit_row.username == "admin"
         assert audit_row.target == "wallos"
