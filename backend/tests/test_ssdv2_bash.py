@@ -92,6 +92,36 @@ def test_interactive_process_pty_prompt_and_no_echo():
     assert "s3cret" not in joined
 
 
+def test_interactive_process_detects_ansible_pause_prompt():
+    child = (
+        "import sys; "
+        "sys.stdout.write('[prompt for YGG username]\\n'); "
+        "sys.stdout.write('Enter value for YGG_USERNAME (your YGG account username)\\n'); "
+        "sys.stdout.flush(); "
+        "line = sys.stdin.readline().strip(); "
+        "print('MATCH' if line == 'alice' else 'NO')"
+    )
+    process = ssdv2_bash.InteractiveProcess([sys.executable, "-c", child], os.environ.copy())
+    lines: list[str] = []
+    prompts: list = []
+
+    def on_prompt(spec, _raw):
+        prompts.append(spec)
+        process.write("alice")
+
+    exit_code = process.run(
+        on_line=lines.append,
+        on_prompt=on_prompt,
+        detect_prompt=detect,
+        timeout=10,
+        idle_timeout=5,
+    )
+
+    assert exit_code == 0
+    assert any(spec.id == "ygg.username" for spec in prompts)
+    assert "MATCH" in "\n".join(lines)
+
+
 def test_spawn_rejects_unknown_function(settings):
     runner = Ssdv2BashRunner(settings)
     with pytest.raises(Ssdv2CtlError):

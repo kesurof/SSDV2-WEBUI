@@ -34,6 +34,11 @@ READ_KEY_PATTERN = re.compile(r"^[a-z0-9][a-z0-9._-]{0,80}$")
 
 POLL_INTERVAL = 0.2
 READ_CHUNK_SIZE = 65536
+BANNER_PREFIXES = ("TASK [", "PLAY ", "PLAY RECAP", "RUNNING HANDLER [", "[")
+
+
+def _is_banner(line: str) -> bool:
+    return line.strip().startswith(BANNER_PREFIXES)
 
 
 class PromptTimeout(Exception):
@@ -123,6 +128,7 @@ class InteractiveProcess:
         self._lock = threading.Lock()
         self._prompt_pending = False
         self._killed = False
+        self._last_emitted: str | None = None
 
     def write(self, value: str) -> None:
         with self._lock:
@@ -171,20 +177,19 @@ class InteractiveProcess:
     ) -> int:
         decoder = codecs.getincrementaldecoder("utf-8")(errors="replace")
         buffer = ""
-        last_prompt_segment: str | None = None
         last_activity = time.monotonic()
         deadline = last_activity + timeout
 
-        def handle_partial() -> None:
-            nonlocal last_prompt_segment
-            if not buffer.strip():
+        def maybe_emit(text: str) -> None:
+            stripped = text.strip()
+            if not stripped or stripped == self._last_emitted or self.prompt_pending():
                 return
-            spec = detect_prompt(buffer)
-            if spec is None or buffer == last_prompt_segment:
+            spec = detect_prompt(text)
+            if spec is None:
                 return
-            last_prompt_segment = buffer
+            self._last_emitted = stripped
             self._mark_prompt()
-            on_prompt(spec, buffer)
+            on_prompt(spec, text)
 
         try:
             while True:
@@ -207,8 +212,9 @@ class InteractiveProcess:
                     while "\n" in buffer:
                         line, buffer = buffer.split("\n", 1)
                         on_line(line)
-                        last_prompt_segment = None
-                    handle_partial()
+                        if not _is_banner(line):
+                            maybe_emit(line)
+                    maybe_emit(buffer)
                 elif self.prompt_pending() and time.monotonic() - last_activity > idle_timeout:
                     self.kill()
                     raise PromptTimeout("idle")

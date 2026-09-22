@@ -308,8 +308,11 @@ aucun push — ADR-0010).
   aucun log en direct ni saisie possible ; incident `plex` (claim interactif → faux succès).
 - Backend : `app/adapters/ssdv2_bash.py` (dispatcher SSDV2 direct, allowlist stricte,
   **PTY interne à écho coupé** — indispensable car `ansible.builtin.pause` refuse de lire
-  hors TTY ; streaming non bufferisé) ; `app/services/prompts.py` (détection heuristique des
-  invites, promotion en secret dès qu'un mot-clé sensible apparaît) ; jobs
+  hors TTY ; streaming non bufferisé, détection des invites sur **lignes complètes**
+  (Ansible `pause` imprime l'invite suivie d'un saut de ligne) **et** sur le buffer partiel
+  (bash `read -p` sans saut de ligne), en ignorant les bandeaux de tâches) ;
+  `app/services/prompts.py` (détection heuristique des invites, promotion en secret dès
+  qu'un mot-clé sensible apparaît) ; jobs
   `install`/`reinstall`/`recreate` interactifs, événement SSE `prompt`,
   `POST /api/v1/jobs/{id}/input`, annulation d'un job en cours, timeout d'inactivité 15 min,
   détection d'échec malgré code retour nul, secrets jamais persistés.
