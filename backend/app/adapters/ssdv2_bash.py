@@ -89,6 +89,7 @@ def _bash_environment(settings: Settings) -> dict[str, str]:
     environment = os.environ.copy()
     environment["SETTINGS_SOURCE"] = str(settings.ssdv2_source)
     environment["SETTINGS_STORAGE"] = str(settings.ssdv2_storage)
+    environment["SSDV2_NON_INTERACTIVE"] = "1"
     if not environment.get("USER"):
         home = environment.get("HOME", str(Path.home()))
         environment["USER"] = Path(home).name

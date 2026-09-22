@@ -59,6 +59,7 @@ def test_bash_environment_sets_user_from_home(settings, monkeypatch):
 
     environment = ssdv2_bash._bash_environment(settings)
     assert environment["USER"] == "kesurof"
+    assert environment["SSDV2_NON_INTERACTIVE"] == "1"
 
 
 def test_open_pty_disables_echo():

@@ -71,6 +71,7 @@ class Ssdv2CtlRunner:
         environment = os.environ.copy()
         environment["SETTINGS_SOURCE"] = str(self.settings.ssdv2_source)
         environment["SETTINGS_STORAGE"] = str(self.settings.ssdv2_storage)
+        environment["SSDV2_NON_INTERACTIVE"] = "1"
         return environment
 
     def run(self, args: list[str], timeout: int | None = None) -> dict:

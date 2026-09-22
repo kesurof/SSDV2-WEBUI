@@ -382,6 +382,19 @@ aucun push — ADR-0010).
   job `diagnostics_purge_apps`. Aucune modification SSDV2.
 - Preuves : `ruff`/`pytest` verts ; `npm run lint|typecheck|test|build` verts.
 
+**Pause non bloquante en contexte WebUI**.
+
+- `relance_container` (mise à jour/recreate) terminait par un `pause()` « APPUYER SUR
+  ENTRÉE » : sous le PTY de la WebUI (`stdin` = TTY), il bloquait le job et demandait une
+  saisie inutile.
+- `functions.sh` : `pause()` ne fait plus rien si `SSDV2_NON_INTERACTIVE=1` **ou** `stdin`
+  n'est pas un terminal (le menu CLI reste interactif).
+- WebUI : les adaptateurs (`ssdv2_bash.py`, `ssdv2_cli.py`) positionnent
+  `SSDV2_NON_INTERACTIVE=1` — pas de modification de `pg_env` SSDV2. `launch_service` et
+  `suppression_appli` n'appellent pas `pause()` : install/reinstall/purge n'étaient pas
+  concernés.
+- Preuves : `ruff`/`pytest` verts.
+
 ## Prochains chantiers pressentis
 
 1. Phase 5 : mise à jour SSDV2/Git, patches, Docker avancé, fonctions hôte (nécessite des
