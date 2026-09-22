@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { CircleHelp, RotateCw } from 'lucide-react'
+import { CircleHelp, Copy, RotateCw } from 'lucide-react'
+import { toast } from 'sonner'
 
 import { KeyValueList } from '@/components/app/key-value-list'
 import { StatusPill } from '@/components/app/status-pill'
@@ -11,6 +12,7 @@ import { JobStatusBadge } from '@/features/jobs/JobStatusBadge'
 import { jobTypeLabel } from '@/features/jobs/JobsView'
 import type { JobPrompt } from '@/features/jobs/useJobEvents'
 import { fr } from '@/i18n/fr'
+import { copyToClipboard } from '@/lib/clipboard'
 import { formatDate } from '@/lib/format'
 import type { Job } from '@/api/types'
 
@@ -121,6 +123,15 @@ export function JobDetailView({
   onInput?: (value: string) => void
   onRetry?: () => void
 }) {
+  async function copyLogs() {
+    const ok = await copyToClipboard(lines.join('\n'))
+    if (ok) {
+      toast.success(fr.common.copied)
+    } else {
+      toast.error(fr.common.copyError)
+    }
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -172,7 +183,18 @@ export function JobDetailView({
       />
 
       <div className="space-y-1">
-        <div className="text-xs text-muted-foreground">{fr.jobs.events}</div>
+        <div className="flex items-center justify-between gap-2">
+          <div className="text-xs text-muted-foreground">{fr.jobs.events}</div>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={lines.length === 0}
+            onClick={copyLogs}
+          >
+            <Copy className="size-3.5" aria-hidden />
+            {fr.common.copy}
+          </Button>
+        </div>
         <pre className="max-h-96 overflow-auto rounded-md border bg-muted/30 p-3 font-mono text-xs">
           {lines.length === 0
             ? done

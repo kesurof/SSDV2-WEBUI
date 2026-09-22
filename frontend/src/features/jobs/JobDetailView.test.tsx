@@ -66,6 +66,24 @@ describe('JobDetailView', () => {
     expect(onInput).toHaveBeenCalledWith('secret-value')
   })
 
+  it('copies the job logs', async () => {
+    const user = userEvent.setup()
+    const writeText = vi.fn().mockResolvedValue(undefined)
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText },
+      configurable: true,
+    })
+
+    render(
+      <MemoryRouter>
+        <JobDetailView job={JOB} lines={['ligne 1', 'ligne 2']} done />
+      </MemoryRouter>,
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Copier' }))
+    expect(writeText).toHaveBeenCalledWith('ligne 1\nligne 2')
+  })
+
   it('renders a choice prompt with option buttons', async () => {
     const user = userEvent.setup()
     const onInput = vi.fn()

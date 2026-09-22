@@ -274,6 +274,23 @@ def test_interactive_failure_detected(auth_client, write_catalogue, settings):
     assert "échec détecté" in finished["message"]
 
 
+def test_interactive_ignored_errors_are_not_failure(auth_client, write_catalogue, settings):
+    write_catalogue("wallos - Budget\n")
+    runner = FakeBashRunner(
+        settings=settings,
+        lines=(
+            "[ERROR]: Task failed: Module failed: pip3 introuvable",
+            "...ignoring",
+            "127.0.0.1 : ok=44 changed=10 unreachable=0 failed=0 skipped=10 ignored=5",
+        ),
+    )
+    job_manager.configure_bash(lambda: runner)
+
+    job_id = auth_client.post("/api/v1/apps/wallos/recreate").json()["id"]
+
+    assert wait_for_job(auth_client, job_id)["status"] == "success"
+
+
 def test_input_rejected_when_not_running(auth_client, write_catalogue, settings):
     write_catalogue("wallos - Budget\n")
     job_manager.configure_bash(lambda: FakeBashRunner(settings=settings))

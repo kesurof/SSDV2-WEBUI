@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { toast } from 'sonner'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -6,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAppLogs } from '@/features/apps/useAppLogs'
 import { fr } from '@/i18n/fr'
+import { copyToClipboard } from '@/lib/clipboard'
 
 const LINES_OPTIONS = [100, 200, 500, 1000]
 const MAX_STREAM_LINES = 1000
@@ -99,6 +101,15 @@ export function AppLogsTab({ app, containers }: { app: string; containers: strin
     URL.revokeObjectURL(url)
   }
 
+  async function copyLogs() {
+    const ok = await copyToClipboard(visible.join('\n'))
+    if (ok) {
+      toast.success(fr.common.copied)
+    } else {
+      toast.error(fr.common.copyError)
+    }
+  }
+
   if (containers.length === 0) {
     return <p className="text-sm text-muted-foreground">{fr.apps.emptyList}</p>
   }
@@ -155,6 +166,9 @@ export function AppLogsTab({ app, containers }: { app: string; containers: strin
         )}
         <Button variant="outline" disabled={visible.length === 0} onClick={download}>
           {fr.apps.logs.download}
+        </Button>
+        <Button variant="outline" disabled={visible.length === 0} onClick={copyLogs}>
+          {fr.common.copy}
         </Button>
       </div>
 

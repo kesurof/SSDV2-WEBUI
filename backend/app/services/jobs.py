@@ -21,7 +21,7 @@ TERMINAL_STATUSES = ("success", "failed", "cancelled", "interrupted")
 
 INTERACTIVE_JOB_TYPES = ("app_install", "app_reinstall", "app_recreate")
 PROMPT_IDLE_TIMEOUT = 900
-FAILURE_PATTERN = re.compile(r"FAILED!|fatal:|\[ERROR\]|action_failed|failed=[1-9]")
+FAILURE_PATTERN = re.compile(r"fatal:|action_failed|failed=[1-9]")
 
 JOB_LABELS = {
     "app_install": "Installation",

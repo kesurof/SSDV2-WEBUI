@@ -153,6 +153,28 @@ describe('AppLogsTab', () => {
     expect(screen.getByText(/après pause/)).toBeInTheDocument()
   })
 
+  it('copies the displayed logs', async () => {
+    const user = userEvent.setup()
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        jsonResponse({ app: 'sonarr', container: 'sonarr', lines: ['ligne à copier'] }),
+      ),
+    )
+    const writeText = vi.fn().mockResolvedValue(undefined)
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText },
+      configurable: true,
+    })
+
+    renderTab('sonarr', ['sonarr'])
+    await waitFor(() => expect(screen.getByText(/ligne à copier/)).toBeInTheDocument())
+
+    await user.click(screen.getByRole('button', { name: 'Copier' }))
+
+    expect(writeText).toHaveBeenCalledWith('ligne à copier')
+  })
+
   it('downloads the displayed logs', async () => {
     const user = userEvent.setup()
     vi.stubGlobal(

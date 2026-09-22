@@ -312,12 +312,18 @@ aucun push — ADR-0010).
   `POST /api/v1/jobs/{id}/input`, annulation d'un job en cours, timeout d'inactivité 15 min,
   détection d'échec malgré code retour nul, secrets jamais persistés.
 - Frontend : panneau « Action requise » dans le détail de job (texte/mot de passe/oui-non/
-  choix) + logs en direct.
+  choix) + logs en direct, et bouton **« Copier »** les logs (détail de job + onglet Logs
+  d'application).
 - Correctif : le venv SSDV2 n'est ajouté au `PATH` **que s'il est utilisable** (comme
   `ssdv2ctl`) — le venv du serveur est cassé dans le conteneur (`venv/bin/python` →
   `/usr/bin/python3` absent), ce qui faisait échouer `manage_account_yml`/`suppression_appli`.
-- Preuves : `ruff`/`pytest` et `npm run lint|typecheck|test|build` verts ; validation serveur
-  en cours.
+- Correctif : la détection d'échec ne considère plus les erreurs Ansible **ignorées**
+  (`[ERROR] … ignoring`) comme un échec ; marqueurs retenus : `fatal:`, `action_failed`,
+  `failed=[1-9]` (PLAY RECAP). L'installation `plex` (dont les tâches `lxml`/`pip` échouent
+  mais sont ignorées) est désormais `success`.
+- Preuves : `ruff`/`pytest` verts ; `npm run lint|typecheck|test|build` verts ; sur le
+  serveur, installation `plex` par l'UI avec saisie guidée (login + mot de passe Plex),
+  conteneur `plex` démarré et DNS `plex.<domaine>` enregistré.
 
 ## Prochains chantiers pressentis
 
