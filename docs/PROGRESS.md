@@ -395,6 +395,21 @@ aucun push — ADR-0010).
   concernés.
 - Preuves : `ruff`/`pytest` verts.
 
+**Mise à jour du WebUI depuis l'interface et réinstallation SSDV2**.
+
+- Auto-mise à jour impossible en l'état : `relance_container ssdv2webui` exécuté *dans* le
+  conteneur fait `docker rm -f` sur lui-même avant `launch_service` → l'app ne redémarre pas.
+  Correctif : pour `app_recreate`/`app_reinstall` ciblant le conteneur courant, un
+  **conteneur d'assistance détaché** (`<app>-updater`, même image, mêmes montages/env que la
+  WebUI, `SSDV2_NON_INTERACTIVE=1`) exécute les étapes (`relance_container` ou
+  `suppression_appli` + `launch_service`) et **survit** au remplacement ; le job indique que
+  l'interface va redémarrer (`backend/app/services/self_update.py`).
+- Réinstallation SSDV2 : le posttask `ssdv2webui` n'attend plus le jeton de premier démarrage
+  lorsque la base `webui.sqlite3` existe déjà (plus de 60 s perdues) ; le jeton reste affiché
+  s'il est présent (première configuration reprise).
+- Preuves : `ruff`/`pytest` verts (tests `self_update` et génération des étapes) ; conteneur
+  `ssdv2webui` restauré après incident.
+
 ## Prochains chantiers pressentis
 
 1. Phase 5 : mise à jour SSDV2/Git, patches, Docker avancé, fonctions hôte (nécessite des

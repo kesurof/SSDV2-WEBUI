@@ -2,16 +2,18 @@ import json
 import logging
 import queue
 import re
+import shlex
 import threading
 from collections.abc import Callable
 
+import docker
 from sqlalchemy import select, update
 
 from app.adapters.ssdv2_bash import InteractiveProcess, PromptTimeout, Ssdv2BashRunner
 from app.adapters.ssdv2_cli import Ssdv2CtlError, Ssdv2CtlRunner
 from app.db.models import Job, JobEvent, utcnow
 from app.db.session import get_session_factory
-from app.services import audit, notifications
+from app.services import audit, notifications, self_update
 from app.services import settings as webui_settings
 from app.services.prompts import PromptSpec, detect, parse_marker, strip_ansi, to_payload
 
@@ -276,6 +278,29 @@ class JobManager:
             self._prompts[job_id] = to_payload(spec, f"{job_id}:{seq}")
         self._add_event(job_id, f"Saisie requise : {spec.label}")
 
+    def _docker_client(self) -> docker.DockerClient | None:
+        try:
+            return docker.from_env()
+        except docker.errors.DockerException:
+            return None
+
+    def _steps_script(self, runner: Ssdv2BashRunner, target: str, steps: list[tuple]) -> str:
+        storage = runner.settings.ssdv2_storage
+        dispatcher = shlex.quote(str(runner.dispatcher))
+        parts: list[str] = []
+        for step in steps:
+            if step[0] == "remove":
+                overrides = " ".join(
+                    shlex.quote(str(storage / folder / f"{target}.yml"))
+                    for folder in ("conf", "vars")
+                )
+                parts.append(f"rm -f {overrides}")
+                continue
+            _, function, args = step
+            quoted = " ".join([shlex.quote(function), *(shlex.quote(str(arg)) for arg in args)])
+            parts.append(f"bash {dispatcher} {quoted}")
+        return "set -e; " + "; ".join(parts)
+
     def _run_interactive_job(
         self, job_id: int, job_type: str, target: str, params: dict, timeout: int
     ) -> tuple[int, str | None]:
@@ -283,6 +308,19 @@ class JobManager:
             raise Ssdv2CtlError("jobs_unavailable", "gestionnaire interactif non configuré")
         runner = self._bash_provider()
         steps = self._build_steps(job_type, target, params, runner)
+        if job_type in ("app_recreate", "app_reinstall"):
+            client = self._docker_client()
+            if client is not None and self_update.is_self_update(client, target):
+                script = self._steps_script(runner, target, steps)
+                name = self_update.launch_updater(
+                    client, runner.settings, target, ["bash", "-lc", script]
+                )
+                self._add_event(
+                    job_id,
+                    f"Mise à jour de {target} lancée en arrière-plan ({name}) : "
+                    "l'interface va redémarrer.",
+                )
+                return 0, None
         state: dict[str, object] = {"failure": False, "timeout": None}
         with self._interactive_lock:
             self._secrets.pop(job_id, None)
