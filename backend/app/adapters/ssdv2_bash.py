@@ -57,12 +57,31 @@ def _validate_key(function: str, args: list[str], app: str | None) -> None:
             raise Ssdv2CtlError("invalid_argument", f"mode de suppression refusé: {delete_data}")
 
 
+def _usable_venv_bin(settings: Settings) -> Path | None:
+    venv_bin = settings.ssdv2_source / "venv" / "bin"
+    candidate = venv_bin / "ansible-playbook"
+    if not candidate.is_file():
+        return None
+    try:
+        result = subprocess.run(
+            [str(candidate), "--version"],
+            capture_output=True,
+            text=True,
+            stdin=subprocess.DEVNULL,
+            timeout=10,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    return venv_bin if result.returncode == 0 else None
+
+
 def _bash_environment(settings: Settings) -> dict[str, str]:
     environment = os.environ.copy()
     environment["SETTINGS_SOURCE"] = str(settings.ssdv2_source)
     environment["SETTINGS_STORAGE"] = str(settings.ssdv2_storage)
-    venv_bin = settings.ssdv2_source / "venv" / "bin"
-    if (venv_bin / "ansible-playbook").is_file():
+    venv_bin = _usable_venv_bin(settings)
+    if venv_bin is not None:
         environment["PATH"] = f"{venv_bin}{os.pathsep}{environment.get('PATH', '')}"
     return environment
 

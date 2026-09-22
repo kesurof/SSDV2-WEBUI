@@ -313,8 +313,11 @@ aucun push — ADR-0010).
   détection d'échec malgré code retour nul, secrets jamais persistés.
 - Frontend : panneau « Action requise » dans le détail de job (texte/mot de passe/oui-non/
   choix) + logs en direct.
+- Correctif : le venv SSDV2 n'est ajouté au `PATH` **que s'il est utilisable** (comme
+  `ssdv2ctl`) — le venv du serveur est cassé dans le conteneur (`venv/bin/python` →
+  `/usr/bin/python3` absent), ce qui faisait échouer `manage_account_yml`/`suppression_appli`.
 - Preuves : `ruff`/`pytest` et `npm run lint|typecheck|test|build` verts ; validation serveur
-  à confirmer.
+  en cours.
 
 ## Prochains chantiers pressentis
 
