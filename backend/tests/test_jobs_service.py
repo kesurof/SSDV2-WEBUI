@@ -168,6 +168,16 @@ def test_reset_interrupted() -> None:
     assert stored.finished_at is not None
 
 
+def test_detect_prompt_prefers_marker() -> None:
+    from app.services.jobs import _detect_prompt
+
+    marker = 'SSDV2_PROMPT {"id":"x.y","label":"Libellé","kind":"text","secret":false}'
+    spec = _detect_prompt(marker)
+    assert spec is not None
+    assert spec.id == "x.y"
+    assert spec.label == "Libellé"
+
+
 def test_redact_secret_values() -> None:
     manager = JobManager()
     manager._secrets[1] = ["s3cret"]

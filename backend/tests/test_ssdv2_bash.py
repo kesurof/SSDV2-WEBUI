@@ -7,7 +7,7 @@ import pytest
 from app.adapters import ssdv2_bash
 from app.adapters.ssdv2_bash import Ssdv2BashRunner, _open_pty
 from app.adapters.ssdv2_cli import Ssdv2CtlError
-from app.services.prompts import detect
+from app.services.prompts import detect, parse_marker
 
 
 def test_usable_venv_bin_absent(settings, tmp_path, monkeypatch):
@@ -128,6 +128,39 @@ def test_interactive_process_detects_ansible_pause_prompt():
 
     assert exit_code == 0
     assert any(spec.id == "ygg.username" for spec in prompts)
+    assert "MATCH" in "\n".join(lines)
+
+
+def test_interactive_process_marker_registers_prompt():
+    marker = (
+        'SSDV2_PROMPT {"id":"ygege.password","label":"Mot de passe YGG",'
+        '"kind":"secret","secret":true}'
+    )
+    child = (
+        "import sys; "
+        f"sys.stdout.write({marker!r} + '\\n'); "
+        "sys.stdout.write('Enter value for YGG_PASSWORD\\n'); sys.stdout.flush(); "
+        "line = sys.stdin.readline().strip(); "
+        "print('MATCH' if line == 'pw' else 'NO')"
+    )
+    process = ssdv2_bash.InteractiveProcess([sys.executable, "-c", child], os.environ.copy())
+    lines: list[str] = []
+    prompts: list = []
+
+    def on_prompt(spec, _raw):
+        prompts.append(spec)
+        process.write("pw")
+
+    exit_code = process.run(
+        on_line=lines.append,
+        on_prompt=on_prompt,
+        detect_prompt=lambda text: parse_marker(text) or detect(text),
+        timeout=10,
+        idle_timeout=5,
+    )
+
+    assert exit_code == 0
+    assert any(spec.id == "ygege.password" for spec in prompts)
     assert "MATCH" in "\n".join(lines)
 
 

@@ -338,6 +338,22 @@ aucun push — ADR-0010).
   invites **Ansible `pause`** ne sont pas alimentables via un pipe
   (`Not waiting for response to prompt as stdin is not interactive`) → transport PTY.
 
+**Marqueur d'invite SSDV2 (détection robuste, ADR-0026)**.
+
+- Contrat : chaque invite existante est préfixée d'une ligne
+  `SSDV2_PROMPT {"id":...,"label":...,"kind":...,"secret":...}`. **Logique inchangée** :
+  même question, mêmes `when`/`block`, même `echo`, aucun défaut ni génération (sauf cas
+  déjà automatique, ex. claim Plex via API). Le marqueur est intégré au texte de l'invite,
+  donc soumis aux mêmes conditions qu'elle.
+- WebUI : `parse_marker()` prioritaire sur les heuristiques ; la ligne marqueur est **filtrée
+  des logs**. Repli heuristique conservé pour les invites non migrées.
+- Migration SSDV2 (arbre de travail serveur, aucun commit — ADR-0010) : `alfred`, `beszel`,
+  `decypharrseed`, `dozzle`, `nzbdav`, `rtorrentvpn`, `seerrcatalog`, `sftorznab`,
+  `streamfusion`, `stremthru`, `transmissionvpn`, `webui`, `ygege`, `tmdb`, `trakt`,
+  `stremio/stremio_base`, `posttasks/default_login_and_password`, `posttasks/wireguard`,
+  `templates/plex/.../claim_server`, `vars/generique`, `vars/traefik`
+  (+ `plex_token.sh`, `functions.sh`). 48 marqueurs au total.
+
 ## Prochains chantiers pressentis
 
 1. Phase 5 : mise à jour SSDV2/Git, patches, Docker avancé, fonctions hôte (nécessite des

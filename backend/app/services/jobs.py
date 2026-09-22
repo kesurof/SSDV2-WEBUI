@@ -13,7 +13,7 @@ from app.db.models import Job, JobEvent, utcnow
 from app.db.session import get_session_factory
 from app.services import audit, notifications
 from app.services import settings as webui_settings
-from app.services.prompts import PromptSpec, detect, strip_ansi, to_payload
+from app.services.prompts import PromptSpec, detect, parse_marker, strip_ansi, to_payload
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +22,11 @@ TERMINAL_STATUSES = ("success", "failed", "cancelled", "interrupted")
 INTERACTIVE_JOB_TYPES = ("app_install", "app_reinstall", "app_recreate")
 PROMPT_IDLE_TIMEOUT = 900
 FAILURE_PATTERN = re.compile(r"fatal:|action_failed|failed=[1-9]")
+
+
+def _detect_prompt(text: str) -> PromptSpec | None:
+    return parse_marker(text) or detect(text)
+
 
 JOB_LABELS = {
     "app_install": "Installation",
@@ -272,6 +277,8 @@ class JobManager:
             self._secrets.pop(job_id, None)
 
         def on_line(line: str) -> None:
+            if parse_marker(line) is not None:
+                return
             line = self._redact(job_id, line)
             if FAILURE_PATTERN.search(line):
                 state["failure"] = True
@@ -295,7 +302,7 @@ class JobManager:
                 code = process.run(
                     on_line=on_line,
                     on_prompt=on_prompt,
-                    detect_prompt=detect,
+                    detect_prompt=_detect_prompt,
                     timeout=timeout,
                     idle_timeout=PROMPT_IDLE_TIMEOUT,
                 )

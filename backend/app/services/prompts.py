@@ -1,8 +1,10 @@
+import json
 import re
 from dataclasses import dataclass, field, replace
 
 ANSI_PATTERN = re.compile(r"\x1b\[[0-9;?]*[ -/]*[@-~]")
 SECRET_HINT = re.compile(r"password|mot de passe|passphrase|secret|token|api[ _]?key|clé", re.I)
+MARKER_PATTERN = re.compile(r"SSDV2_PROMPT (\{.*\})")
 
 
 @dataclass(frozen=True)
@@ -17,6 +19,33 @@ class PromptSpec:
 
 def strip_ansi(text: str) -> str:
     return ANSI_PATTERN.sub("", text).replace("\r", "")
+
+
+def parse_marker(text: str) -> PromptSpec | None:
+    match = MARKER_PATTERN.search(text)
+    if match is None:
+        return None
+    try:
+        data = json.loads(match.group(1))
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(data, dict) or not data.get("id"):
+        return None
+    options: list[tuple[str, str]] = []
+    for item in data.get("options") or []:
+        if isinstance(item, dict):
+            value = str(item.get("value", ""))
+            options.append((value, str(item.get("label") or value)))
+        else:
+            options.append((str(item), str(item)))
+    return PromptSpec(
+        id=str(data["id"]),
+        label=str(data.get("label") or data["id"]),
+        kind=str(data.get("kind") or "text"),
+        secret=bool(data.get("secret")),
+        default=str(data.get("default") or ""),
+        options=tuple(options),
+    )
 
 
 def _rule(pattern: str, spec: PromptSpec) -> tuple[re.Pattern[str], PromptSpec]:

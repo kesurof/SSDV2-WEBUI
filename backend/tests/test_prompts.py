@@ -1,4 +1,29 @@
-from app.services.prompts import detect, strip_ansi
+from app.services.prompts import detect, parse_marker, strip_ansi
+
+
+def test_parse_marker():
+    spec = parse_marker(
+        'SSDV2_PROMPT {"id":"ygege.password","label":"Mot de passe YGG",'
+        '"kind":"secret","secret":true}'
+    )
+    assert spec is not None
+    assert spec.id == "ygege.password"
+    assert spec.kind == "secret"
+    assert spec.secret is True
+
+
+def test_parse_marker_options():
+    spec = parse_marker(
+        'SSDV2_PROMPT {"id":"app.auth","label":"Authentification","kind":"choice",'
+        '"secret":false,"options":[{"value":"5","label":"oauth2-proxy"}]}'
+    )
+    assert spec is not None
+    assert spec.options == (("5", "oauth2-proxy"),)
+
+
+def test_parse_marker_invalid():
+    assert parse_marker("SSDV2_PROMPT pas du json") is None
+    assert parse_marker("aucun marqueur") is None
 
 
 def test_strip_ansi():
