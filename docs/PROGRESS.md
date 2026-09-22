@@ -296,9 +296,11 @@ aucun push — ADR-0010).
   repli `ssddb`) ; `AppStateOut`/`AppDetailOut` exposent `domain` (FQDN) en plus de `url`.
 - Frontend : « Domaine » cliquable dans la vue détail, le tableau des applications et la
   page d'authentification en masse.
-- Preuves : `ruff` + `pytest` verts ; `npm run lint|typecheck|test|build` verts ; source
-  serveur confirmée (`config get user.domain` → domaine réel, label Traefik
-  `Host(<app>.<domaine>)`). Validation UI à confirmer après déploiement.
+- Preuves : CI verte (`fe14b71`) ; `ruff` + `pytest` verts ; `npm run
+  lint|typecheck|test|build` verts ; source serveur confirmée (`config get user.domain` →
+  domaine réel, label Traefik `Host(<app>.<domaine>)`) ; après `relance_container
+  ssdv2webui`, le domaine s'affiche dans la vue détail et la colonne « Domaine » du
+  tableau (validation serveur 2026-09-22).
 
 ## Prochains chantiers pressentis
 
