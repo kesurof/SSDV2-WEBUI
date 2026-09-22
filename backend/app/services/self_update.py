@@ -62,12 +62,15 @@ def launch_updater(
     except docker.errors.DockerException:
         pass
     try:
+        # On ne supprime pas le conteneur en sortie : ses journaux restent
+        # consultables (`docker logs <app>-updater`) si la mise à jour échoue.
+        # Il est recréé (ancien supprimé) au prochain lancement.
         client.containers.run(
             image,
             command=command,
             name=name,
             detach=True,
-            remove=True,
+            remove=False,
             volumes=binds,
             environment=environment,
             network_mode=network,
