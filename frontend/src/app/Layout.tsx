@@ -15,7 +15,7 @@ import {
   X,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Navigate, NavLink, Outlet, useNavigate } from 'react-router-dom'
 
@@ -23,6 +23,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { PageSkeleton } from '@/components/app/page-skeleton'
 import { ThemeToggle } from '@/components/app/theme-toggle'
 import { UserMenu } from '@/components/app/user-menu'
 import { useLogout, useMe } from '@/features/auth/useAuth'
@@ -74,10 +75,11 @@ type NotificationEventPayload = {
 
 export function Layout() {
   const me = useMe()
-  const health = useHealth()
-  const summary = useSummary()
-  const notifications = useNotifications()
-  const apps = useApps()
+  const authed = Boolean(me.data)
+  const health = useHealth(authed)
+  const summary = useSummary(authed)
+  const notifications = useNotifications(authed)
+  const apps = useApps(authed)
   const setup = useSetupStatus()
   const logout = useLogout()
   const navigate = useNavigate()
@@ -95,6 +97,9 @@ export function Layout() {
   }, [instanceName])
 
   useEffect(() => {
+    if (!authed) {
+      return
+    }
     const source = new EventSource('/api/v1/notifications/events')
     source.onmessage = (event) => {
       const payload = JSON.parse(event.data as string) as NotificationEventPayload
@@ -105,7 +110,7 @@ export function Layout() {
     return () => {
       source.close()
     }
-  }, [queryClient])
+  }, [authed, queryClient])
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -136,11 +141,7 @@ export function Layout() {
     return <Navigate to="/setup" replace />
   }
 
-  if (me.isPending) {
-    return <div className="p-8 text-sm text-muted-foreground">{fr.common.loading}</div>
-  }
-
-  if (!me.data) {
+  if (!me.isPending && !me.data) {
     return <Navigate to="/login" replace />
   }
 
@@ -158,6 +159,7 @@ export function Layout() {
 
   const badges: Record<string, number> = { notifications: unread, updates: 0 }
   const healthy = health.data?.status !== 'degraded'
+  const showShell = !me.isPending && me.data !== null
 
   return (
     <div className="flex min-h-svh bg-background">
@@ -313,11 +315,13 @@ export function Layout() {
 
           <div className="ml-auto flex items-center gap-2">
             <ThemeToggle />
-            <UserMenu
-              username={me.data.username}
-              internalAuth={me.data.internal_auth}
-              onLogout={handleLogout}
-            />
+            {me.data && (
+              <UserMenu
+                username={me.data.username}
+                internalAuth={me.data.internal_auth}
+                onLogout={handleLogout}
+              />
+            )}
           </div>
         </header>
 
@@ -332,7 +336,13 @@ export function Layout() {
         )}
 
         <main className="mx-auto w-full max-w-[1600px] flex-1 p-4 lg:p-7">
-          <Outlet />
+          {showShell ? (
+            <Suspense fallback={<PageSkeleton />}>
+              <Outlet />
+            </Suspense>
+          ) : (
+            <PageSkeleton />
+          )}
         </main>
       </div>
     </div>

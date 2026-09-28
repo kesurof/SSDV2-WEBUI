@@ -7,6 +7,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import func, select
 from sqlalchemy.exc import SQLAlchemyError
+from starlette.middleware.gzip import GZipMiddleware
 
 from app.adapters.ssdv2_bash import Ssdv2BashRunner
 from app.adapters.ssdv2_cli import Ssdv2CtlRunner
@@ -77,6 +78,8 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
 def create_app() -> FastAPI:
     setup_logging(get_settings().log_level)
     app = FastAPI(title="SSDV2 WebUI", version="0.1.0", lifespan=lifespan)
+    # Les flux SSE (notifications, jobs, logs) sont exclus par GZipMiddleware.
+    app.add_middleware(GZipMiddleware, minimum_size=1024, compresslevel=5)
 
     api_router = APIRouter(prefix="/api/v1")
     api_router.include_router(apps.router)
@@ -99,6 +102,13 @@ def create_app() -> FastAPI:
     return app
 
 
+class ImmutableStaticFiles(StaticFiles):
+    def file_response(self, *args, **kwargs):  # type: ignore[no-untyped-def]
+        response = super().file_response(*args, **kwargs)
+        response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+        return response
+
+
 def _mount_frontend(app: FastAPI) -> None:
     dist = get_settings().static_dir
     if not dist.is_dir():
@@ -106,7 +116,7 @@ def _mount_frontend(app: FastAPI) -> None:
 
     assets = dist / "assets"
     if assets.is_dir():
-        app.mount("/assets", StaticFiles(directory=assets), name="assets")
+        app.mount("/assets", ImmutableStaticFiles(directory=assets), name="assets")
 
     @app.get("/{path:path}", include_in_schema=False)
     async def spa(path: str) -> FileResponse:
@@ -115,7 +125,7 @@ def _mount_frontend(app: FastAPI) -> None:
         candidate = dist / path
         if path and candidate.is_file():
             return FileResponse(candidate)
-        return FileResponse(dist / "index.html")
+        return FileResponse(dist / "index.html", headers={"Cache-Control": "no-cache"})
 
 
 app = create_app()

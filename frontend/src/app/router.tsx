@@ -1,21 +1,40 @@
+import { lazy } from 'react'
+import type { ComponentType } from 'react'
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 
 import { Layout } from '@/app/Layout'
-import { AppDetailPage } from '@/features/apps/AppDetailPage'
-import { AppHistoryPage } from '@/features/apps/AppHistoryPage'
-import { AppsPage } from '@/features/apps/AppsPage'
-import { AuditPage } from '@/features/audit/AuditPage'
-import { AuthAppsPage } from '@/features/auth/AuthAppsPage'
-import { BackupsPage } from '@/features/backups/BackupsPage'
-import { LoginPage } from '@/features/auth/LoginPage'
-import { DashboardPage } from '@/features/dashboard/DashboardPage'
-import { DiagnosticsPage } from '@/features/diagnostics/DiagnosticsPage'
-import { HealthPage } from '@/features/health/HealthPage'
-import { JobsPage } from '@/features/jobs/JobsPage'
-import { NotificationsPage } from '@/features/notifications/NotificationsPage'
-import { SettingsPage } from '@/features/settings/SettingsPage'
-import { SetupPage } from '@/features/setup/SetupPage'
-import { UpdatesPage } from '@/features/updates/UpdatesPage'
+
+function lazyPage<T extends Record<string, ComponentType>>(
+  loader: () => Promise<T>,
+  name: keyof T,
+) {
+  return lazy(async () => {
+    const module = await loader()
+    return { default: module[name] }
+  })
+}
+
+const AppDetailPage = lazyPage(() => import('@/features/apps/AppDetailPage'), 'AppDetailPage')
+const AppHistoryPage = lazyPage(() => import('@/features/apps/AppHistoryPage'), 'AppHistoryPage')
+const AppsPage = lazyPage(() => import('@/features/apps/AppsPage'), 'AppsPage')
+const AuditPage = lazyPage(() => import('@/features/audit/AuditPage'), 'AuditPage')
+const AuthAppsPage = lazyPage(() => import('@/features/auth/AuthAppsPage'), 'AuthAppsPage')
+const BackupsPage = lazyPage(() => import('@/features/backups/BackupsPage'), 'BackupsPage')
+const LoginPage = lazyPage(() => import('@/features/auth/LoginPage'), 'LoginPage')
+const DashboardPage = lazyPage(() => import('@/features/dashboard/DashboardPage'), 'DashboardPage')
+const DiagnosticsPage = lazyPage(
+  () => import('@/features/diagnostics/DiagnosticsPage'),
+  'DiagnosticsPage',
+)
+const HealthPage = lazyPage(() => import('@/features/health/HealthPage'), 'HealthPage')
+const JobsPage = lazyPage(() => import('@/features/jobs/JobsPage'), 'JobsPage')
+const NotificationsPage = lazyPage(
+  () => import('@/features/notifications/NotificationsPage'),
+  'NotificationsPage',
+)
+const SettingsPage = lazyPage(() => import('@/features/settings/SettingsPage'), 'SettingsPage')
+const SetupPage = lazyPage(() => import('@/features/setup/SetupPage'), 'SetupPage')
+const UpdatesPage = lazyPage(() => import('@/features/updates/UpdatesPage'), 'UpdatesPage')
 
 export const router = createBrowserRouter([
   { path: '/setup', element: <SetupPage /> },

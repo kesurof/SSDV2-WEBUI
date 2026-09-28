@@ -14,6 +14,8 @@ publication GHCR si vert — ADR-0023). Détails : `docs/ARCHITECTURE-CURRENT.md
   `python3 -m venv .venv && .venv/bin/pip install -e '.[dev]' && .venv/bin/ruff check . && .venv/bin/ruff format --check . && .venv/bin/pytest`
   (repli hors Python local : `docker run --rm -v "$PWD/backend:/src:ro" -w / python:3.13-slim sh -c "cp -r /src /work && cd /work && pip install -q -e '.[dev]' && ruff check . && ruff format --check . && pytest"`)
 - Frontend (depuis `frontend/`) : `npm ci && npm run lint && npm run typecheck && npm run test && npm run build`
+- Analyse du bundle front (ponctuelle) : `npm run analyze` → `frontend/dist/stats.html`
+  (non versionné ; ADR-0027).
 - Types API : régénérer `backend/openapi.json` (`python -m app.export_openapi`) puis
   `npm run gen:api` — les deux fichiers sont versionnés.
 - Image : `docker build -t ssdv2-webui:local .`

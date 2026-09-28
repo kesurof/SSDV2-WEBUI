@@ -16,11 +16,12 @@ import type {
   Updates,
 } from '@/api/types'
 
-export function useApps() {
+export function useApps(enabled = true) {
   return useQuery<AppState[]>({
     queryKey: ['apps'],
     queryFn: () => apiFetch<AppState[]>('/apps'),
     refetchInterval: 30_000,
+    enabled,
   })
 }
 
@@ -64,11 +65,12 @@ export function useAppStorage(app: string) {
   })
 }
 
-export function useHealth() {
+export function useHealth(enabled = true) {
   return useQuery<Health>({
     queryKey: ['health'],
     queryFn: () => apiFetch<Health>('/health'),
     refetchInterval: 30_000,
+    enabled,
   })
 }
 
@@ -104,10 +106,11 @@ export function useDiagnostics() {
   })
 }
 
-export function useSummary() {
+export function useSummary(enabled = true) {
   return useQuery<SystemSummary>({
     queryKey: ['summary'],
     queryFn: () => apiFetch<SystemSummary>('/system/summary'),
     refetchInterval: 30_000,
+    enabled,
   })
 }

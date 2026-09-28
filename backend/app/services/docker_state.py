@@ -1,7 +1,22 @@
+import threading
+import time
 from collections.abc import Iterator
 from dataclasses import dataclass
 
 import docker
+
+CACHE_TTL_SECONDS = 3.0
+
+_cache_snapshot: "DockerSnapshot | None" = None
+_cache_at: float = 0.0
+_cache_lock = threading.Lock()
+
+
+def clear_docker_cache() -> None:
+    global _cache_snapshot, _cache_at
+    with _cache_lock:
+        _cache_snapshot = None
+        _cache_at = 0.0
 
 
 @dataclass(frozen=True)
@@ -60,6 +75,21 @@ def stream_container_logs(
 
 
 def collect_containers(client: docker.DockerClient | None) -> DockerSnapshot:
+    global _cache_snapshot, _cache_at
+
+    now = time.monotonic()
+    with _cache_lock:
+        if _cache_snapshot is not None and now - _cache_at < CACHE_TTL_SECONDS:
+            return _cache_snapshot
+
+    snapshot = _collect_containers_uncached(client)
+    with _cache_lock:
+        _cache_snapshot = snapshot
+        _cache_at = time.monotonic()
+    return snapshot
+
+
+def _collect_containers_uncached(client: docker.DockerClient | None) -> DockerSnapshot:
     if client is None:
         return DockerSnapshot([], "Docker indisponible")
     try:

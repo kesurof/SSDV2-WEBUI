@@ -10,7 +10,8 @@
   `GET /health` et `/api/v1/health`, auth admin (Argon2id, sessions serveur en SQLite,
   CSRF double-submit, rate limiting en mémoire), `GET /api/v1/apps` agrégeant catalogue,
   `ssddb`, registres `.containers/.volumes/.dns`, domaine via `ssdv2ctl config get
-  user.domain` (cache 300 s, ADR-0025) et Docker SDK (un appel groupé),
+  user.domain` (cache 300 s, ADR-0025) et Docker SDK (snapshot conteneurs mutualisé,
+  cache mémoire TTL 3 s, ADR-0027),
   `GET /api/v1/apps/{app}` (détail : conteneurs, registres, entrée `ssddb`, domaine),
   `GET /api/v1/apps/{app}/auth` (type d'authentification via `ssdv2ctl auth get`),
   `GET /api/v1/apps/{app}/logs` (conteneur rattaché à l'application, lignes, horodatage)
@@ -61,9 +62,14 @@
   en en-tête (Ouvrir ↗ conditionnel, Démarrer/Arrêter, Redémarrer, Sauvegarder, menu),
   cartes Informations (avec « Depuis »), Stockage, Déploiement (faits Docker + Recréer) ;
   table des applications : colonnes « Actions rapides » et « Mise à jour ».
+  Chargement optimisé (ADR-0027) : découpage par route (`React.lazy` + `Suspense`,
+  `PageSkeleton`), chunks `react`/`tanstack`/`icons`, coquille montée sans attendre
+  `/auth/me` (requêtes non critiques conditionnées à l'authentification, SSE après auth),
+  rapport d'analyse `npm run analyze` (`rollup-plugin-visualizer`).
 - `Dockerfile` : multi-stage Node 22 → `python:3.13-slim`, entrypoint PUID/PGID
-  (`setpriv --init-groups`, ADR-0017), frontend compilé servi par FastAPI, healthcheck
-  `/health`, runtime SSDV2 : ansible (`ansible-core` 2.21.0, collections
+  (`setpriv --init-groups`, ADR-0017), frontend compilé servi par FastAPI (compression
+  `GZipMiddleware` — flux SSE exclus — et assets hachés servis `immutable`, ADR-0027),
+  healthcheck `/health`, runtime SSDV2 : ansible (`ansible-core` 2.21.0, collections
   `community.docker`/`community.general`/`ansible.posix`, rôles `kwoodson.yedit`/
   `geerlingguy.docker` dans `/opt/ansible`), outils CLI `jq`, `sqlite3`, `curl`,
   `gettext`, `htpasswd`, `pigz`, `sudo`, `tzdata` (image ~505 Mo) ; CLI Docker

@@ -6,7 +6,18 @@
 
 ## Chantier actif
 
-Aucun.
+**Optimisation du chargement front (ADR-0027)**.
+
+- Réseau : `GZipMiddleware` (SSE exclus), assets hachés en `immutable`, `index.html` en
+  `no-cache`.
+- Front : découpage par route (`React.lazy` + `Suspense` + `PageSkeleton`), chunks
+  `react`/`tanstack`/`icons`, coquille montée sans attendre `/auth/me`, requêtes non
+  critiques conditionnées à l'authentification, SSE notifications après auth ;
+  `npm run analyze` pour le rapport de bundle.
+- Backend : snapshot Docker mutualisé (cache mémoire TTL 3 s, `clear_docker_cache`).
+- Preuves : `ruff`/`pytest` (204 tests) et `lint`/`typecheck`/`test`/`build` front verts ;
+  bundle initial réduit de ~725 Ko à une coquille ~276 Ko + `react` ~211 Ko (reste par
+  route).
 
 ## Derniers chantiers terminés (2026-09-17)
 

@@ -611,6 +611,39 @@ pointe vers son remplaçant. Une décision non tranchée reste dans « Décision
 - **Références** : ADR-0007, ADR-0010, ADR-0013 ; `ARCHITECTURE-CURRENT.md`,
   `PROGRESS.md`, `AGENTS.md` (règle 10).
 
+## ADR-0027 — Optimisation du chargement front (compression, cache, découpage, snapshot Docker)
+
+- **Statut** : acceptée — 2026-09-28
+- **Contexte** : le premier rendu était lent : bundle JS unique d'environ 725 Ko non
+  compressé (toutes les pages importées statiquement), aucune compression HTTP (le
+  service SSDV2 expose la WebUI derrière Traefik), et `Layout` déclenchait six requêtes
+  au montage, dont plusieurs recalculant chacune un snapshot Docker complet.
+- **Décision** :
+  - **compression** : `GZipMiddleware` (Starlette) activé côté backend (`minimum_size`
+    1024, `compresslevel` 5) ; les flux `text/event-stream` (notifications, jobs, logs)
+    restent exclus par le middleware — jamais bufferisés ni compressés ;
+  - **cache** : fichiers de `/assets` (hachés par Vite) servis
+    `Cache-Control: public, max-age=31536000, immutable` via `ImmutableStaticFiles` ;
+    `index.html` et le repli SPA en `Cache-Control: no-cache` ;
+  - **découpage** : `React.lazy` par page avec `Suspense` (`PageSkeleton`) ; chunks
+    manuels `react` / `tanstack` / `icons` ; `rollup-plugin-visualizer` disponible via
+    `npm run analyze` (`ANALYZE=1`) ;
+  - **rendu non bloquant** : la coquille reste montée le temps de la résolution de
+    `/auth/me`, le menu utilisateur et les requêtes non critiques (`/health`,
+    `/system/summary`, `/notifications`, `/apps`) sont conditionnés à l'authentification
+    (`enabled`), le flux SSE notifications démarre après auth ;
+  - **snapshot Docker** : `collect_containers` mis en cache mémoire TTL 3 s (verrou
+    `threading.Lock`, `clear_docker_cache()`), mutualisant les appels des endpoints
+    agrégés ; les lectures de fichiers du catalogue ne sont pas mises en cache.
+- **Conséquences** : JS initial réduit (coquille ~276 Ko + react ~211 Ko, le reste
+  chargé par route ; ~89 Ko + 66 Ko en gzip) ; moins d'appels Docker concurrents ;
+  statut Docker potentiellement périmé de quelques secondes après une mutation.
+- **Alternatives écartées** : compression déléguée au seul reverse proxy (hors dépôt,
+  non garantie) ; `lazy` sur `/login` et `/setup` (retarderait le premier écran) ;
+  cache disque des fichiers catalogue/registres (gain faible, risque de péremption) ;
+  préchargement forcé de la police (gain marginal, `font-display: swap` déjà en place).
+- **Références** : ADR-0004 ; `ARCHITECTURE-CURRENT.md` ; `AGENTS.md` (conventions).
+
 ## Décisions ouvertes
 
 À trancher explicitement puis consigner en ADR (voir brief §72) :

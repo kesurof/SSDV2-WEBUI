@@ -3,11 +3,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiFetch } from '@/api/client'
 import type { AuditEvent, NotificationList } from '@/api/types'
 
-export function useNotifications() {
+export function useNotifications(enabled = true) {
   return useQuery<NotificationList>({
     queryKey: ['notifications'],
     queryFn: () => apiFetch<NotificationList>('/notifications?limit=200'),
     refetchInterval: 30_000,
+    enabled,
   })
 }
 

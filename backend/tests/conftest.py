@@ -292,10 +292,12 @@ def client(fake_containers: list[FakeContainer], settings) -> Iterator[TestClien
     from app.api.auth import login_limiter
     from app.deps import get_docker_client, get_ssdv2ctl
     from app.main import app
+    from app.services.docker_state import clear_docker_cache
     from app.services.domain import clear_domain_cache
     from app.services.jobs import job_manager
 
     clear_domain_cache()
+    clear_docker_cache()
     login_limiter()._attempts.clear()
     job_manager.configure(lambda: FakeStreamingRunner())
     job_manager.configure_bash(lambda: FakeBashRunner(settings=settings))
