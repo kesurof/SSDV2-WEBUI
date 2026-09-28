@@ -77,13 +77,16 @@ def stream_container_logs(
 def collect_containers(client: docker.DockerClient | None) -> DockerSnapshot:
     global _cache_snapshot, _cache_at
 
-    now = time.monotonic()
     with _cache_lock:
-        if _cache_snapshot is not None and now - _cache_at < CACHE_TTL_SECONDS:
+        if _cache_snapshot is not None and time.monotonic() - _cache_at < CACHE_TTL_SECONDS:
             return _cache_snapshot
 
     snapshot = _collect_containers_uncached(client)
     with _cache_lock:
+        # Un autre thread a pu rafraîchir pendant le calcul : garder sa valeur
+        # (fraîche) pour éviter d'écraser un résultat plus récent.
+        if _cache_snapshot is not None and time.monotonic() - _cache_at < CACHE_TTL_SECONDS:
+            return _cache_snapshot
         _cache_snapshot = snapshot
         _cache_at = time.monotonic()
     return snapshot

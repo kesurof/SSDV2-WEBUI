@@ -621,10 +621,16 @@ pointe vers son remplaçant. Une décision non tranchée reste dans « Décision
 - **Décision** :
   - **compression** : `GZipMiddleware` (Starlette) activé côté backend (`minimum_size`
     1024, `compresslevel` 5) ; les flux `text/event-stream` (notifications, jobs, logs)
-    restent exclus par le middleware — jamais bufferisés ni compressés ;
+    restent exclus par le middleware — jamais bufferisés ni compressés ; l'incrémentalité
+    des flux est verrouillée par test, pas seulement l'absence d'en-tête ;
+  - **formats déjà compressés** : `GZipMiddleware` n'exclut par défaut que selon le
+    `content-type`, or `StaticFiles` sert `.woff2/.png/.jpg/.gif/.webp/.avif/.ico/.gz/.br`
+    en `application/octet-stream` — ils seraient recompressés. `ImmutableStaticFiles`
+    marque donc ces extensions `Content-Encoding: identity` (testé) ;
   - **cache** : fichiers de `/assets` (hachés par Vite) servis
     `Cache-Control: public, max-age=31536000, immutable` via `ImmutableStaticFiles` ;
-    `index.html` et le repli SPA en `Cache-Control: no-cache` ;
+    `index.html`, le repli SPA **et tout fichier statique non-asset** (favicon, etc.) en
+    `Cache-Control: no-cache` (le shell ne doit pas rester figé après un déploiement) ;
   - **découpage** : `React.lazy` par page avec `Suspense` (`PageSkeleton`) ; chunks
     manuels `react` / `tanstack` / `icons` ; `rollup-plugin-visualizer` disponible via
     `npm run analyze` (`ANALYZE=1`) ;
@@ -633,15 +639,24 @@ pointe vers son remplaçant. Une décision non tranchée reste dans « Décision
     `/system/summary`, `/notifications`, `/apps`) sont conditionnés à l'authentification
     (`enabled`), le flux SSE notifications démarre après auth ;
   - **snapshot Docker** : `collect_containers` mis en cache mémoire TTL 3 s (verrou
-    `threading.Lock`, `clear_docker_cache()`), mutualisant les appels des endpoints
-    agrégés ; les lectures de fichiers du catalogue ne sont pas mises en cache.
+    `threading.Lock`, horloge `monotonic()`, double-vérification sous verrou au
+    rafraîchissement pour éviter un recalcul en rafale — « thundering herd »,
+    `clear_docker_cache()`), mutualisant les appels des endpoints agrégés ; les lectures
+    de fichiers du catalogue ne sont pas mises en cache ;
+  - **chunk `icons`** : mesuré au visualizer, il ne fait que déplacer ~9,5 Ko d'icônes
+    hors de `index`/`react` (coût gzip total quasi identique) ; conservé pour isoler un
+    vendor stable sans régression.
 - **Conséquences** : JS initial réduit (coquille ~276 Ko + react ~211 Ko, le reste
   chargé par route ; ~89 Ko + 66 Ko en gzip) ; moins d'appels Docker concurrents ;
-  statut Docker potentiellement périmé de quelques secondes après une mutation.
+  statut Docker potentiellement périmé de quelques secondes après une mutation. Le cache
+  Docker est **par processus** : il n'est pas partagé si `uvicorn` passe un jour à
+  plusieurs workers (le déploiement actuel tourne en worker unique).
 - **Alternatives écartées** : compression déléguée au seul reverse proxy (hors dépôt,
-  non garantie) ; `lazy` sur `/login` et `/setup` (retarderait le premier écran) ;
-  cache disque des fichiers catalogue/registres (gain faible, risque de péremption) ;
-  préchargement forcé de la police (gain marginal, `font-display: swap` déjà en place).
+  non garantie) ; gzip restreint à `/api/v1` (le montage `/assets` reste couvert par
+  l'exclusion d'extension) ; `lazy` sur `/login` et `/setup` (retarderait le premier
+  écran) ; cache disque des fichiers catalogue/registres (gain faible, risque de
+  péremption) ; préchargement forcé de la police (gain marginal, `font-display: swap`
+  déjà en place).
 - **Références** : ADR-0004 ; `ARCHITECTURE-CURRENT.md` ; `AGENTS.md` (conventions).
 
 ## Décisions ouvertes

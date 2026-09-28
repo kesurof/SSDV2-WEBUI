@@ -275,11 +275,17 @@ def settings():
 @pytest.fixture(autouse=True)
 def _ensure_internal_auth() -> Iterator[None]:
     yield
+    from sqlalchemy.exc import OperationalError
+
     from app.db.session import get_session_factory
     from app.services import settings as webui_settings
 
-    with get_session_factory()() as session:
-        webui_settings.set_internal_auth(session, True)
+    try:
+        with get_session_factory()() as session:
+            webui_settings.set_internal_auth(session, True)
+    except OperationalError:
+        # Tests sans application/DB initialisée (ex. statiques) : rien à restaurer.
+        pass
 
 
 @pytest.fixture

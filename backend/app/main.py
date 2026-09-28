@@ -102,10 +102,34 @@ def create_app() -> FastAPI:
     return app
 
 
+PRECOMPRESSED_SUFFIXES = (
+    ".woff",
+    ".woff2",
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".gif",
+    ".webp",
+    ".avif",
+    ".ico",
+    ".gz",
+    ".br",
+)
+
+
 class ImmutableStaticFiles(StaticFiles):
     def file_response(self, *args, **kwargs):  # type: ignore[no-untyped-def]
         response = super().file_response(*args, **kwargs)
         response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+        return response
+
+    async def get_response(self, path: str, scope):  # type: ignore[no-untyped-def]
+        # StaticFiles sert ces formats en `application/octet-stream`, que
+        # GZipMiddleware recompresserait (l'exclusion par défaut ne voit que le
+        # content-type, pas l'extension). On marque la réponse comme déjà encodée.
+        response = await super().get_response(path, scope)
+        if path.lower().endswith(PRECOMPRESSED_SUFFIXES):
+            response.headers["Content-Encoding"] = "identity"
         return response
 
 
@@ -124,7 +148,7 @@ def _mount_frontend(app: FastAPI) -> None:
             raise HTTPException(status_code=404)
         candidate = dist / path
         if path and candidate.is_file():
-            return FileResponse(candidate)
+            return FileResponse(candidate, headers={"Cache-Control": "no-cache"})
         return FileResponse(dist / "index.html", headers={"Cache-Control": "no-cache"})
 
 
