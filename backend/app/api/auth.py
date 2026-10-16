@@ -2,7 +2,7 @@ from datetime import timedelta
 from functools import lru_cache
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
-from sqlalchemy import select
+from sqlalchemy import delete, select
 
 from app.adapters.ssdv2_cli import Ssdv2CtlError
 from app.core.config import get_settings
@@ -10,13 +10,20 @@ from app.core.ratelimit import FixedWindowLimiter
 from app.core.security import (
     CSRF_COOKIE,
     SESSION_COOKIE,
+    hash_password,
     hash_token,
     new_token,
     verify_password,
 )
 from app.db.models import User, UserSession, utcnow
 from app.deps import CurrentUser, DbDep, SettingsDep, Ssdv2CtlDep, require_csrf
-from app.schemas.auth import AppAuthSummary, AuthBulkRequest, LoginRequest, UserOut
+from app.schemas.auth import (
+    AppAuthSummary,
+    AuthBulkRequest,
+    LoginRequest,
+    PasswordChangeRequest,
+    UserOut,
+)
 from app.schemas.job import JobOut
 from app.services import audit
 from app.services import settings as webui_settings
@@ -94,6 +101,38 @@ def logout(
     audit.record("logout", "success", username=_user.username)
     response.delete_cookie(SESSION_COOKIE, path="/")
     response.delete_cookie(CSRF_COOKIE, path="/")
+
+
+@router.post("/password", status_code=status.HTTP_204_NO_CONTENT)
+def change_password(
+    payload: PasswordChangeRequest,
+    request: Request,
+    db: DbDep,
+    _user: CurrentUser,
+    _csrf: None = Depends(require_csrf),
+) -> None:
+    if not _user.internal_auth:
+        raise HTTPException(status.HTTP_409_CONFLICT, "l'authentification interne est désactivée")
+    user = db.scalar(select(User).where(User.username == _user.username))
+    if user is None or not verify_password(user.password_hash, payload.current_password):
+        audit.record("password_change", "failed", username=_user.username)
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "mot de passe actuel invalide")
+    if payload.new_password.lower() == user.username.lower():
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            "le mot de passe doit être différent de l'identifiant",
+        )
+    user.password_hash = hash_password(payload.new_password)
+    current = request.cookies.get(SESSION_COOKIE)
+    if current:
+        db.execute(
+            delete(UserSession).where(
+                UserSession.user_id == user.id,
+                UserSession.id != hash_token(current),
+            )
+        )
+    db.commit()
+    audit.record("password_change", "success", username=user.username)
 
 
 @router.get("/me", response_model=UserOut)

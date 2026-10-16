@@ -332,6 +332,16 @@ export const fr = {
     confirmEnable:
       'Réactiver l’authentification interne ? Les sessions en cours seront fermées et une connexion sera nécessaire.',
     typeToConfirm: 'Tapez « DESACTIVER » pour confirmer',
+    passwordTitle: 'Mot de passe administrateur',
+    currentPassword: 'Mot de passe actuel',
+    newPassword: 'Nouveau mot de passe',
+    passwordHint: '12 caractères minimum, différent de l’identifiant.',
+    passwordConfirm: 'Confirmation du nouveau mot de passe',
+    passwordTooShort: 'Le nouveau mot de passe doit contenir au moins 12 caractères.',
+    passwordMismatch: 'Les mots de passe ne correspondent pas.',
+    passwordSameAsCurrent: 'Le nouveau mot de passe doit être différent de l’actuel.',
+    passwordChanged: 'Mot de passe mis à jour.',
+    changePassword: 'Modifier le mot de passe',
   },
   settings: {
     title: 'Paramètres',

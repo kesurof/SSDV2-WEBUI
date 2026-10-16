@@ -54,3 +54,13 @@ export function useUpdateSecurity() {
     },
   })
 }
+
+export function useChangePassword() {
+  return useMutation({
+    mutationFn: (payload: { current_password: string; new_password: string }) =>
+      apiFetch<void>('/auth/password', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      }),
+  })
+}

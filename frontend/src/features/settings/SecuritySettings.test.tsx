@@ -56,6 +56,43 @@ describe('SecuritySettings', () => {
     )
   })
 
+  it('changes the admin password', async () => {
+    const user = userEvent.setup()
+    const fetchMock = vi.fn(async (_url: string, init?: RequestInit) => {
+      if (init?.method === 'POST') {
+        return new Response(null, { status: 204 })
+      }
+      return jsonResponse({ internal_auth: true })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderSecurity()
+    await waitFor(() => expect(screen.getByLabelText('Mot de passe actuel')).toBeInTheDocument())
+
+    const submit = screen.getByRole('button', { name: 'Modifier le mot de passe' })
+    expect(submit).toBeDisabled()
+
+    await user.type(screen.getByLabelText('Mot de passe actuel'), 'test-password')
+    await user.type(screen.getByLabelText('Nouveau mot de passe'), 'nouveau-mot-de-passe')
+    await user.type(
+      screen.getByLabelText('Confirmation du nouveau mot de passe'),
+      'nouveau-mot-de-passe',
+    )
+    expect(submit).toBeEnabled()
+    await user.click(submit)
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/v1/auth/password',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          current_password: 'test-password',
+          new_password: 'nouveau-mot-de-passe',
+        }),
+      }),
+    )
+  })
+
   it('re-enables internal auth with a simple confirmation', async () => {
     const user = userEvent.setup()
     const fetchMock = vi.fn(async (_url: string, init?: RequestInit) => {
