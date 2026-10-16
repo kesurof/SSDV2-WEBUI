@@ -78,6 +78,26 @@ describe('SetupPage', () => {
     expect(screen.getByRole('button', { name: 'Suivant' })).toBeDisabled()
   })
 
+  it('blocks the account step when the username contains uppercase', async () => {
+    const user = userEvent.setup()
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => jsonResponse({ required: true, token_required: true, instance_name: 'x' })),
+    )
+
+    renderSetup()
+    await waitFor(() => expect(screen.getByLabelText('Jeton d’installation')).toBeInTheDocument())
+
+    await user.type(screen.getByLabelText('Jeton d’installation'), 'jeton-installation')
+    await user.clear(screen.getByLabelText('Identifiant'))
+    await user.type(screen.getByLabelText('Identifiant'), 'Cognotte')
+    await user.type(screen.getByLabelText('Mot de passe'), 'motdepasse-tres-long')
+    await user.type(screen.getByLabelText('Confirmation du mot de passe'), 'motdepasse-tres-long')
+
+    expect(screen.getByText(/Identifiant invalide/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Suivant' })).toBeDisabled()
+  })
+
   it('runs the full wizard and submits the setup', async () => {
     const user = userEvent.setup()
     const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {

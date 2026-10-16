@@ -379,7 +379,12 @@ export const fr = {
     token: 'Jeton d’installation',
     tokenHint:
       'Affiché au premier démarrage dans les journaux du conteneur ou dans le fichier ./data/setup-token.',
+    tokenInvalid: 'Le jeton doit contenir entre 8 et 128 caractères.',
     username: 'Identifiant',
+    usernameHint: '3 à 64 caractères, en minuscules, chiffres, point, tiret ou underscore.',
+    usernameInvalid:
+      'Identifiant invalide : minuscules, chiffres, point, tiret et underscore uniquement, en commençant par une lettre ou un chiffre.',
+    usernameTooLong: 'L’identifiant ne doit pas dépasser 64 caractères.',
     password: 'Mot de passe',
     passwordHint: '12 caractères minimum, différent de l’identifiant.',
     passwordConfirm: 'Confirmation du mot de passe',
@@ -393,6 +398,7 @@ export const fr = {
       'Sans authentification interne, toute personne pouvant atteindre la WebUI dispose d’un accès complet (socket Docker).',
     internalAuthAck: 'Je comprends et je confirme que le proxy amont assure la protection.',
     instanceName: 'Nom de l’instance',
+    instanceNameTooLong: 'Le nom de l’instance ne doit pas dépasser 100 caractères.',
     notifyJobSuccess: 'Notifier les succès des jobs de cycle de vie',
     notifyJobSuccessHint: 'Les échecs sont toujours notifiés.',
     environment: 'Environnement détecté',

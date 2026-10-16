@@ -13,6 +13,9 @@ import { fr } from '@/i18n/fr'
 
 const STEPS = [fr.setup.stepAccount, fr.setup.stepSecurity, fr.setup.stepInstance, fr.setup.stepReview]
 
+// Doit rester aligné sur `SetupRequest` (backend/app/schemas/setup.py).
+const USERNAME_PATTERN = /^[a-z0-9][a-z0-9._-]*$/
+
 type FormState = {
   token: string
   username: string
@@ -50,18 +53,28 @@ export function SetupPage() {
     return <Navigate to="/login" replace />
   }
 
+  const tokenValue = form.token.trim()
+  const usernameValue = form.username.trim()
+  const instanceNameValue = form.instanceName.trim()
+
+  const tokenValid = tokenValue.length >= 8 && tokenValue.length <= 128
+  const usernameValid = USERNAME_PATTERN.test(usernameValue)
+  const usernameTooLong = usernameValue.length > 64
   const passwordTooShort = form.password.length > 0 && form.password.length < 12
   const passwordMismatch = form.confirm.length > 0 && form.password !== form.confirm
-  const passwordSameAsUsername = form.password.length > 0 && form.password === form.username
+  const passwordSameAsUsername =
+    form.password.length > 0 && form.password.toLowerCase() === usernameValue.toLowerCase()
   const accountValid =
-    form.token.trim().length >= 8 &&
-    form.username.trim().length >= 3 &&
+    tokenValid &&
+    usernameValue.length >= 3 &&
+    usernameValid &&
     form.password.length >= 12 &&
+    form.password.length <= 200 &&
     !passwordSameAsUsername &&
     form.password === form.confirm
 
   const securityValid = form.internalAuth || form.acknowledged
-  const instanceValid = form.instanceName.trim().length > 0
+  const instanceValid = instanceNameValue.length >= 1 && instanceNameValue.length <= 100
 
   const canContinue =
     (step === 0 && accountValid) ||
@@ -127,6 +140,9 @@ export function SetupPage() {
                   onChange={(event) => update('token', event.target.value)}
                 />
                 <p className="text-xs text-muted-foreground">{fr.setup.tokenHint}</p>
+                {form.token.length > 0 && !tokenValid && (
+                  <p className="text-xs text-destructive">{fr.setup.tokenInvalid}</p>
+                )}
               </div>
               <div className="space-y-1">
                 <Label htmlFor="setup-username">{fr.setup.username}</Label>
@@ -135,6 +151,19 @@ export function SetupPage() {
                   value={form.username}
                   onChange={(event) => update('username', event.target.value)}
                 />
+                <p
+                  className={
+                    usernameValue.length > 0 && !usernameValid
+                      ? 'text-xs text-destructive'
+                      : 'text-xs text-muted-foreground'
+                  }
+                >
+                  {usernameValue.length > 0 && !usernameValid
+                    ? usernameTooLong
+                      ? fr.setup.usernameTooLong
+                      : fr.setup.usernameInvalid
+                    : fr.setup.usernameHint}
+                </p>
               </div>
               <div className="space-y-1">
                 <Label htmlFor="setup-password">{fr.setup.password}</Label>
@@ -218,6 +247,9 @@ export function SetupPage() {
                   value={form.instanceName}
                   onChange={(event) => update('instanceName', event.target.value)}
                 />
+                {instanceNameValue.length > 100 && (
+                  <p className="text-xs text-destructive">{fr.setup.instanceNameTooLong}</p>
+                )}
               </div>
               <label className="flex items-center gap-2 text-sm">
                 <input
