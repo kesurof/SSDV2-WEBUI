@@ -8,27 +8,24 @@ import {
   HeartPulse,
   ListChecks,
   Menu,
-  PanelLeftClose,
-  PanelLeftOpen,
   Search,
   Settings,
   ShieldCheck,
   Wrench,
   X,
 } from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { Navigate, NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { Navigate, Outlet, useNavigate } from 'react-router-dom'
 
 import { apiUrl } from '@/api/url'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { PageSkeleton } from '@/components/app/page-skeleton'
-import { BrandLogo, BrandMark } from '@/components/app/brand-logo'
+import { AppSidebar } from '@/components/app/app-sidebar'
+import type { SidebarSection } from '@/components/app/app-sidebar'
 import { ThemeToggle } from '@/components/app/theme-toggle'
 import { UserMenu } from '@/components/app/user-menu'
 import { meQueryKey, useLogout, useMe } from '@/features/auth/useAuth'
@@ -39,14 +36,7 @@ import { fr } from '@/i18n/fr'
 import { useEventStream } from '@/lib/useEventStream'
 import { cn } from '@/lib/utils'
 
-type NavItem = {
-  to: string
-  label: string
-  icon: LucideIcon
-  badge?: 'notifications' | 'updates'
-}
-
-const NAV_SECTIONS: Array<{ label: string; items: NavItem[] }> = [
+const NAV_SECTIONS: SidebarSection[] = [
   {
     label: fr.nav.sections.pilotage,
     items: [
@@ -104,6 +94,15 @@ export function Layout() {
     document.title = instanceName
   }, [instanceName])
 
+  useEffect(() => {
+    const media = window.matchMedia('(min-width: 1024px)')
+    const closeOnDesktop = () => {
+      if (media.matches) setSidebarOpen(false)
+    }
+    media.addEventListener?.('change', closeOnDesktop)
+    return () => media.removeEventListener?.('change', closeOnDesktop)
+  }, [])
+
   useEventStream({
     key: authed ? 'notifications' : null,
     enabled: authed,
@@ -127,7 +126,7 @@ export function Layout() {
     function onKeyDown(event: KeyboardEvent) {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault()
-        if (window.matchMedia?.('(max-width: 767px)').matches) {
+        if (window.matchMedia?.('(max-width: 1023px)').matches) {
           setMobileSearchOpen(true)
         } else {
           searchRef.current?.focus()
@@ -173,123 +172,62 @@ export function Layout() {
     navigate(`/apps/${encodeURIComponent(name)}`)
   }
 
-  const badges: Record<string, number> = { notifications: unread, updates: 0 }
   const healthy = health.data?.status !== 'degraded'
   const showShell = !me.isPending && me.data !== null
 
   return (
     <div className="control-shell flex min-h-svh bg-background">
-      {sidebarOpen && (
-        <button
-          type="button"
-          aria-label={fr.common.close}
-          className="fixed inset-0 z-30 bg-black/40 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-40 flex w-62 flex-col border-r bg-sidebar text-sidebar-foreground transition-all duration-200 lg:sticky lg:top-0 lg:h-svh lg:translate-x-0',
-          sidebarCollapsed && 'lg:w-20',
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full',
+          'sticky top-0 hidden h-dvh min-h-0 shrink-0 overflow-hidden border-r border-sidebar-border lg:flex',
+          sidebarCollapsed ? 'lg:w-20' : 'lg:w-62',
         )}
       >
-        <div className={cn('flex min-h-20 items-center gap-2 border-b border-sidebar-border px-4 py-4', sidebarCollapsed && 'lg:flex-col lg:justify-center lg:gap-1 lg:px-2 lg:py-1.5')}>
-          <div className={cn('min-w-0 flex-1', sidebarCollapsed && 'lg:hidden')}>
-            <BrandLogo className="w-[130px]" />
-            <div className="mt-1 truncate text-[11px] text-muted-foreground" title={instanceName}>
-              {instanceName === 'SSDV2 WebUI' ? "Console d'administration" : instanceName}
-            </div>
-          </div>
-          {sidebarCollapsed && <BrandMark className="hidden lg:block lg:size-7" />}
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            className={cn("ml-auto hidden shrink-0 text-muted-foreground lg:inline-flex", sidebarCollapsed && "lg:ml-0 lg:size-7")}
-            aria-label={sidebarCollapsed ? 'Déployer la navigation' : 'Réduire la navigation'}
-            title={sidebarCollapsed ? 'Déployer la navigation' : 'Réduire la navigation'}
-            onClick={() => setSidebarCollapsed((value) => !value)}
-          >
-            {sidebarCollapsed ? <PanelLeftOpen className="size-4" aria-hidden /> : <PanelLeftClose className="size-4" aria-hidden />}
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            className="ml-auto lg:hidden"
-            aria-label={fr.common.close}
-            onClick={() => setSidebarOpen(false)}
-          >
-            <X className="size-4" aria-hidden />
-          </Button>
-        </div>
-
-        <nav className="flex-1 space-y-5 overflow-y-auto px-3 pb-4">
-          {NAV_SECTIONS.map((section) => (
-            <div key={section.label}>
-              <div className={cn("px-2 pb-1.5 text-[11px] font-bold tracking-wider text-muted-foreground uppercase", sidebarCollapsed && "lg:sr-only")}>
-                {section.label}
-              </div>
-              <div className="space-y-0.5">
-                {section.items.map((item) => {
-                  const Icon = item.icon
-                  const badgeCount = item.badge ? badges[item.badge] : 0
-                  return (
-                    <NavLink
-                      key={item.to}
-                      to={item.to}
-                      onClick={() => setSidebarOpen(false)}
-                      title={item.label}
-                      className={({ isActive }) =>
-                        cn(
-                          'flex items-center gap-2.5 rounded-lg px-2.5 py-2.5 text-sm transition-colors',
-                          sidebarCollapsed && 'lg:justify-center',
-                          isActive
-                            ? 'bg-sidebar-accent font-semibold text-sidebar-accent-foreground'
-                            : 'text-muted-foreground hover:bg-secondary hover:text-foreground',
-                        )
-                      }
-                    >
-                      <Icon className="size-5 shrink-0" aria-hidden />
-                      <span className={cn("truncate", sidebarCollapsed && "lg:sr-only")}>{item.label}</span>
-                      {badgeCount > 0 && (
-                        <Badge className={cn("ml-auto border-transparent bg-primary text-primary-foreground", sidebarCollapsed && "lg:hidden")}>
-                          {badgeCount}
-                        </Badge>
-                      )}
-                    </NavLink>
-                  )
-                })}
-              </div>
-            </div>
-          ))}
-        </nav>
-
-        <div className={cn("border-t px-5 py-4 text-xs text-muted-foreground", sidebarCollapsed && "lg:px-2 lg:text-center")}>
-          {!sidebarCollapsed && (summary.data?.ssdv2.branch ?? 'SSDV2')}
-          {!sidebarCollapsed && summary.data?.ssdv2.commit ? ` · ${summary.data.ssdv2.commit.slice(0, 7)}` : ''}
-          <div className={cn('mt-1 font-semibold', healthy ? 'text-success' : 'text-warning')}>
-            ● <span className={cn(sidebarCollapsed && "lg:sr-only")}>{healthy ? fr.nav.systemOperational : fr.nav.systemDegraded}</span>
-          </div>
-        </div>
+        <AppSidebar
+          sections={NAV_SECTIONS}
+          instanceName={instanceName}
+          branch={summary.data?.ssdv2.branch}
+          commit={summary.data?.ssdv2.commit}
+          healthy={healthy}
+          unread={unread}
+          collapsed={sidebarCollapsed}
+          onToggleCollapse={() => setSidebarCollapsed((value) => !value)}
+        />
       </aside>
+
+      <Dialog open={sidebarOpen} onOpenChange={setSidebarOpen}>
+        <DialogContent className="control-sidebar-drawer lg:hidden" showCloseButton={false}>
+          <DialogTitle className="sr-only">Navigation principale SSDv2</DialogTitle>
+          <AppSidebar
+            sections={NAV_SECTIONS}
+            instanceName={instanceName}
+            branch={summary.data?.ssdv2.branch}
+            commit={summary.data?.ssdv2.commit}
+            healthy={healthy}
+            unread={unread}
+            mobile
+            onClose={() => setSidebarOpen(false)}
+            onNavigate={() => setSidebarOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b bg-card/95 px-4 backdrop-blur lg:px-6">
           <Button
             variant="outline"
             size="icon"
-            className="lg:hidden"
+            className="size-12 shrink-0 lg:hidden"
             aria-label="Ouvrir la navigation"
             onClick={() => setSidebarOpen(true)}
           >
-            <Menu className="size-4" aria-hidden />
+            <Menu className="size-6" aria-hidden />
           </Button>
 
-          <Button size="icon" variant="outline" className="shrink-0 md:hidden" aria-label="Rechercher une application" onClick={() => setMobileSearchOpen(true)}>
-            <Search className="size-4" aria-hidden />
+          <Button size="icon" variant="outline" className="size-12 shrink-0 lg:hidden" aria-label="Rechercher une application" onClick={() => setMobileSearchOpen(true)}>
+            <Search className="size-6" aria-hidden />
           </Button>
-          <div className="relative hidden w-full max-w-md md:block">
+          <div className="relative hidden w-full max-w-md lg:block">
             <Search
               className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
               aria-hidden
@@ -362,7 +300,7 @@ export function Layout() {
         </header>
 
         <Dialog open={mobileSearchOpen} onOpenChange={setMobileSearchOpen}>
-          <DialogContent className="top-4 max-w-[calc(100%-1rem)] -translate-y-0 gap-3 p-4 sm:max-w-lg md:hidden" showCloseButton={false}>
+          <DialogContent className="top-4 max-w-[calc(100%-1rem)] -translate-y-0 gap-3 p-4 sm:max-w-lg lg:hidden" showCloseButton={false}>
             <DialogHeader className="flex-row items-center justify-between gap-2">
               <DialogTitle>Rechercher une application</DialogTitle>
               <Button size="icon-sm" variant="ghost" aria-label={fr.common.close} onClick={() => setMobileSearchOpen(false)}>
@@ -416,7 +354,7 @@ export function Layout() {
           </Alert>
         )}
 
-        <main className="mx-auto w-full max-w-[1600px] flex-1 p-4 pb-10 lg:p-7">
+        <main className="mx-auto w-full max-w-[1600px] min-w-0 flex-1 p-4 pb-40 lg:p-7">
           {showShell ? (
             <Suspense fallback={<PageSkeleton />}>
               <Outlet />
@@ -425,22 +363,19 @@ export function Layout() {
             <PageSkeleton />
           )}
         </main>
-        <nav aria-label="Navigation principale mobile" className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-4 border-t bg-card/95 pb-[env(safe-area-inset-bottom)] shadow-lg backdrop-blur lg:hidden">
-          {[
-            { to: '/dashboard', label: 'Accueil', icon: Gauge },
-            { to: '/apps', label: 'Applications', icon: Boxes },
-            { to: '/jobs', label: 'Jobs', icon: ListChecks },
-          ].map(({ to, label, icon: Icon }) => (
-            <NavLink key={to} to={to} className={({ isActive }) => cn('flex min-h-16 flex-col items-center justify-center gap-1 text-[11px]', isActive ? 'text-primary' : 'text-muted-foreground')}>
-              <Icon className="size-5" aria-hidden />
-              {label}
-            </NavLink>
-          ))}
-          <button type="button" className="flex min-h-16 flex-col items-center justify-center gap-1 text-[11px] text-muted-foreground" aria-expanded={sidebarOpen} aria-label="Toutes les rubriques" onClick={() => setSidebarOpen(true)}>
-            <Menu className="size-5" aria-hidden />
-            Plus
+        {!sidebarOpen && (
+          <button
+            type="button"
+            aria-label="Ouvrir le menu de navigation"
+            aria-expanded={false}
+            aria-haspopup="dialog"
+            className="control-glass-fab fixed left-5 z-30 grid size-15 place-items-center rounded-full lg:hidden"
+            onClick={() => setSidebarOpen(true)}
+          >
+            <Menu className="size-7" aria-hidden />
+            <span className="sr-only">Ouvrir la navigation SSDv2</span>
           </button>
-        </nav>
+        )}
       </div>
     </div>
   )

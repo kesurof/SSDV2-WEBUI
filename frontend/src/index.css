@@ -193,7 +193,7 @@
   .control-shell *, .control-shell *::before, .control-shell *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
 @media (max-width: 1023px) {
-  .control-shell { padding-bottom: 4.5rem; }
+  .control-shell { padding-bottom: 0; }
 }
 
 /* Cohérence tactile, sans modifier la densité des tableaux sur desktop. */
@@ -201,4 +201,71 @@
   .control-shell [data-slot="button"] { min-height: 2.5rem; }
   .control-shell [data-slot="tabs-list"] { min-width: 0; }
   .control-shell main { min-width: 0; overflow-wrap: anywhere; }
+}
+
+/* La sidebar comporte trois régions fixes : en-tête, scroll autonome, pied de page. */
+.control-sidebar-scroll {
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+  scrollbar-gutter: stable;
+}
+.control-sidebar-scroll:focus-visible {
+  outline: 2px solid var(--sidebar-ring);
+  outline-offset: -2px;
+}
+.control-sidebar-drawer[data-slot="dialog-content"] {
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: auto;
+  translate: none;
+  transform: none;
+  display: flex;
+  width: min(19rem, calc(100vw - 2.5rem));
+  max-width: none;
+  height: 100dvh;
+  max-height: 100dvh;
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+  gap: 0;
+  padding: 0;
+  border-radius: 0 1rem 1rem 0;
+  background: var(--sidebar);
+  color: var(--sidebar-foreground);
+  box-shadow: 14px 0 48px rgb(2 6 23 / .24);
+}
+.control-glass-fab {
+  bottom: calc(8.5rem + env(safe-area-inset-bottom, 0px));
+  isolation: isolate;
+  border: 1px solid rgb(255 255 255 / .54);
+  background: linear-gradient(145deg, rgb(255 255 255 / .54), rgb(255 255 255 / .15));
+  color: var(--foreground);
+  box-shadow: inset 0 1px 1px rgb(255 255 255 / .70), 0 12px 35px rgb(15 23 42 / .23), 0 2px 6px rgb(15 23 42 / .13);
+  backdrop-filter: blur(22px) saturate(170%);
+  -webkit-backdrop-filter: blur(22px) saturate(170%);
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+.control-glass-fab::before {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  z-index: -1;
+  border-radius: inherit;
+  background: radial-gradient(circle at 30% 12%,rgb(255 255 255 / .45),transparent 64%);
+  pointer-events: none;
+}
+.control-glass-fab:hover { transform: translateY(-2px); }
+.control-glass-fab:active { transform: scale(.96); }
+.control-glass-fab:focus-visible { outline: 3px solid var(--ring); outline-offset: 4px; }
+.dark .control-glass-fab {
+  border-color: rgb(191 219 254 / .36);
+  background: linear-gradient(145deg, rgb(73 99 139 / .62), rgb(10 23 42 / .76));
+  box-shadow: inset 0 1px 1px rgb(226 232 240 / .28), 0 12px 40px rgb(0 0 0 / .40);
+}
+@media (prefers-reduced-motion: reduce) {
+  .control-glass-fab { transition: none; }
+  .control-glass-fab:hover, .control-glass-fab:active { transform: none; }
 }

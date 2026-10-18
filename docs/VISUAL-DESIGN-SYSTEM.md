@@ -23,7 +23,7 @@ L'interface existante repose sur shadcn/ui + Tailwind 4 + next-themes. Les token
 
 ## Principes d'interface
 
-1. Navigation latérale stable sur desktop, repliable en icônes avec titres explicites ; navigation inférieure sur mobile et accès au menu complet.
+1. Navigation latérale stable et repliable sur ordinateur, zone défilante indépendante ; sur mobile, bouton flottant en verre pour ouvrir la sidebar. Plus de barre d'onglets en bas.
 2. Dashboard opérationnel : état, chiffres utiles, ressources et activité récente ; jamais une galerie décorative.
 3. Catalogue : filtres en onglets compacts et tableau lisible ; actions existantes conservées.
 4. Détail d'application : informations regroupées et hiérarchisées, onglets fonctionnels, actions du cycle de vie conservées.
@@ -64,3 +64,12 @@ L'interface existante repose sur shadcn/ui + Tailwind 4 + next-themes. Les token
 - Recherche : icône mobile avec dialogue dédié, recherche partagée avec desktop, raccourci Cmd/Ctrl+K préservé.
 - Notifications : filtres Toutes et Non lues, regroupement par date, accès direct à la fiche applicative lorsque le job lié est identifié.
 - Divers : états vides uniformisés, skeleton adaptés aux petits écrans et dimensions tactiles minimales pour les boutons sur mobile.
+
+## Navigation latérale robuste et FAB en verre (octobre 2026)
+
+- `AppSidebar` est un composant unique pour desktop et mobile. Ses trois régions sont indépendantes : en-tête/logo, navigation défilante (`min-h-0`, `overflow-y-auto`, inertie tactile iOS, `overscroll-y-contain`) et statut de bas de panneau.
+- Desktop : sidebar sticky, hauteur `100dvh`, rétractable en icônes ; les liens restent accessibles au clavier via leur nom.
+- Mobile/tablette : panneau dans un `Dialog` Base UI (focus géré, fermeture Échap/fond/fermeture explicite et blocage du scroll de l'arrière-plan), largeur limitée à l'écran, pied de page respectant les marges iOS. Fermeture automatique à la navigation et au passage desktop.
+- Le menu bas à quatre destinations est supprimé ; un bouton flottant circulaire à effet verre (clair et sombre) le remplace en bas à gauche, à `8.5rem` + safe area du bas pour laisser de la place aux notifications. Il ouvre le même panneau mobile que le bouton hamburger du haut.
+- Hamburger et recherche de la top bar : zones tactiles 48 × 48 px et icônes 24 px. La search modale dédiée sous 768 px est conservée.
+- Test visuel recommandé à 320/375/430 px, paysage, Safari iOS, contenu long, clavier virtuel, réduction d'animations et notifications Sonner ; ne jamais affirmer une validation appareil tant qu'elle n'a pas eu lieu.
