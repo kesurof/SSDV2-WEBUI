@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { BrandLogo } from '@/components/app/brand-logo'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -56,8 +57,8 @@ export function SetupPage() {
 
   if (status.isPending) {
     return (
-      <div className="flex min-h-svh items-center justify-center bg-muted/40 p-4">
-        <Card className="w-full max-w-2xl">
+      <div className="flex min-h-svh items-center justify-center bg-background p-4">
+        <Card className="w-full max-w-2xl border shadow-lg">
           <CardContent className="py-10 text-center text-sm text-muted-foreground">
             {fr.common.loading}
           </CardContent>
@@ -68,8 +69,8 @@ export function SetupPage() {
 
   if (status.isError) {
     return (
-      <div className="flex min-h-svh items-center justify-center bg-muted/40 p-4">
-        <Card className="w-full max-w-2xl">
+      <div className="flex min-h-svh items-center justify-center bg-background p-4">
+        <Card className="w-full max-w-2xl border shadow-lg">
           <CardHeader>
             <CardTitle>{fr.setup.title}</CardTitle>
           </CardHeader>
@@ -150,9 +151,10 @@ export function SetupPage() {
 
   return (
     <div className="flex min-h-svh items-center justify-center bg-muted/40 p-4">
-      <Card className="w-full max-w-2xl">
-        <CardHeader>
-          <CardTitle>{fr.setup.title}</CardTitle>
+      <Card className="w-full max-w-2xl border shadow-lg">
+        <CardHeader className="space-y-4">
+          <BrandLogo className="w-36" />
+          <CardTitle className="text-xl">{fr.setup.title}</CardTitle>
           <CardDescription>
             {STEPS.map((label, index) => (
               <span key={label} className={index === step ? 'font-medium text-foreground' : ''}>

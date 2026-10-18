@@ -3,6 +3,7 @@ import type { FormEvent } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 
 import { ApiError } from '@/api/client'
+import { BrandLogo } from '@/components/app/brand-logo'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -54,10 +55,24 @@ export function LoginPage() {
   const errorMessage = loginErrorMessage(login.error)
 
   return (
-    <div className="flex min-h-svh items-center justify-center bg-muted/40 p-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle>{fr.login.title}</CardTitle>
+    <div className="flex min-h-svh items-center justify-center bg-background p-4 lg:p-8">
+      <div className="grid w-full max-w-[960px] overflow-hidden rounded-2xl border bg-card shadow-xl lg:min-h-[520px] lg:grid-cols-[1fr_1fr]">
+        <aside className="control-login-accent hidden flex-col justify-between p-12 text-white lg:flex">
+          <img src="/branding/ssdv2-horizontal-dark.svg" alt="SSDv2" className="w-44" />
+          <div>
+            <div className="mb-5 h-1 w-12 rounded-full bg-cyan-400" aria-hidden />
+            <h1 className="text-3xl font-bold tracking-tight">Déployez. Gérez. Sécurisez.</h1>
+            <p className="mt-4 max-w-sm text-sm leading-7 text-slate-300">Votre écosystème d’applications Docker, administré en toute simplicité.</p>
+          </div>
+          <p className="text-xs text-slate-400">SSDv2 · Console d'administration</p>
+        </aside>
+        <Card className="flex w-full flex-col justify-center rounded-none border-0 bg-card p-5 shadow-none sm:p-10">
+        <CardHeader className="space-y-5">
+          <BrandLogo className="w-36 lg:hidden" />
+          <div>
+            <CardTitle className="text-2xl">{fr.login.title}</CardTitle>
+            <p className="mt-2 text-sm text-muted-foreground">Accédez à votre espace d’administration.</p>
+          </div>
         </CardHeader>
         <CardContent>
           <form className="space-y-4" onSubmit={handleSubmit}>
@@ -88,7 +103,8 @@ export function LoginPage() {
             </Button>
           </form>
         </CardContent>
-      </Card>
+        </Card>
+      </div>
     </div>
   )
 }

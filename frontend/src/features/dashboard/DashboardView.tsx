@@ -50,7 +50,7 @@ export function DashboardView({
   const alerts = (notifications ?? []).slice(0, 3)
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <PageHeader
         title={fr.dashboard.title}
         subtitle="Vue d'ensemble de votre instance SSDV2."
@@ -74,7 +74,37 @@ export function DashboardView({
         </Alert>
       )}
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <MetricCard
+          icon={Boxes}
+          value={summary.ssdv2.apps_total}
+          label={fr.dashboard.appsTotal}
+          to="/apps"
+        />
+        <MetricCard
+          icon={Download}
+          value={summary.ssdv2.installed}
+          label={fr.dashboard.installed}
+          tone="ok"
+          to="/apps?status=installed"
+        />
+        <MetricCard
+          icon={CirclePlay}
+          value={summary.ssdv2.running}
+          label={fr.dashboard.running}
+          tone="ok"
+          to="/apps?status=running"
+        />
+        <MetricCard
+          icon={CircleStop}
+          value={summary.ssdv2.stopped}
+          label={fr.dashboard.stopped}
+          tone={summary.ssdv2.stopped > 0 ? 'err' : 'info'}
+          to="/apps?status=stopped"
+        />
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-sm">
@@ -153,38 +183,8 @@ export function DashboardView({
         </Card>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard
-          icon={Boxes}
-          value={summary.ssdv2.apps_total}
-          label={fr.dashboard.appsTotal}
-          to="/apps"
-        />
-        <MetricCard
-          icon={Download}
-          value={summary.ssdv2.installed}
-          label={fr.dashboard.installed}
-          tone="ok"
-          to="/apps?status=installed"
-        />
-        <MetricCard
-          icon={CirclePlay}
-          value={summary.ssdv2.running}
-          label={fr.dashboard.running}
-          tone="ok"
-          to="/apps?status=running"
-        />
-        <MetricCard
-          icon={CircleStop}
-          value={summary.ssdv2.stopped}
-          label={fr.dashboard.stopped}
-          tone={summary.ssdv2.stopped > 0 ? 'err' : 'info'}
-          to="/apps?status=stopped"
-        />
-      </div>
-
       {updatesCount !== undefined && updatesCount > 0 && (
-        <div className="flex flex-wrap items-center gap-3 rounded-2xl border bg-card p-4">
+        <div className="flex flex-wrap items-center gap-3 rounded-xl border bg-card p-4">
           <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-warning-soft text-warning">
             <ArrowUpCircle className="size-5" aria-hidden />
           </div>

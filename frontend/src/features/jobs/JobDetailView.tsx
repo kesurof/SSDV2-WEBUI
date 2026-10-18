@@ -195,7 +195,7 @@ export function JobDetailView({
             {fr.common.copy}
           </Button>
         </div>
-        <pre className="max-h-96 overflow-auto rounded-md border bg-muted/30 p-3 font-mono text-xs">
+        <pre className="control-console max-h-[480px] min-h-36 overflow-auto rounded-lg p-4 font-mono text-xs leading-relaxed">
           {lines.length === 0
             ? done
               ? fr.apps.logs.empty

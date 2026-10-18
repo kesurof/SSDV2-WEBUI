@@ -55,7 +55,7 @@ function Tile({
   tone?: 'info' | 'ok' | 'warn' | 'err'
 }) {
   return (
-    <div className="rounded-2xl border bg-card p-5">
+    <div className="rounded-xl border bg-card p-4">
       <div className="mb-3 flex items-center justify-between gap-3">
         <span className="flex items-center gap-2 text-sm font-semibold">
           <Icon className="size-4 text-muted-foreground" aria-hidden />
@@ -81,7 +81,7 @@ function InfoCard({
   children: React.ReactNode
 }) {
   return (
-    <div className="rounded-2xl border bg-card p-5">
+    <div className="rounded-xl border bg-card p-4">
       <div className="mb-3 flex items-center justify-between gap-3">
         <span className="text-sm font-semibold">{title}</span>
         <StatusPill tone={tone}>{tone === 'ok' ? 'OK' : tone === 'err' ? fr.health.degraded : '—'}</StatusPill>
@@ -247,7 +247,7 @@ export function HealthView({
         </InfoCard>
       </div>
 
-      <div className="mt-4 rounded-2xl border bg-card p-5">
+      <div className="mt-4 rounded-xl border bg-card p-4">
         <h2 className="mb-3 text-sm font-semibold">{fr.health.services}</h2>
         <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
           {health.services.map((service) => (

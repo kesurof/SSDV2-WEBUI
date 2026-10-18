@@ -207,7 +207,7 @@ export function AppLogsTab({ app, containers }: { app: string; containers: strin
       ) : (
         <pre
           ref={preRef}
-          className="max-h-96 overflow-auto rounded-md border bg-muted/30 p-3 font-mono text-xs"
+          className="control-console max-h-[520px] min-h-60 overflow-auto rounded-xl p-4 font-mono text-xs leading-relaxed"
         >
           {visible.join('\n')}
         </pre>

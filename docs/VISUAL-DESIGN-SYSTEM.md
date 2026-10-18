@@ -1,0 +1,39 @@
+# SSDv2 Control — Refonte de la WebUI
+
+> Statut : implémentation visuelle. Source officielle de marque : [projetssd/branding](https://github.com/projetssd/branding).
+
+## Intention
+
+Une console d'administration dense, claire, calme et fiable. Conserver toutes les fonctionnalités, informations et protections de SSDV2-WEBUI. Ne pas recréer la logique métier de SSDV2.
+
+## Identité
+
+- Nom officiel SSDv2, signature « Déployez. Gérez. Sécurisez. ».
+- Les fichiers SVG de `frontend/public/branding/` sont des copies du Brand Kit généré depuis les maîtres. Ne **jamais** redessiner les rubans à la main.
+- Bleu d'action #2563EB (clair), bleu #3B82F6 (sombre), violet #7C3AED et cyan #06B6D4 comme accents **non sémantiques**.
+- Polices : Inter en priorité, Geist/system-ui en repli. Les polices sont chargées par CSS web dans `frontend/index.html`, sans font embarquée.
+- Surface claire #F8FAFC, surface sombre #070F1E. État réel : vert succès, orange attention, rouge erreur.
+- Respecter l'accessibilité (contrastes, navigation clavier, libellés, réduction des animations).
+
+## Intégration technique
+
+L'interface existante repose sur shadcn/ui + Tailwind 4 + next-themes. Les tokens du kit officiel sont adaptés aux variables shadcn dans `frontend/src/index.css` ; la classe `.dark` reste source unique du thème. Ne pas charger `theme.css` du dépôt Branding par-dessus cette couche, car ses sélecteurs `[data-theme]` introduiraient une source de vérité concurrente.
+
+`frontend/src/components/app/brand-logo.tsx` utilise les logos horizontaux clairs/sombres selon le thème. Conserver le favicon, les logos et illustrations synchronisés avec les exports officiels.
+
+## Principes d'interface
+
+1. Navigation latérale stable sur desktop, repliable en icônes avec titres explicites ; navigation inférieure sur mobile et accès au menu complet.
+2. Dashboard opérationnel : état, chiffres utiles, ressources et activité récente ; jamais une galerie décorative.
+3. Catalogue : filtres en onglets compacts et tableau lisible ; actions existantes conservées.
+4. Détail d'application : informations regroupées et hiérarchisées, onglets fonctionnels, actions du cycle de vie conservées.
+5. Jobs : liste à gauche, détail/logs à droite sur desktop ; mobile en empilement.
+6. Une palette fonctionnelle indépendante de la marque pour les états Docker, les logs, les avertissements et les erreurs.
+7. Ne jamais affaiblir les confirmations graduées des opérations dangereuses décrites dans `AGENTS.md` et le brief du projet.
+
+## Contrôles avant publication
+
+- `cd frontend && npm ci && npm run lint && npm run typecheck && npm run test && npm run build`.
+- Vérifier les pages en clair/sombre et à 375, 768, 1280, 1920 px.
+- Tester clavier, menu mobile, sidebar repliée, modal des actions critiques, consultation logs SSE et authentification externe.
+- Exécuter la CI backend inchangée et le workflow Docker multiarchitecture avant d'annoncer une publication terminée.

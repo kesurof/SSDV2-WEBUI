@@ -90,14 +90,14 @@ export function JobsView({ jobs, selectedId }: { jobs: Job[]; selectedId?: numbe
       {filtered.length === 0 ? (
         <EmptyState icon={ListChecks} message={fr.jobs.empty} />
       ) : (
-        <div className="overflow-hidden rounded-2xl border bg-card">
+        <div className="overflow-hidden rounded-xl border bg-card">
           {pageItems.map((job) => (
             <Link
               key={job.id}
               to={`/jobs/${job.id}`}
               className={cn(
-                'flex items-center gap-3 border-b px-3 py-2.5 transition-colors last:border-b-0 hover:bg-secondary/60',
-                selectedId === job.id && 'bg-accent/60',
+                'flex items-center gap-3 border-b border-l-2 border-l-transparent px-3 py-3 transition-colors last:border-b-0 hover:bg-secondary/60',
+                selectedId === job.id && 'border-l-primary bg-accent/60',
               )}
             >
               <span className="font-mono text-xs text-muted-foreground">#{job.id}</span>

@@ -7,10 +7,10 @@ import { fr } from '@/i18n/fr'
 import type { Notification } from '@/api/types'
 
 const SEVERITY_STYLES: Record<Notification['severity'], string> = {
-  info: 'border-transparent bg-sky-600 text-white',
-  success: 'border-transparent bg-emerald-600 text-white',
-  warning: 'border-transparent bg-amber-500 text-white',
-  error: 'border-transparent bg-red-600 text-white',
+  info: 'border-primary/20 bg-primary/10 text-primary',
+  success: 'border-success/20 bg-success-soft text-success',
+  warning: 'border-warning/20 bg-warning-soft text-warning',
+  error: 'border-destructive/20 bg-destructive-soft text-destructive',
 }
 
 function formatDate(value: string): string {
@@ -58,7 +58,7 @@ export function NotificationsView({
           {items.map((notification) => (
             <li
               key={notification.id}
-              className={`rounded-md border p-3 ${notification.read_at ? '' : 'bg-accent/30'}`}
+              className={`rounded-xl border p-4 ${notification.read_at ? 'bg-card' : 'border-primary/20 bg-accent/30'}`}
             >
               <div className="flex items-start justify-between gap-3">
                 <div>

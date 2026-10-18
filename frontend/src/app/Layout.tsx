@@ -8,6 +8,8 @@ import {
   HeartPulse,
   ListChecks,
   Menu,
+  PanelLeftClose,
+  PanelLeftOpen,
   Search,
   Settings,
   ShieldCheck,
@@ -25,6 +27,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { PageSkeleton } from '@/components/app/page-skeleton'
+import { BrandLogo, BrandMark } from '@/components/app/brand-logo'
 import { ThemeToggle } from '@/components/app/theme-toggle'
 import { UserMenu } from '@/components/app/user-menu'
 import { meQueryKey, useLogout, useMe } from '@/features/auth/useAuth'
@@ -87,6 +90,7 @@ export function Layout() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [query, setQuery] = useState('')
   const [searchFocused, setSearchFocused] = useState(false)
   const searchRef = useRef<HTMLInputElement>(null)
@@ -167,7 +171,7 @@ export function Layout() {
   const showShell = !me.isPending && me.data !== null
 
   return (
-    <div className="flex min-h-svh bg-background">
+    <div className="control-shell flex min-h-svh bg-background">
       {sidebarOpen && (
         <button
           type="button"
@@ -179,18 +183,29 @@ export function Layout() {
 
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-40 flex w-62 flex-col border-r bg-sidebar text-sidebar-foreground transition-transform lg:sticky lg:top-0 lg:h-svh lg:translate-x-0',
+          'fixed inset-y-0 left-0 z-40 flex w-62 flex-col border-r bg-sidebar text-sidebar-foreground transition-all duration-200 lg:sticky lg:top-0 lg:h-svh lg:translate-x-0',
+          sidebarCollapsed && 'lg:w-20',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full',
         )}
       >
-        <div className="flex items-center gap-2.5 px-5 py-5">
-          <div className="grid size-8 place-items-center rounded-lg bg-primary font-extrabold text-primary-foreground">
-            ◇
+        <div className={cn('flex min-h-20 items-center gap-2 border-b border-sidebar-border px-4 py-4', sidebarCollapsed && 'lg:flex-col lg:justify-center lg:gap-1 lg:px-2 lg:py-1.5')}>
+          <div className={cn('min-w-0 flex-1', sidebarCollapsed && 'lg:hidden')}>
+            <BrandLogo className="w-[130px]" />
+            <div className="mt-1 truncate text-[11px] text-muted-foreground" title={instanceName}>
+              {instanceName === 'SSDV2 WebUI' ? "Console d'administration" : instanceName}
+            </div>
           </div>
-          <div className="min-w-0">
-            <div className="truncate text-sm font-semibold">{instanceName}</div>
-            <div className="text-[11px] text-muted-foreground">Administration simplifiée</div>
-          </div>
+          {sidebarCollapsed && <BrandMark className="hidden lg:block lg:size-7" />}
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className={cn("ml-auto hidden shrink-0 text-muted-foreground lg:inline-flex", sidebarCollapsed && "lg:ml-0 lg:size-7")}
+            aria-label={sidebarCollapsed ? 'Déployer la navigation' : 'Réduire la navigation'}
+            title={sidebarCollapsed ? 'Déployer la navigation' : 'Réduire la navigation'}
+            onClick={() => setSidebarCollapsed((value) => !value)}
+          >
+            {sidebarCollapsed ? <PanelLeftOpen className="size-4" aria-hidden /> : <PanelLeftClose className="size-4" aria-hidden />}
+          </Button>
           <Button
             variant="ghost"
             size="icon-sm"
@@ -205,7 +220,7 @@ export function Layout() {
         <nav className="flex-1 space-y-5 overflow-y-auto px-3 pb-4">
           {NAV_SECTIONS.map((section) => (
             <div key={section.label}>
-              <div className="px-2 pb-1.5 text-[11px] font-bold tracking-wider text-muted-foreground uppercase">
+              <div className={cn("px-2 pb-1.5 text-[11px] font-bold tracking-wider text-muted-foreground uppercase", sidebarCollapsed && "lg:sr-only")}>
                 {section.label}
               </div>
               <div className="space-y-0.5">
@@ -217,9 +232,11 @@ export function Layout() {
                       key={item.to}
                       to={item.to}
                       onClick={() => setSidebarOpen(false)}
+                      title={item.label}
                       className={({ isActive }) =>
                         cn(
-                          'flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors',
+                          'flex items-center gap-2.5 rounded-lg px-2.5 py-2.5 text-sm transition-colors',
+                          sidebarCollapsed && 'lg:justify-center',
                           isActive
                             ? 'bg-sidebar-accent font-semibold text-sidebar-accent-foreground'
                             : 'text-muted-foreground hover:bg-secondary hover:text-foreground',
@@ -227,9 +244,9 @@ export function Layout() {
                       }
                     >
                       <Icon className="size-5 shrink-0" aria-hidden />
-                      <span className="truncate">{item.label}</span>
+                      <span className={cn("truncate", sidebarCollapsed && "lg:sr-only")}>{item.label}</span>
                       {badgeCount > 0 && (
-                        <Badge className="ml-auto border-transparent bg-primary text-primary-foreground">
+                        <Badge className={cn("ml-auto border-transparent bg-primary text-primary-foreground", sidebarCollapsed && "lg:hidden")}>
                           {badgeCount}
                         </Badge>
                       )}
@@ -241,11 +258,11 @@ export function Layout() {
           ))}
         </nav>
 
-        <div className="border-t px-5 py-4 text-xs text-muted-foreground">
-          {summary.data?.ssdv2.branch ?? 'SSDV2'}
-          {summary.data?.ssdv2.commit ? ` · ${summary.data.ssdv2.commit.slice(0, 7)}` : ''}
+        <div className={cn("border-t px-5 py-4 text-xs text-muted-foreground", sidebarCollapsed && "lg:px-2 lg:text-center")}>
+          {!sidebarCollapsed && (summary.data?.ssdv2.branch ?? 'SSDV2')}
+          {!sidebarCollapsed && summary.data?.ssdv2.commit ? ` · ${summary.data.ssdv2.commit.slice(0, 7)}` : ''}
           <div className={cn('mt-1 font-semibold', healthy ? 'text-success' : 'text-warning')}>
-            ● {healthy ? fr.nav.systemOperational : fr.nav.systemDegraded}
+            ● <span className={cn(sidebarCollapsed && "lg:sr-only")}>{healthy ? fr.nav.systemOperational : fr.nav.systemDegraded}</span>
           </div>
         </div>
       </aside>
@@ -256,7 +273,7 @@ export function Layout() {
             variant="outline"
             size="icon"
             className="lg:hidden"
-            aria-label={fr.common.search}
+            aria-label="Ouvrir la navigation"
             onClick={() => setSidebarOpen(true)}
           >
             <Menu className="size-4" aria-hidden />
@@ -319,6 +336,9 @@ export function Layout() {
           </div>
 
           <div className="ml-auto flex items-center gap-2">
+            <span className={cn("hidden items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium md:inline-flex", healthy ? "text-success" : "text-warning")}>
+              <span aria-hidden>●</span>{healthy ? fr.nav.systemOperational : fr.nav.systemDegraded}
+            </span>
             <ThemeToggle />
             {me.data && (
               <UserMenu
@@ -341,7 +361,7 @@ export function Layout() {
           </Alert>
         )}
 
-        <main className="mx-auto w-full max-w-[1600px] flex-1 p-4 lg:p-7">
+        <main className="mx-auto w-full max-w-[1600px] flex-1 p-4 pb-10 lg:p-7">
           {showShell ? (
             <Suspense fallback={<PageSkeleton />}>
               <Outlet />
@@ -350,6 +370,22 @@ export function Layout() {
             <PageSkeleton />
           )}
         </main>
+        <nav aria-label="Navigation principale mobile" className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-4 border-t bg-card/95 pb-[env(safe-area-inset-bottom)] shadow-lg backdrop-blur lg:hidden">
+          {[
+            { to: '/dashboard', label: 'Accueil', icon: Gauge },
+            { to: '/apps', label: 'Applications', icon: Boxes },
+            { to: '/jobs', label: 'Jobs', icon: ListChecks },
+          ].map(({ to, label, icon: Icon }) => (
+            <NavLink key={to} to={to} className={({ isActive }) => cn('flex min-h-16 flex-col items-center justify-center gap-1 text-[11px]', isActive ? 'text-primary' : 'text-muted-foreground')}>
+              <Icon className="size-5" aria-hidden />
+              {label}
+            </NavLink>
+          ))}
+          <button type="button" className="flex min-h-16 flex-col items-center justify-center gap-1 text-[11px] text-muted-foreground" aria-expanded={sidebarOpen} aria-label="Toutes les rubriques" onClick={() => setSidebarOpen(true)}>
+            <Menu className="size-5" aria-hidden />
+            Plus
+          </button>
+        </nav>
       </div>
     </div>
   )

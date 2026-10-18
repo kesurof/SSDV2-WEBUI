@@ -53,7 +53,7 @@ function JobDetailPanel({ job }: { job: Job }) {
   }
 
   return (
-    <div className="rounded-2xl border bg-card p-5">
+    <div className="rounded-xl border bg-card p-4 sm:p-5">
       <JobDetailView
         job={job}
         lines={lines}
@@ -91,7 +91,7 @@ export function JobsPage() {
   return (
     <div>
       <PageHeader title={fr.jobs.title} subtitle="Gérez et surveillez les tâches planifiées." />
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,460px)]">
+      <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(300px,360px)_minmax(0,1fr)]">
         <JobsView jobs={jobs.data} selectedId={selectedJob?.id} />
         <div className="h-fit lg:sticky lg:top-20">
           {selectedJob ? (

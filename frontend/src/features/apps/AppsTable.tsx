@@ -28,7 +28,7 @@ function buildColumns(updatesByApp?: Record<string, UpdateEntry>) {
   columnHelper.accessor('name', {
     header: fr.apps.columns.name,
     cell: (ctx) => (
-      <div>
+      <div className="min-w-40">
         <Link to={`/apps/${ctx.getValue()}`} className="font-medium hover:underline">
           {ctx.getValue()}
         </Link>
@@ -126,8 +126,8 @@ export function AppsTable({
   }
 
   return (
-    <div className="rounded-md border">
-      <Table>
+    <div className="control-app-table overflow-x-auto rounded-xl border bg-card">
+      <Table className="min-w-[880px]">
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
