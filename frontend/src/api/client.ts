@@ -1,11 +1,13 @@
-const API_BASE = '/api/v1'
+import { apiUrl } from '@/api/url'
 
 export class ApiError extends Error {
   status: number
+  code: 'http' | 'non_json'
 
-  constructor(status: number, message: string) {
+  constructor(status: number, message: string, code: 'http' | 'non_json' = 'http') {
     super(message)
     this.status = status
+    this.code = code
   }
 }
 
@@ -56,11 +58,23 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
     if (init.body) headers.set('content-type', 'application/json')
   }
 
-  const response = await fetch(`${API_BASE}${path}`, {
+  const response = await fetch(apiUrl(path), {
     ...init,
     headers,
     credentials: 'include',
   })
+
+  // Certains proxies (oauth2-proxy, Authelia) répondent en HTML — parfois avec un
+  // HTTP 200 — lorsqu'ils demandent une reconnexion. On ne recharge jamais ici :
+  // cela provoquerait une boucle ; on expose une erreur explicite.
+  const contentType = response.headers?.get('content-type') ?? ''
+  if (response.status !== 204 && contentType && !contentType.includes('application/json')) {
+    throw new ApiError(
+      response.status,
+      'Le serveur a renvoyé une page ou un contenu non-JSON. Vérifiez la connexion externe et les règles du reverse proxy.',
+      'non_json',
+    )
+  }
 
   if (!response.ok) {
     let message = response.statusText
@@ -74,5 +88,13 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
   if (response.status === 204) {
     return undefined as T
   }
-  return (await response.json()) as T
+  try {
+    return (await response.json()) as T
+  } catch {
+    throw new ApiError(
+      response.status,
+      'La réponse du serveur n’est pas un JSON valide. Vérifiez la configuration du proxy.',
+      'non_json',
+    )
+  }
 }

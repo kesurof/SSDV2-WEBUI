@@ -25,6 +25,16 @@ def test_jobs_requires_authentication(client):
     assert client.get("/api/v1/jobs/1").status_code == 401
 
 
+def test_job_events_unauthenticated_reports_auth_required(client):
+    # Flux SSE : pas de 401 (EventSource n'expose pas le code HTTP), mais une trame
+    # « auth required » sur un flux 200 ; l'existence du job n'est pas révélée.
+    response = client.get("/api/v1/jobs/1/events")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/event-stream")
+    assert '{"auth":"required"}' in response.text
+
+
 def test_app_action_creates_job(auth_client, write_catalogue):
     write_catalogue("sonarr - Gestion Séries\n")
     runner = FakeStreamingRunner(lines=("action en cours", "terminé"))
@@ -70,6 +80,22 @@ def test_job_events_stream(auth_client, write_catalogue):
 
 def test_job_events_unknown_job(auth_client):
     assert auth_client.get("/api/v1/jobs/99999/events").status_code == 404
+
+
+def test_job_events_resume_uses_after(auth_client, write_catalogue):
+    write_catalogue("sonarr - Gestion Séries\n")
+    job_manager.configure(lambda: FakeStreamingRunner(lines=("ligne de job",)))
+
+    job_id = auth_client.post("/api/v1/apps/sonarr/start").json()["id"]
+    wait_for_job(auth_client, job_id)
+
+    full = auth_client.get(f"/api/v1/jobs/{job_id}/events").text
+    ids = [int(line[len("id: ") :]) for line in full.splitlines() if line.startswith("id: ")]
+    assert ids
+
+    resumed = auth_client.get(f"/api/v1/jobs/{job_id}/events?after={max(ids)}").text
+    assert "ligne de job" not in resumed
+    assert '"done": true' in resumed
 
 
 def test_cancel_queued_job(auth_client, write_catalogue):

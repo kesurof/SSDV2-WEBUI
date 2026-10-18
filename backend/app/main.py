@@ -7,7 +7,6 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import func, select
 from sqlalchemy.exc import SQLAlchemyError
-from starlette.middleware.gzip import GZipMiddleware
 
 from app.adapters.ssdv2_bash import Ssdv2BashRunner
 from app.adapters.ssdv2_cli import Ssdv2CtlRunner
@@ -28,6 +27,8 @@ from app.api import (
 )
 from app.core.config import get_settings
 from app.core.logging import setup_logging
+from app.core.middleware import ApiGZipMiddleware
+from app.core.proxy_auth import trusted_proxies_configured
 from app.core.security import hash_password
 from app.db.models import User
 from app.db.session import get_session_factory, init_db
@@ -63,6 +64,18 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
         bootstrap_admin()
         settings = get_settings()
         with get_session_factory()() as db:
+            migrated = webui_settings.migrate_legacy_auth_mode(db)
+            mode, _source = webui_settings.effective_auth_mode(db)
+            if migrated == "proxy":
+                logger.warning(
+                    "auth_mode migré vers « proxy » (ancien internal_auth=false). "
+                    "Renseigner WEBUI_TRUSTED_PROXIES sinon les accès protégés sont refusés."
+                )
+            if mode == "proxy" and not trusted_proxies_configured(settings):
+                logger.warning(
+                    "auth_mode=proxy sans WEBUI_TRUSTED_PROXIES : accès protégés refusés "
+                    "(fail-closed). Configurer les proxies de confiance ou choisir un autre mode."
+                )
             if webui_settings.setup_required(db):
                 setup_service.ensure_setup_token(settings.webui_data)
         job_manager.configure(lambda: Ssdv2CtlRunner(settings))
@@ -78,8 +91,8 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
 def create_app() -> FastAPI:
     setup_logging(get_settings().log_level)
     app = FastAPI(title="SSDV2 WebUI", version="0.1.0", lifespan=lifespan)
-    # Les flux SSE (notifications, jobs, logs) sont exclus par GZipMiddleware.
-    app.add_middleware(GZipMiddleware, minimum_size=1024, compresslevel=5)
+    # Les flux SSE (notifications, jobs, logs) sont exclus par ApiGZipMiddleware (par chemin).
+    app.add_middleware(ApiGZipMiddleware, minimum_size=1024, compresslevel=5)
 
     api_router = APIRouter(prefix="/api/v1")
     api_router.include_router(apps.router)

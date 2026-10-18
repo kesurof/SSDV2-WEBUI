@@ -19,6 +19,7 @@ import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Navigate, NavLink, Outlet, useNavigate } from 'react-router-dom'
 
+import { apiUrl } from '@/api/url'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -26,11 +27,12 @@ import { Input } from '@/components/ui/input'
 import { PageSkeleton } from '@/components/app/page-skeleton'
 import { ThemeToggle } from '@/components/app/theme-toggle'
 import { UserMenu } from '@/components/app/user-menu'
-import { useLogout, useMe } from '@/features/auth/useAuth'
+import { meQueryKey, useLogout, useMe } from '@/features/auth/useAuth'
 import { useNotifications } from '@/features/notifications/useNotifications'
 import { useSetupStatus } from '@/features/setup/useSetup'
 import { useApps, useHealth, useSummary } from '@/features/system/useSystem'
 import { fr } from '@/i18n/fr'
+import { useEventStream } from '@/lib/useEventStream'
 import { cn } from '@/lib/utils'
 
 type NavItem = {
@@ -96,21 +98,24 @@ export function Layout() {
     document.title = instanceName
   }, [instanceName])
 
-  useEffect(() => {
-    if (!authed) {
-      return
-    }
-    const source = new EventSource('/api/v1/notifications/events')
-    source.onmessage = (event) => {
-      const payload = JSON.parse(event.data as string) as NotificationEventPayload
-      if (payload.id) {
-        queryClient.invalidateQueries({ queryKey: ['notifications'] })
+  useEventStream({
+    key: authed ? 'notifications' : null,
+    enabled: authed,
+    buildUrl: (after) => apiUrl(`/notifications/events${after ? `?after=${after}` : ''}`),
+    onMessage: (data) => {
+      try {
+        const payload = JSON.parse(data) as NotificationEventPayload
+        if (payload.id) {
+          queryClient.invalidateQueries({ queryKey: ['notifications'] })
+        }
+      } catch {
+        // ignore les trames non JSON
       }
-    }
-    return () => {
-      source.close()
-    }
-  }, [authed, queryClient])
+    },
+    onAuthLost: () => {
+      queryClient.setQueryData(meQueryKey, null)
+    },
+  })
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -319,6 +324,7 @@ export function Layout() {
               <UserMenu
                 username={me.data.username}
                 internalAuth={me.data.internal_auth}
+                externalLogoutUrl={setup.data?.external_logout_url ?? null}
                 onLogout={handleLogout}
               />
             )}

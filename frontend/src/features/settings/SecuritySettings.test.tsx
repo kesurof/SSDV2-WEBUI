@@ -5,6 +5,14 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { SecuritySettings } from '@/features/settings/SecuritySettings'
 
+const INTERNAL = {
+  mode: 'internal',
+  mode_source: 'settings',
+  internal_auth: true,
+  external_logout_url: null,
+  trusted_proxies_configured: false,
+}
+
 function jsonResponse(body: unknown): Response {
   return new Response(JSON.stringify(body), {
     status: 200,
@@ -26,34 +34,58 @@ describe('SecuritySettings', () => {
     vi.unstubAllGlobals()
   })
 
-  it('disables internal auth after typed confirmation', async () => {
+  it('enregistre le basculement vers le mode proxy', async () => {
     const user = userEvent.setup()
     const fetchMock = vi.fn(async (_url: string, init?: RequestInit) => {
       if (init?.method === 'PATCH') {
-        return jsonResponse({ internal_auth: false })
+        return jsonResponse({ ...INTERNAL, mode: 'proxy', internal_auth: false })
       }
-      return jsonResponse({ internal_auth: true })
+      return jsonResponse({ ...INTERNAL, trusted_proxies_configured: true })
     })
     vi.stubGlobal('fetch', fetchMock)
 
     renderSecurity()
-    await waitFor(() => expect(screen.getByText('Activée')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getAllByRole('radio')).toHaveLength(2))
 
-    await user.click(screen.getByRole('button', { name: 'Désactiver' }))
-    const confirmButton = screen.getByRole('button', { name: 'Confirmer' })
-    expect(confirmButton).toBeDisabled()
+    const proxyRadio = screen.getAllByRole('radio')[1]
+    expect(proxyRadio).toBeEnabled()
+    await user.click(proxyRadio)
 
-    await user.type(screen.getByLabelText(/Tapez « DESACTIVER »/), 'DESACTIVER')
-    expect(confirmButton).toBeEnabled()
-    await user.click(confirmButton)
+    await user.click(screen.getByRole('button', { name: 'Enregistrer' }))
 
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/v1/security',
       expect.objectContaining({
         method: 'PATCH',
-        body: JSON.stringify({ internal_auth: false }),
+        body: JSON.stringify({ mode: 'proxy' }),
       }),
     )
+  })
+
+  it('désactive le mode proxy sans proxy de confiance', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => jsonResponse(INTERNAL)))
+
+    renderSecurity()
+    await waitFor(() => expect(screen.getAllByRole('radio')).toHaveLength(2))
+
+    expect(screen.getAllByRole('radio')[1]).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Enregistrer' })).toBeDisabled()
+  })
+
+  it('verrouille le mode imposé par l’environnement', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        jsonResponse({ ...INTERNAL, mode_source: 'env', trusted_proxies_configured: true }),
+      ),
+    )
+
+    renderSecurity()
+    await waitFor(() => expect(screen.getAllByRole('radio')).toHaveLength(2))
+
+    expect(screen.getAllByRole('radio')[0]).toBeDisabled()
+    expect(screen.getAllByRole('radio')[1]).toBeDisabled()
+    expect(screen.getByText(/imposé par WEBUI_AUTH_MODE/)).toBeInTheDocument()
   })
 
   it('changes the admin password', async () => {
@@ -62,7 +94,7 @@ describe('SecuritySettings', () => {
       if (init?.method === 'POST') {
         return new Response(null, { status: 204 })
       }
-      return jsonResponse({ internal_auth: true })
+      return jsonResponse(INTERNAL)
     })
     vi.stubGlobal('fetch', fetchMock)
 
@@ -89,31 +121,6 @@ describe('SecuritySettings', () => {
           current_password: 'test-password',
           new_password: 'nouveau-mot-de-passe',
         }),
-      }),
-    )
-  })
-
-  it('re-enables internal auth with a simple confirmation', async () => {
-    const user = userEvent.setup()
-    const fetchMock = vi.fn(async (_url: string, init?: RequestInit) => {
-      if (init?.method === 'PATCH') {
-        return jsonResponse({ internal_auth: true })
-      }
-      return jsonResponse({ internal_auth: false })
-    })
-    vi.stubGlobal('fetch', fetchMock)
-
-    renderSecurity()
-    await waitFor(() => expect(screen.getByText('Désactivée (auth externe)')).toBeInTheDocument())
-
-    await user.click(screen.getByRole('button', { name: 'Activer' }))
-    await user.click(screen.getByRole('button', { name: 'Confirmer' }))
-
-    expect(fetchMock).toHaveBeenCalledWith(
-      '/api/v1/security',
-      expect.objectContaining({
-        method: 'PATCH',
-        body: JSON.stringify({ internal_auth: true }),
       }),
     )
   })

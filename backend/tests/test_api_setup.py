@@ -86,7 +86,11 @@ def test_setup_success_and_closure(setup_client, setup_env):
     response = client.post("/api/v1/setup", json={**VALID_PAYLOAD, "token": token})
 
     assert response.status_code == 201
-    assert response.json() == {"username": "admin2", "internal_auth": True}
+    assert response.json() == {
+        "username": "admin2",
+        "internal_auth": True,
+        "auth_mode": "internal",
+    }
 
     assert client.get("/api/v1/apps").status_code == 200
 
@@ -115,19 +119,41 @@ def test_setup_success_and_closure(setup_client, setup_env):
         assert events[0].username == "admin2"
 
 
-def test_setup_without_internal_auth(setup_client):
+def test_setup_proxy_requires_trusted_proxies(setup_client):
     client, token = setup_client
 
+    # internal_auth=False legacy -> mode proxy ; sans proxies de confiance : refusé.
     response = client.post(
         "/api/v1/setup", json={**VALID_PAYLOAD, "token": token, "internal_auth": False}
     )
 
-    assert response.status_code == 201
-    assert response.json() == {"username": "admin2", "internal_auth": False}
-    assert client.get("/api/v1/apps").status_code == 200
-    assert client.get("/api/v1/security").json() == {"internal_auth": False}
-    login = client.post("/api/v1/auth/login", json={"username": "admin2", "password": "x" * 12})
-    assert login.status_code == 409
+    assert response.status_code == 409
+
+
+def test_setup_proxy_mode(setup_client, monkeypatch: pytest.MonkeyPatch):
+    from app.core.config import get_settings
+    from app.main import app
+
+    monkeypatch.setenv("WEBUI_TRUSTED_PROXIES", "172.18.0.0/16")
+    get_settings.cache_clear()
+
+    client, token = setup_client
+    payload = {**VALID_PAYLOAD, "token": token, "auth_mode": "proxy"}
+    # Une adresse configurée ne suffit pas : il faut une identité vérifiée.
+    assert client.post("/api/v1/setup", json=payload).status_code == 400
+
+    with TestClient(app, client=("172.18.0.5", 50000)) as trusted:
+        response = trusted.post(
+            "/api/v1/setup",
+            json=payload,
+            headers={"X-Auth-Request-User": "alice"},
+        )
+        assert response.status_code == 201
+        assert response.json()["auth_mode"] == "proxy"
+        assert trusted.get("/api/v1/jobs").status_code == 401
+        result = trusted.get("/api/v1/auth/me", headers={"X-Auth-Request-User": "alice"})
+        assert result.status_code == 200
+        assert result.json()["auth_mode"] == "proxy"
 
 
 def test_env_bootstrap_completes_setup(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):

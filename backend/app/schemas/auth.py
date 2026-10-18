@@ -19,6 +19,7 @@ class PasswordChangeRequest(BaseModel):
 class UserOut(BaseModel):
     username: str
     internal_auth: bool = True
+    auth_mode: str = "internal"
 
 
 class AppAuthSummary(BaseModel):

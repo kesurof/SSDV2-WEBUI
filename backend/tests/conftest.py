@@ -277,9 +277,13 @@ def _ensure_internal_auth() -> Iterator[None]:
     yield
     from sqlalchemy.exc import OperationalError
 
+    from app.core.config import get_settings
     from app.db.session import get_session_factory
     from app.services import settings as webui_settings
 
+    # Évite qu'un test ayant surchargé une variable d'environnement (ex. mode proxy)
+    # ne laisse fuiter des réglages vers les tests suivants.
+    get_settings.cache_clear()
     try:
         with get_session_factory()() as session:
             webui_settings.set_internal_auth(session, True)

@@ -220,7 +220,12 @@ def test_app_logs_without_docker(auth_client, write_catalogue):
 
 
 def test_app_logs_stream_requires_authentication(client):
-    assert client.get("/api/v1/apps/sonarr/logs/stream").status_code == 401
+    # Les flux SSE ne renvoient pas de 401 (EventSource n'expose pas le code HTTP) :
+    # ils émettent une trame « auth required » sur un flux 200 que le client interprète.
+    response = client.get("/api/v1/apps/sonarr/logs/stream")
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/event-stream")
+    assert '{"auth":"required"}' in response.text
 
 
 def test_app_logs_stream(auth_client, write_catalogue, write_registry, fake_containers):

@@ -43,10 +43,10 @@ export function useSecurity() {
 export function useUpdateSecurity() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (internalAuth: boolean) =>
+    mutationFn: (mode: 'internal' | 'proxy') =>
       apiFetch<Security>('/security', {
         method: 'PATCH',
-        body: JSON.stringify({ internal_auth: internalAuth }),
+        body: JSON.stringify({ mode }),
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['security'] })

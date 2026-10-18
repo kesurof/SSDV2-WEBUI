@@ -78,6 +78,20 @@ agent), §72 (décisions à trancher), §75 (stack).
     (logs live + saisie guidée), allowlist stricte dans `app/adapters/ssdv2_bash.py`.
 11. Ne jamais créer de branche ni de pull request sur `projetssd/ssdv2` tant que le projet
     n'est pas finalisé (ADR-0010) : le développement lié à SSDV2 reste local.
+12. Tout flux SSE respecte les invariants d'ADR-0030 : générateur `async`, heartbeat
+    (`: keep-alive`, 25 s), `id:` + reprise `Last-Event-ID`/`?after=`, fermeture bornée par
+    `WEBUI_SSE_MAX_SECONDS`, session courte (`StreamUser`) et réponse
+    `data: {"auth":"required"}` (jamais un 401) ; exclusion gzip **par chemin**
+    (    `ApiGZipMiddleware`). Côté front, passer par `lib/useEventStream` (pas d'`EventSource`
+    brut). SQLite reste en WAL (`app/db/session.py`). Ne pas modifier ces invariants sans
+    ADR.
+13. Authentification : deux modes, `internal` (Argon2id + session/CSRF) et `proxy`
+    (identité par **un seul** en-tête + source de confiance, **fail-closed**). Le mode vit
+    dans `webui_settings.auth_mode` (source `env` `WEBUI_AUTH_MODE` ou `settings`),
+    migration de l'ancien booléen `internal_auth` ; aucun mode sans authentification.
+    Validation proxy dans `app/core/proxy_auth.py` (`WEBUI_TRUSTED_PROXIES` /
+    `WEBUI_TRUST_PROXY`). L'assistant `/setup` détecte et explique le mode (ADR-0031) ;
+    ne pas recoder ce modèle sans ADR.
 
 ## Stack retenue (ADR-0004, brief §75)
 

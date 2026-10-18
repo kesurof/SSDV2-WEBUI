@@ -25,6 +25,25 @@ class Settings(BaseSettings):
     cookie_secure: bool = False
     login_max_attempts: int = 5
     login_window_seconds: int = 60
+    # Mode d'authentification imposé par l'environnement (facultatif) : internal ou proxy.
+    # Toute autre valeur retombe sur « internal » (aucun accès ouvert).
+    auth_mode: str | None = Field(default=None, validation_alias="WEBUI_AUTH_MODE")
+    # Opt-in moins strict : faire confiance à l'en-tête d'identité sans liste d'IP.
+    # À n'utiliser que si le port WebUI n'est joignable que via le proxy.
+    trust_proxy: bool = Field(default=False, validation_alias="WEBUI_TRUST_PROXY")
+    # Liste explicite d'IP/CIDR des proxies de confiance (jamais de détection automatique).
+    trusted_proxies: str = Field(default="", validation_alias="WEBUI_TRUSTED_PROXIES")
+    # En-tête unique d'identité transmis par le proxy (écrasé via authResponseHeaders).
+    proxy_identity_header: str = Field(
+        default="X-Auth-Request-User", validation_alias="WEBUI_PROXY_IDENTITY_HEADER"
+    )
+    # URL de déconnexion du fournisseur d'identité (facultative).
+    external_logout_url: str | None = Field(
+        default=None, validation_alias="WEBUI_EXTERNAL_LOGOUT_URL"
+    )
+    # Durée maximale d'un flux SSE avant fermeture propre : force une reconnexion
+    # périodique (réauthentification, renouvellement de session, libération des ressources).
+    sse_max_seconds: int = Field(default=900, validation_alias="WEBUI_SSE_MAX_SECONDS")
     log_level: str = "INFO"
 
     @property

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -16,13 +16,14 @@ const STEPS = [fr.setup.stepAccount, fr.setup.stepSecurity, fr.setup.stepInstanc
 // Doit rester aligné sur `SetupRequest` (backend/app/schemas/setup.py).
 const USERNAME_PATTERN = /^[a-z0-9][a-z0-9._-]*$/
 
+type AuthMode = 'internal' | 'proxy'
+
 type FormState = {
   token: string
   username: string
   password: string
   confirm: string
-  internalAuth: boolean
-  acknowledged: boolean
+  authMode: AuthMode
   instanceName: string
   notifyJobSuccess: boolean
 }
@@ -39,14 +40,51 @@ export function SetupPage() {
     username: 'admin',
     password: '',
     confirm: '',
-    internalAuth: true,
-    acknowledged: false,
+    authMode: 'internal',
     instanceName: 'SSDV2 WebUI',
     notifyJobSuccess: true,
   })
 
+  // Si l'hébergeur impose un mode proxy validé, le montrer dans l'assistant.
+  useEffect(() => {
+    if (status.data?.auth_mode === 'proxy' && status.data.trusted_proxies_configured) {
+      setForm((current) =>
+        current.authMode === 'proxy' ? current : { ...current, authMode: 'proxy' },
+      )
+    }
+  }, [status.data?.auth_mode, status.data?.trusted_proxies_configured])
+
   if (status.isPending) {
-    return <div className="p-8 text-sm text-muted-foreground">{fr.common.loading}</div>
+    return (
+      <div className="flex min-h-svh items-center justify-center bg-muted/40 p-4">
+        <Card className="w-full max-w-2xl">
+          <CardContent className="py-10 text-center text-sm text-muted-foreground">
+            {fr.common.loading}
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  if (status.isError) {
+    return (
+      <div className="flex min-h-svh items-center justify-center bg-muted/40 p-4">
+        <Card className="w-full max-w-2xl">
+          <CardHeader>
+            <CardTitle>{fr.setup.title}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Alert variant="destructive">
+              <AlertTitle>{fr.common.error}</AlertTitle>
+              <AlertDescription>
+                {status.error instanceof Error ? status.error.message : fr.login.unreachable}
+              </AlertDescription>
+            </Alert>
+            <Button onClick={() => void status.refetch()}>{fr.common.retry}</Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   if (status.data && !status.data.required) {
@@ -73,7 +111,9 @@ export function SetupPage() {
     !passwordSameAsUsername &&
     form.password === form.confirm
 
-  const securityValid = form.internalAuth || form.acknowledged
+  const externalAuth = status.data?.external_auth ?? false
+  const proxyAvailable = status.data?.trusted_proxies_configured ?? false
+  const securityValid = form.authMode === 'internal' || (proxyAvailable && externalAuth)
   const instanceValid = instanceNameValue.length >= 1 && instanceNameValue.length <= 100
 
   const canContinue =
@@ -93,7 +133,7 @@ export function SetupPage() {
         token: form.token.trim(),
         username: form.username.trim(),
         password: form.password,
-        internal_auth: form.internalAuth,
+        auth_mode: form.authMode,
         instance_name: form.instanceName.trim(),
         notify_job_success: form.notifyJobSuccess,
       },
@@ -198,43 +238,16 @@ export function SetupPage() {
 
           {step === 1 && (
             <div className="space-y-3">
-              <Label>{fr.setup.internalAuth}</Label>
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 text-sm">
-                  <input
-                    type="radio"
-                    name="internal-auth"
-                    checked={form.internalAuth}
-                    onChange={() => update('internalAuth', true)}
-                  />
-                  {fr.setup.internalAuthEnabled}
-                </label>
-                <label className="flex items-center gap-2 text-sm">
-                  <input
-                    type="radio"
-                    name="internal-auth"
-                    checked={!form.internalAuth}
-                    onChange={() => update('internalAuth', false)}
-                  />
-                  {fr.setup.internalAuthDisabled}
-                </label>
-              </div>
-              {!form.internalAuth && (
-                <Alert variant="destructive">
-                  <AlertTitle>{fr.setup.internalAuth}</AlertTitle>
-                  <AlertDescription className="space-y-2">
-                    <p>{fr.setup.internalAuthWarning}</p>
-                    <label className="flex items-center gap-2 text-sm">
-                      <input
-                        type="checkbox"
-                        checked={form.acknowledged}
-                        onChange={(event) => update('acknowledged', event.target.checked)}
-                      />
-                      {fr.setup.internalAuthAck}
-                    </label>
-                  </AlertDescription>
-                </Alert>
-              )}
+              <Label>{fr.setup.authMode}</Label>
+              <Alert variant="default">
+                <AlertDescription>
+                  {form.authMode === 'proxy'
+                    ? externalAuth
+                      ? fr.setup.externalAuthDetected
+                      : fr.setup.authModeProxyUnavailable
+                    : fr.setup.internalAuthStandard}
+                </AlertDescription>
+              </Alert>
             </div>
           )}
 
@@ -300,8 +313,8 @@ export function SetupPage() {
                     {fr.setup.instanceName} : {form.instanceName}
                   </li>
                   <li>
-                    {fr.setup.internalAuth} :{' '}
-                    {form.internalAuth ? fr.setup.internalAuthEnabled : fr.setup.internalAuthDisabled}
+                    {fr.setup.authMode} :{' '}
+                    {form.authMode === 'proxy' ? fr.setup.authModeProxy : fr.setup.authModeInternal}
                   </li>
                   <li>
                     {fr.setup.notifyJobSuccess} : {form.notifyJobSuccess ? 'oui' : 'non'}

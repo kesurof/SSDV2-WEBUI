@@ -2,6 +2,7 @@ export const fr = {
   common: {
     loading: 'Chargement…',
     error: 'Erreur',
+    retry: 'Réessayer',
     logout: 'Déconnexion',
     degraded: 'Mode dégradé : certaines sources sont indisponibles.',
     refresh: 'Actualiser',
@@ -327,6 +328,20 @@ export const fr = {
   security: {
     title: 'Authentification interne',
     hint: 'À désactiver lorsque la WebUI est déjà protégée en amont (ex. oauth2-proxy via Traefik). Sans authentification interne, toute personne pouvant atteindre la WebUI dispose d’un accès complet.',
+    mode: 'Mode d’authentification',
+    internal: 'Interne',
+    internalHint: 'Connexion par identifiant et mot de passe de l’application.',
+    proxy: 'Proxy',
+    proxyHint: 'Identité fournie par un proxy d’authentification de confiance.',
+    proxyUnavailable:
+      'Indisponible : aucun proxy de confiance configuré (WEBUI_TRUSTED_PROXIES).',
+    envLocked: 'Le mode est imposé par WEBUI_AUTH_MODE et ne peut pas être modifié ici.',
+    saved: 'Sécurité enregistrée',
+    save: 'Enregistrer',
+    trustedConfigured: 'Proxies de confiance configurés',
+    currentMode: 'Mode actuel',
+    external: 'Auth externe',
+    externalLogout: 'Se déconnecter',
     enabled: 'Activée',
     disabled: 'Désactivée (auth externe)',
     enable: 'Activer',
@@ -405,6 +420,14 @@ export const fr = {
     passwordMismatch: 'Les mots de passe ne correspondent pas.',
     passwordTooShort: 'Le mot de passe doit contenir au moins 12 caractères.',
     passwordSameAsUsername: 'Le mot de passe doit être différent de l’identifiant.',
+    authMode: 'Mode d’authentification',
+    authModeInternal: 'Interne (recommandé)',
+    authModeProxy: 'Proxy (identité fournie par le proxy)',
+    authModeProxyUnavailable: 'Indisponible : aucun proxy de confiance configuré.',
+    internalAuthStandard:
+      'Connexion interne activée : aucun réglage de proxy nécessaire. Le fournisseur externe peut demander une première connexion indépendante. La session est mémorisable.',
+    externalAuthDetected:
+      'Identité externe vérifiée. Le serveur doit protéger chaque accès à l’application.',
     internalAuth: 'Authentification interne',
     internalAuthEnabled: 'Activée (recommandé en accès direct)',
     internalAuthDisabled: 'Désactivée — protégée par un proxy amont (oauth2-proxy, Authelia…)',

@@ -67,4 +67,22 @@ describe('apiFetch', () => {
     expect(error).toBeInstanceOf(ApiError)
     expect(error).toMatchObject({ status: 500 })
   })
+
+  it('détecte une page HTML de proxy (reconnexion) sans la parser en JSON', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        async () =>
+          new Response('<!doctype html><title>Sign in</title>', {
+            status: 200,
+            headers: { 'content-type': 'text/html; charset=utf-8' },
+          }),
+      ),
+    )
+
+    const error = await apiFetch('/x').catch((e) => e as ApiError)
+
+    expect(error).toBeInstanceOf(ApiError)
+    expect(error).toMatchObject({ status: 200, code: 'non_json' })
+  })
 })

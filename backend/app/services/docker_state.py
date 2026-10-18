@@ -52,22 +52,34 @@ def read_container_logs(
     return [line for line in text.splitlines() if line.strip()]
 
 
+def open_container_log_stream(
+    client: docker.DockerClient,
+    name: str,
+    lines: int = 100,
+    timestamps: bool = True,
+):
+    """Ouvre un flux Docker « follow » brut (fermable de l'extérieur via ``.close()``)."""
+    container = client.containers.get(name)
+    return container.logs(stream=True, follow=True, tail=lines, timestamps=timestamps)
+
+
+def decode_log_chunks(stream) -> Iterator[str]:
+    for chunk in stream:
+        text = chunk.decode("utf-8", errors="replace") if isinstance(chunk, bytes) else str(chunk)
+        for line in text.splitlines():
+            if line.strip():
+                yield line
+
+
 def stream_container_logs(
     client: docker.DockerClient,
     name: str,
     lines: int = 100,
     timestamps: bool = True,
 ) -> Iterator[str]:
-    container = client.containers.get(name)
-    stream = container.logs(stream=True, follow=True, tail=lines, timestamps=timestamps)
+    stream = open_container_log_stream(client, name, lines, timestamps)
     try:
-        for chunk in stream:
-            text = (
-                chunk.decode("utf-8", errors="replace") if isinstance(chunk, bytes) else str(chunk)
-            )
-            for line in text.splitlines():
-                if line.strip():
-                    yield line
+        yield from decode_log_chunks(stream)
     finally:
         close = getattr(stream, "close", None)
         if callable(close):

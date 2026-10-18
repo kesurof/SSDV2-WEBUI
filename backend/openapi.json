@@ -1466,6 +1466,33 @@
               "type": "integer",
               "title": "Job Id"
             }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "After"
+            }
+          },
+          {
+            "name": "last-event-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Last-Event-Id"
+            }
           }
         ],
         "responses": {
@@ -1627,6 +1654,22 @@
               "type": "boolean",
               "default": false,
               "title": "Once"
+            }
+          },
+          {
+            "name": "last-event-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Last-Event-Id"
             }
           }
         ],
@@ -3533,28 +3576,69 @@
       },
       "SecurityOut": {
         "properties": {
+          "mode": {
+            "type": "string",
+            "title": "Mode"
+          },
+          "mode_source": {
+            "type": "string",
+            "title": "Mode Source"
+          },
           "internal_auth": {
             "type": "boolean",
-            "title": "Internal Auth"
+            "title": "Internal Auth",
+            "default": true
+          },
+          "external_logout_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External Logout Url"
+          },
+          "trusted_proxies_configured": {
+            "type": "boolean",
+            "title": "Trusted Proxies Configured",
+            "default": false
           }
         },
         "type": "object",
         "required": [
-          "internal_auth"
+          "mode",
+          "mode_source"
         ],
         "title": "SecurityOut"
       },
       "SecurityUpdateRequest": {
         "properties": {
+          "mode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mode"
+          },
           "internal_auth": {
-            "type": "boolean",
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Internal Auth"
           }
         },
         "type": "object",
-        "required": [
-          "internal_auth"
-        ],
         "title": "SecurityUpdateRequest"
       },
       "ServiceCheck": {
@@ -3612,10 +3696,27 @@
             "minLength": 12,
             "title": "Password"
           },
+          "auth_mode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Auth Mode"
+          },
           "internal_auth": {
-            "type": "boolean",
-            "title": "Internal Auth",
-            "default": true
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Internal Auth"
           },
           "instance_name": {
             "type": "string",
@@ -3651,6 +3752,32 @@
           "instance_name": {
             "type": "string",
             "title": "Instance Name"
+          },
+          "external_auth": {
+            "type": "boolean",
+            "title": "External Auth",
+            "default": false
+          },
+          "auth_mode": {
+            "type": "string",
+            "title": "Auth Mode",
+            "default": "internal"
+          },
+          "external_logout_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External Logout Url"
+          },
+          "trusted_proxies_configured": {
+            "type": "boolean",
+            "title": "Trusted Proxies Configured",
+            "default": false
           }
         },
         "type": "object",
@@ -3996,6 +4123,11 @@
             "type": "boolean",
             "title": "Internal Auth",
             "default": true
+          },
+          "auth_mode": {
+            "type": "string",
+            "title": "Auth Mode",
+            "default": "internal"
           }
         },
         "type": "object",

@@ -79,7 +79,7 @@ def login(payload: LoginRequest, response: Response, db: DbDep, settings: Settin
         secure=settings.cookie_secure,
         path="/",
     )
-    return UserOut(username=user.username, internal_auth=True)
+    return UserOut(username=user.username, internal_auth=True, auth_mode="internal")
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
@@ -136,7 +136,8 @@ def change_password(
 
 
 @router.get("/me", response_model=UserOut)
-def me(user: CurrentUser, response: Response, settings: SettingsDep) -> UserOut:
+def me(user: CurrentUser, response: Response, db: DbDep, settings: SettingsDep) -> UserOut:
+    mode, _source = webui_settings.effective_auth_mode(db)
     if not user.internal_auth:
         response.set_cookie(
             CSRF_COOKIE,
@@ -147,7 +148,7 @@ def me(user: CurrentUser, response: Response, settings: SettingsDep) -> UserOut:
             secure=settings.cookie_secure,
             path="/",
         )
-    return UserOut(username=user.username, internal_auth=user.internal_auth)
+    return UserOut(username=user.username, internal_auth=user.internal_auth, auth_mode=mode)
 
 
 @router.get("/apps", response_model=list[AppAuthSummary])

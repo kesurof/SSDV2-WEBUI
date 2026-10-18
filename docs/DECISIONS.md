@@ -735,6 +735,82 @@ pointe vers son remplaçant. Une décision non tranchée reste dans « Décision
   `ssdv2ctl auth apply` (implémentation Docker SDK côté WebUI retirée).
 - **Références** : ADR-0024 (amendé), ADR-0026, ADR-0028 ; `ARCHITECTURE-CURRENT.md`.
 
+## ADR-0030 — Robustesse des flux SSE, de la session et de SQLite
+
+- **Statut** : acceptée — 2026-10-18
+- **Contexte** : le déploiement de test subissait des **interruptions fréquentes** des flux
+  temps réel (notifications, jobs, logs), des 401 opaques en cours de session et des erreurs
+  `database is locked` pendant les jobs. Causes identifiées : flux SSE sans heartbeat
+  (coupés par les proxies sur inactivité), sans `id:`/reprise (perte ou duplication
+  d'événements à la reconnexion), générateurs **synchrones** tenant un thread et une
+  connexion SQLite pendant tout le flux (flux notifications infini), sessions à durée fixe
+  sans renouvellement, et SQLite sans WAL (lecteurs bloqués par le worker de jobs).
+- **Décision** :
+  - **SQLite** : `journal_mode=WAL`, `busy_timeout=5000`, `synchronous=NORMAL`,
+    `foreign_keys=ON` à chaque connexion (`app/db/session.py`).
+  - **SSE backend** : générateurs `async`, accès bloquants via `run_in_threadpool` ;
+    directive `retry: 5000` ; commentaire heartbeat `: keep-alive` toutes les 25 s ;
+    champ `id:` par événement et reprise par `Last-Event-ID`/`?after=` ; fermeture propre
+    après `WEBUI_SSE_MAX_SECONDS` (900 s par défaut) ; le flux des logs Docker est lu dans
+    un thread dédié et fermé à la déconnexion. Les flux utilisent `StreamUser`
+    (session courte, libérée avant le stream) ; non authentifié = flux 200 portant
+    `data: {"auth":"required"}`, jamais un 401 opaque.
+  - **Gzip** : exclusion des flux SSE **par chemin** (`/events`, `/logs/stream`) via
+    `ApiGZipMiddleware`, indépendamment de la version de Starlette.
+  - **Session** : renouvellement glissant côté backend (`_resolve_user`) et
+    `refetchInterval` sur `/auth/me` côté front.
+  - **Frontend** : hook unique `lib/useEventStream` (backoff exponentiel, détection de perte
+    d'authentification via `/auth/me`, reprise `?after=`) pour notifications, jobs et logs ;
+    `apiFetch` distingue les réponses non-JSON (page de connexion d'un proxy, sans reload) ;
+    error boundary racine.
+- **Conséquences** : flux résilients aux coupures proxy/session ; plus de saturation du pool
+  SQLite ni des threads AnyIO ; les reconnexions sont bornées et sans doublon. Le proxy amont
+  doit conserver `X-Accel-Buffering: no` (voir `REVERSE-PROXY.md`).
+- **Alternatives écartées** : WebSocket (surdimensionné), polling seul (latence), stockage
+  Redis/celery (interdit par ADR-0003), reprise côté serveur par buffer en mémoire (perdu au
+  redémarrage) au lieu de l'index SQLite.
+- **Références** : ADR-0003, ADR-0004, ADR-0018 ; `ARCHITECTURE-CURRENT.md` ;
+  `REVERSE-PROXY.md` ; `AGENTS.md` (règle 8).
+
+## ADR-0031 — Mode d'authentification `internal`/`proxy` et assistant aligné sur Symlink
+
+- **Statut** : acceptée — 2026-10-18
+- **Contexte** : ADR-0018 modélisait l'accès par un simple booléen `internal_auth`
+  (interne activée/désactivée) et faisait confiance aveuglément au proxy amont en mode
+  « externe ». Le projet Symlink (`ssdv2-symlink`) dispose d'un modèle plus complet
+  (`auth_mode` ∈ {`internal`,`proxy`}, verrou d'environnement, validation d'identité par
+  en-tête unique et sources de confiance, URL de déconnexion externe) et d'un assistant
+  de premier démarrage qui détecte et explique le mode retenu. La WebUI doit s'aligner
+  sur ce fonctionnement.
+- **Décision** :
+  - le réglage `internal_auth` (booléen) est remplacé par `auth_mode` ∈
+    `internal`/`proxy` (`webui_settings.auth_mode`), avec compatibilité de lecture de
+    l'ancien booléen (`false` → `proxy`, sinon `internal`) et migration idempotente au
+    démarrage ; `internal_auth` reste exposé en lecture (dérivé) pour compatibilité ;
+  - la source du mode est `env` (`WEBUI_AUTH_MODE`) ou `settings` ; une valeur
+    d'environnement invalide retombe sur `internal` (aucun accès ouvert) et **verrouille**
+    la modification dans l'UI ;
+  - en mode `proxy`, l'identité provient d'**un seul** en-tête
+    (`WEBUI_PROXY_IDENTITY_HEADER`, défaut `X-Auth-Request-User`) et uniquement d'une
+    source listée dans `WEBUI_TRUSTED_PROXIES` (ou `WEBUI_TRUST_PROXY=true` en opt-in) ;
+    sinon l'accès est refusé (fail-closed) — port de `app/core/proxy_auth.py` de Symlink ;
+  - `WEBUI_EXTERNAL_LOGOUT_URL` alimente la déconnexion du fournisseur externe ;
+  - l'assistant `/setup` affiche le mode détecté (`GET /setup/status` expose `auth_mode`,
+    `external_auth`, `trusted_proxies_configured`, `external_logout_url`) et l'explique
+    via une alerte (étape « Sécurité »), sur le modèle de Symlink ; `POST /setup` accepte
+    `auth_mode` et applique les garde-fous (409 env, 409 proxy sans source de confiance,
+    400 proxy sans identité vérifiée) ;
+  - la page Réglages → Sécurité permet de basculer `internal`/`proxy` (radios), avec verrou
+    d'environnement et statut des proxies de confiance.
+- **Conséquences** : modèle d'authentification identique à Symlink ; en mode `proxy`, le
+  déploiement doit renseigner `WEBUI_TRUSTED_PROXIES` (ou `WEBUI_TRUST_PROXY`), sinon les
+  accès protégés sont refusés. Le mode « sans authentification » reste impossible.
+- **Alternatives écartées** : conserver le booléen `internal_auth` sans validation
+  d'identité (moins sûr, diverge de Symlink) ; configurer le fournisseur externe depuis la
+  WebUI (hors périmètre, géré par SSDV2/Traefik).
+- **Références** : amende ADR-0018 ; ADR-0019 (assistant de premier démarrage) ;
+  `ARCHITECTURE-CURRENT.md` ; `REVERSE-PROXY.md` ; `AGENTS.md`.
+
 ## Décisions ouvertes
 
 À trancher explicitement puis consigner en ADR (voir brief §72) :

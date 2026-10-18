@@ -2,7 +2,7 @@ from collections.abc import Iterator
 from functools import lru_cache
 
 from fastapi import HTTPException, status
-from sqlalchemy import Engine, create_engine
+from sqlalchemy import Engine, create_engine, event
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -14,7 +14,7 @@ from app.db.models import Base
 def get_engine() -> Engine:
     settings = get_settings()
     settings.webui_data.mkdir(parents=True, exist_ok=True)
-    return create_engine(
+    engine = create_engine(
         f"sqlite:///{settings.webui_db_file}",
         connect_args={"check_same_thread": False},
         pool_size=10,
@@ -22,6 +22,20 @@ def get_engine() -> Engine:
         pool_timeout=20,
         pool_pre_ping=True,
     )
+
+    @event.listens_for(engine, "connect")
+    def configure_sqlite(dbapi_connection, _connection_record) -> None:
+        cursor = dbapi_connection.cursor()
+        # WAL : les lectures de l'UI ne sont plus bloquées par les écritures du worker
+        # de jobs ; busy_timeout évite un « database is locked » immédiat, synchronous
+        # NORMAL reste sûr en WAL.
+        cursor.execute("PRAGMA journal_mode=WAL")
+        cursor.execute("PRAGMA busy_timeout=5000")
+        cursor.execute("PRAGMA synchronous=NORMAL")
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
+
+    return engine
 
 
 @lru_cache

@@ -1,12 +1,14 @@
+import asyncio
 import json
-from collections.abc import Iterator
+import threading
+from collections.abc import AsyncIterator
 
 import docker
 from fastapi import APIRouter, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
 
 from app.adapters.ssdv2_cli import Ssdv2CtlError
-from app.deps import CurrentUser, DbDep, DockerDep, SettingsDep, Ssdv2CtlDep
+from app.deps import CurrentUser, DbDep, DockerDep, SettingsDep, Ssdv2CtlDep, StreamUser
 from app.schemas.app import (
     AppAuthOut,
     AppDetailOut,
@@ -28,8 +30,9 @@ from app.services.app_storage import build_app_storage, read_volume_usage
 from app.services.catalogue import read_catalogue
 from app.services.docker_state import (
     collect_containers,
+    decode_log_chunks,
+    open_container_log_stream,
     read_container_logs,
-    stream_container_logs,
 )
 from app.services.domain import get_global_domain
 from app.services.jobs import job_manager
@@ -37,6 +40,9 @@ from app.services.registries import read_registries
 from app.services.ssddb import read_ssddb
 
 router = APIRouter(prefix="/apps", tags=["apps"])
+
+HEARTBEAT_SECONDS = 25
+SSE_HEADERS = {"Cache-Control": "no-cache", "X-Accel-Buffering": "no"}
 
 
 @router.get("", response_model=list[AppStateOut])
@@ -129,29 +135,86 @@ def get_app_logs(
 
 
 @router.get("/{app}/logs/stream")
-def stream_app_logs(
+async def stream_app_logs(
     app: str,
     settings: SettingsDep,
     docker_client: DockerDep,
-    _user: CurrentUser,
+    _user: StreamUser,
     container: str | None = None,
     lines: int = Query(default=100, ge=1, le=1000),
 ) -> StreamingResponse:
+    if _user is None:
+
+        async def auth_required() -> AsyncIterator[str]:
+            yield 'retry: 5000\ndata: {"auth":"required"}\n\n'
+
+        return StreamingResponse(
+            auth_required(), media_type="text/event-stream", headers=SSE_HEADERS
+        )
+
     selected = _resolve_log_container(app, container, settings, docker_client)
 
-    def events() -> Iterator[str]:
-        yield 'data: {"ready": true}\n\n'
-        try:
-            for line in stream_container_logs(docker_client, selected, lines=lines):
-                yield f"data: {json.dumps({'line': line}, ensure_ascii=False)}\n\n"
-        except docker.errors.DockerException as exc:
-            yield f"data: {json.dumps({'error': str(exc)}, ensure_ascii=False)}\n\n"
+    async def events() -> AsyncIterator[str]:
+        loop = asyncio.get_running_loop()
+        queue: asyncio.Queue[tuple[str, str | None]] = asyncio.Queue()
+        stop = threading.Event()
+        holder: dict[str, object] = {}
 
-    return StreamingResponse(
-        events(),
-        media_type="text/event-stream",
-        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
-    )
+        def emit(kind: str, value: str | None) -> None:
+            if loop.is_closed():
+                return
+            try:
+                loop.call_soon_threadsafe(queue.put_nowait, (kind, value))
+            except RuntimeError:
+                pass
+
+        def produce() -> None:
+            # Lecture Docker bloquante dans un thread dédié : l'event loop reste libre
+            # pour émettre les heartbeats et réagir à la déconnexion du client.
+            try:
+                stream = open_container_log_stream(docker_client, selected, lines=lines)
+                holder["stream"] = stream
+                for line in decode_log_chunks(stream):
+                    if stop.is_set():
+                        break
+                    emit("line", line)
+            except docker.errors.DockerException as exc:
+                emit("error", str(exc))
+            except Exception as exc:  # noqa: BLE001 - toute erreur devient une trame SSE
+                emit("error", str(exc))
+            finally:
+                emit("end", None)
+
+        threading.Thread(target=produce, name="webui-logs", daemon=True).start()
+        yield "retry: 5000\n\n"
+        yield 'data: {"ready": true}\n\n'
+        started = loop.time()
+        try:
+            while True:
+                try:
+                    kind, value = await asyncio.wait_for(queue.get(), timeout=HEARTBEAT_SECONDS)
+                except TimeoutError:
+                    yield ": keep-alive\n\n"
+                    continue
+                if kind == "line":
+                    yield f"data: {json.dumps({'line': value}, ensure_ascii=False)}\n\n"
+                elif kind == "error":
+                    yield f"data: {json.dumps({'error': value}, ensure_ascii=False)}\n\n"
+                else:
+                    return
+                if loop.time() - started >= settings.sse_max_seconds:
+                    return
+        finally:
+            stop.set()
+            stream = holder.get("stream")
+            close = getattr(stream, "close", None)
+            if callable(close):
+                try:
+                    close()
+                except Exception:  # noqa: BLE001 - fermeture best-effort du flux Docker
+                    pass
+
+    return StreamingResponse(events(), media_type="text/event-stream", headers=SSE_HEADERS)
 
 
 def _submit_job(

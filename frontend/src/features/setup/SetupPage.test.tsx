@@ -120,7 +120,7 @@ describe('SetupPage', () => {
     await fillAccountStep(user)
     await user.click(screen.getByRole('button', { name: 'Suivant' }))
 
-    expect(screen.getByText('Authentification interne')).toBeInTheDocument()
+    expect(screen.getByText('Mode d’authentification')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Suivant' }))
 
     await user.clear(screen.getByLabelText('Nom de l’instance'))
@@ -140,7 +140,7 @@ describe('SetupPage', () => {
           token: 'jeton-installation',
           username: 'admin',
           password: 'motdepasse-tres-long',
-          internal_auth: true,
+          auth_mode: 'internal',
           instance_name: 'Prod SSDV2',
           notify_job_success: true,
         }),

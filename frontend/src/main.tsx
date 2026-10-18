@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client'
 import { RouterProvider } from 'react-router-dom'
 
 import { router } from '@/app/router'
+import { ErrorBoundary } from '@/components/app/error-boundary'
 import { PageSkeleton } from '@/components/app/page-skeleton'
 import { ThemeProvider } from '@/components/app/theme-provider'
 import { Toaster } from '@/components/ui/sonner'
@@ -21,12 +22,14 @@ if (rootElement) {
   createRoot(rootElement).render(
     <StrictMode>
       <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} storageKey="ssdv2-theme">
-        <QueryClientProvider client={queryClient}>
-          <Suspense fallback={<PageSkeleton />}>
-            <RouterProvider router={router} />
-          </Suspense>
-          <Toaster />
-        </QueryClientProvider>
+        <ErrorBoundary>
+          <QueryClientProvider client={queryClient}>
+            <Suspense fallback={<PageSkeleton />}>
+              <RouterProvider router={router} />
+            </Suspense>
+            <Toaster />
+          </QueryClientProvider>
+        </ErrorBoundary>
       </ThemeProvider>
     </StrictMode>,
   )

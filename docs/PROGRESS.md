@@ -20,6 +20,26 @@
 
 ## Derniers chantiers terminés (2026-10-18)
 
+**Authentification `internal`/`proxy` + assistant `/setup` aligné Symlink (ADR-0031)** —
+terminé : modèle `auth_mode` (source `env`/`settings`, migration de l'ancien booléen),
+validation d'identité proxy par en-tête unique + sources de confiance (`app/core/proxy_auth.py`),
+`WEBUI_AUTH_MODE`/`WEBUI_TRUST_PROXY`/`WEBUI_TRUSTED_PROXIES`/`WEBUI_PROXY_IDENTITY_HEADER`/
+`WEBUI_EXTERNAL_LOGOUT_URL` ; `GET /setup/status` enrichi (mode détecté, proxy, logout) ;
+étape « Sécurité » du wizard sur le modèle Symlink (détection + explication) ; `PATCH /security`
+sur `mode` ; page Réglages → Sécurité en radios + verrou d'environnement ; `auth_mode` exposé
+par `/auth/me`. Preuves : backend `ruff`/`format`/`pytest` (**229** verts, dont
+`test_api_proxy_auth`) ; frontend `lint`/`typecheck`/`test` (**75** verts)/`build` verts.
+
+**Robustesse temps réel — SSE, session, SQLite (ADR-0030)** — terminé : heartbeat 25 s et
+`id:`/reprise `Last-Event-ID`/`?after=` sur les trois flux SSE (notifications, jobs, logs),
+générateurs `async` (plus de thread bloqué), session courte `StreamUser`, réponse
+`{"auth":"required"}` au lieu d'un 401, fermeture bornée `WEBUI_SSE_MAX_SECONDS` (900 s),
+gzip exclu **par chemin**, SQLite en WAL/`busy_timeout`, renouvellement glissant de session,
+hook front unique `useEventStream` + détection non-JSON + error boundary. Doc :
+[`REVERSE-PROXY.md`](REVERSE-PROXY.md). Preuves : backend `ruff`/`format`/`pytest`
+(**220** verts, dont WAL et reprise SSE) ; frontend `lint`/`typecheck`/`test`
+(**74** verts)/`build` verts.
+
 **Mises à jour « image seule » et `lxml` Ansible (ADR-0028)** — terminé : `lxml` ajouté à
 l'image ; mise à jour image-only (désormais portée par SSDV2/`ssdv2ctl`) ; bouton
 « Mettre à jour » câblé sur l'action `update`.

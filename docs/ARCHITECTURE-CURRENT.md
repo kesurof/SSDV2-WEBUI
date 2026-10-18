@@ -70,9 +70,14 @@
   `PageSkeleton`), chunks `react`/`tanstack`/`icons`, coquille montée sans attendre
   `/auth/me` (requêtes non critiques conditionnées à l'authentification, SSE après auth),
   rapport d'analyse `npm run analyze` (`rollup-plugin-visualizer`).
+  Flux temps réel centralisés par le hook `lib/useEventStream` (backoff, détection de perte
+  d'authentification via `/auth/me`, reprise `?after=`) ; `apiFetch` distingue les réponses
+  non-JSON (page de connexion d'un proxy, sans reload) et un error boundary racine
+  (`components/app/error-boundary.tsx`) évite l'écran blanc (ADR-0030).
 - `Dockerfile` : multi-stage Node 22 → `python:3.13-slim`, entrypoint PUID/PGID
   (`setpriv --init-groups`, ADR-0017), frontend compilé servi par FastAPI (compression
-  `GZipMiddleware` — flux SSE exclus — et assets hachés servis `immutable`, ADR-0027),
+  `ApiGZipMiddleware` — exclusion des flux SSE **par chemin** (`/events`, `/logs/stream`),
+  ADR-0030 — et assets hachés servis `immutable`, ADR-0027),
   healthcheck `/health`, runtime SSDV2 : ansible (`ansible-core` 2.21.0, collections
   `community.docker`/`community.general`/`ansible.posix`, rôles `kwoodson.yedit`/
   `geerlingguy.docker` dans `/opt/ansible`, **`lxml`** requis par le module Ansible `xml` —
@@ -136,6 +141,43 @@
 - Distribution : paquet GHCR **public** ; `docker pull ghcr.io/kesurof/ssdv2-webui:latest`
   anonyme validé depuis le serveur et `app reinstall` avec pull effectif (image du
   conteneur = digest publié), données et compte admin conservés.
+
+## Authentification et assistant d'installation (constaté le 2026-10-18, ADR-0031)
+
+- **Modes** : `internal` (Argon2id + session cookie, CSRF double-submit) ou `proxy`
+  (identité fournie par un proxy de confiance). Réglage `webui_settings.auth_mode`, source
+  `env` (`WEBUI_AUTH_MODE`, verrouille l'UI) ou `settings`. L'ancien booléen `internal_auth`
+  est migré au démarrage (`false` → `proxy`) et reste exposé en lecture (dérivé).
+- **Mode proxy (fail-closed)** : identity lue dans un seul en-tête
+  (`WEBUI_PROXY_IDENTITY_HEADER`, défaut `X-Auth-Request-User`) et uniquement depuis une
+  source listée dans `WEBUI_TRUSTED_PROXIES` (IP/CIDR) ou via `WEBUI_TRUST_PROXY=true`
+  (`app/core/proxy_auth.py`). `WEBUI_EXTERNAL_LOGOUT_URL` alimente la déconnexion externe.
+- **Assistant `/setup`** (4 étapes : compte / sécurité / instance / vérification) : l'étape
+  « Sécurité » détecte et explique le mode via `GET /setup/status` (`auth_mode`,
+  `external_auth`, `trusted_proxies_configured`, `external_logout_url`) ; `POST /setup`
+  accepte `auth_mode` et refuse (409/400) un mode proxy non valide ou imposé par
+  l'environnement. Modèle repris de Symlink.
+- **Réglages → Sécurité** : bascule `internal`/`proxy` (radios), verrou d'environnement,
+  statut des proxies de confiance, changement de mot de passe (mode interne uniquement).
+- Endpoints : `GET /api/v1/security` et `PATCH /api/v1/security` (`mode`), `GET /api/v1/setup/status`
+  et `POST /api/v1/setup` enrichis ; `GET /api/v1/auth/me` expose `auth_mode`.
+
+## Robustesse temps réel (constatée le 2026-10-18, ADR-0030)
+
+- **SQLite** : chaque connexion active `journal_mode=WAL`, `busy_timeout=5000`,
+  `synchronous=NORMAL`, `foreign_keys=ON` (`app/db/session.py`) — les lectures de l'UI ne
+  sont plus bloquées par les écritures du worker de jobs (`database is locked`).
+- **Flux SSE** (`/notifications/events`, `/jobs/{id}/events`, `/apps/{app}/logs/stream`) :
+  générateurs `async` (accès bloquants via `run_in_threadpool`), directive `retry: 5000`,
+  heartbeat `: keep-alive` toutes les 25 s, champ `id:` par événement et reprise par
+  `Last-Event-ID`/`?after=`, fermeture propre après `WEBUI_SSE_MAX_SECONDS` (900 s). Les
+  flux utilisent une **session courte** (`StreamUser`) libérée avant le stream ; non
+  authentifié répond **200** avec `data: {"auth":"required"}` (jamais un 401 opaque).
+  Le flux des logs Docker est lu dans un thread dédié, fermé à la déconnexion.
+- **Session** : renouvellement glissant côté backend et `refetchInterval` sur `/auth/me`
+  côté front ; `SESSION_TTL` au repos sans interaction.
+- **Reverse proxy** : voir [`REVERSE-PROXY.md`](REVERSE-PROXY.md) (pas de mise en tampon,
+  timeout de lecture > 25 s, même périmètre d'authentification pour les flux SSE).
 
 ## Ce qui n'existe pas (à ce jour)
 

@@ -12,10 +12,11 @@ recopie aucun contenu ; il oriente vers le document de référence.
 | Conception détaillée / spécification source | [`SSDV2_WEBUI_PROJECT_BRIEF.md`](SSDV2_WEBUI_PROJECT_BRIEF.md) |
 | Maquette de référence UI (design) | [`SSDV2_WEBUI_MOCKUP_FINAL_UI.html`](SSDV2_WEBUI_MOCKUP_FINAL_UI.html) |
 | Décisions architecturales (ADR) | [`DECISIONS.md`](DECISIONS.md) |
+| Hébergement derrière un reverse proxy (SSE, auth externe) | [`REVERSE-PROXY.md`](REVERSE-PROXY.md) |
 | Roadmap et phases | [`ROADMAP.md`](ROADMAP.md) |
 | Chantier en cours | [`PROGRESS.md`](PROGRESS.md) |
 | Règles permanentes de conception et de développement (réutilisation, code maison, dépendances, sources de vérité, preuve, synchronisation) | [`DEVELOPMENT-PRINCIPLES.md`](DEVELOPMENT-PRINCIPLES.md) |
-| Rappels opérationnels spécifiques au dépôt | [`../AGENTS.md`](../AGENTS.md) (règles 1-10) |
+| Rappels opérationnels spécifiques au dépôt | [`../AGENTS.md`](../AGENTS.md) (règles 1-13) |
 | Instructions agents IA | [`../AGENTS.md`](../AGENTS.md) |
 | Historique détaillé | Git (commits) |
 

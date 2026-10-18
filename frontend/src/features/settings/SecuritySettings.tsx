@@ -1,16 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -22,8 +12,9 @@ import {
   useUpdateSecurity,
 } from '@/features/settings/useSettings'
 import { fr } from '@/i18n/fr'
+import { cn } from '@/lib/utils'
 
-const CONFIRM_PHRASE = 'DESACTIVER'
+type AuthMode = 'internal' | 'proxy'
 
 function PasswordChangeCard() {
   const change = useChangePassword()
@@ -113,28 +104,40 @@ function PasswordChangeCard() {
 export function SecuritySettings() {
   const security = useSecurity()
   const update = useUpdateSecurity()
-  const [pending, setPending] = useState<'enable' | 'disable' | null>(null)
-  const [confirmation, setConfirmation] = useState('')
+  const [selected, setSelected] = useState<AuthMode>('internal')
+
+  const mode = (security.data?.mode ?? 'internal') as AuthMode
+  const locked = security.data?.mode_source === 'env'
+  const proxyAvailable = security.data?.trusted_proxies_configured ?? false
+
+  useEffect(() => {
+    if (security.data) {
+      setSelected(security.data.mode as AuthMode)
+    }
+  }, [security.data])
 
   if (security.isPending) {
     return null
   }
 
-  const enabled = security.data?.internal_auth ?? true
+  const canSave = !locked && !update.isPending && selected !== mode
 
   function submit() {
-    const nextInternalAuth = pending === 'enable'
-    setPending(null)
-    setConfirmation('')
-    update.mutate(nextInternalAuth, {
-      onSuccess: () => {
-        toast.success(nextInternalAuth ? fr.security.enabled : fr.security.disabled)
-      },
-      onError: (error) => {
-        toast.error(error.message)
-      },
+    update.mutate(selected, {
+      onSuccess: () => toast.success(fr.security.saved),
+      onError: (error) => toast.error(error.message),
     })
   }
+
+  const options: Array<{ value: AuthMode; label: string; hint: string; disabled: boolean }> = [
+    { value: 'internal', label: fr.security.internal, hint: fr.security.internalHint, disabled: false },
+    {
+      value: 'proxy',
+      label: fr.security.proxy,
+      hint: proxyAvailable ? fr.security.proxyHint : fr.security.proxyUnavailable,
+      disabled: !proxyAvailable,
+    },
+  ]
 
   return (
     <div className="space-y-4">
@@ -144,71 +147,55 @@ export function SecuritySettings() {
         </CardHeader>
         <CardContent className="space-y-3">
           <p className="text-xs text-muted-foreground">{fr.security.hint}</p>
+
+          {locked && (
+            <div className="rounded-md border bg-secondary/40 p-2 text-xs text-muted-foreground">
+              {fr.security.envLocked}
+            </div>
+          )}
+
+          <div className="space-y-2">
+            {options.map((option) => (
+              <label
+                key={option.value}
+                className={cn(
+                  'flex cursor-pointer items-start gap-3 rounded-lg border p-3 text-sm',
+                  selected === option.value ? 'border-primary bg-secondary/40' : '',
+                  option.disabled && 'cursor-not-allowed opacity-60',
+                )}
+              >
+                <input
+                  type="radio"
+                  name="auth-mode"
+                  className="mt-0.5"
+                  value={option.value}
+                  checked={selected === option.value}
+                  disabled={option.disabled || locked}
+                  onChange={() => setSelected(option.value)}
+                />
+                <span>
+                  <span className="block font-medium">{option.label}</span>
+                  <span className="block text-xs text-muted-foreground">{option.hint}</span>
+                </span>
+              </label>
+            ))}
+          </div>
+
           <div className="flex items-center gap-3">
-            <Badge
-              variant="outline"
-              className={
-                enabled
-                  ? 'border-transparent bg-emerald-600 text-white'
-                  : 'border-transparent bg-amber-500 text-white'
-              }
-            >
-              {enabled ? fr.security.enabled : fr.security.disabled}
+            <Badge variant="outline" className="border-transparent bg-secondary text-foreground">
+              {fr.security.currentMode} : {mode === 'proxy' ? fr.security.proxy : fr.security.internal}
             </Badge>
-            <Button
-              size="sm"
-              variant={enabled ? 'destructive' : 'default'}
-              disabled={update.isPending}
-              onClick={() => {
-                setConfirmation('')
-                setPending(enabled ? 'disable' : 'enable')
-              }}
-            >
-              {enabled ? fr.security.disable : fr.security.enable}
+            <span className="text-xs text-muted-foreground">
+              {fr.security.trustedConfigured} : {proxyAvailable ? 'oui' : 'non'}
+            </span>
+            <Button size="sm" className="ml-auto" disabled={!canSave} onClick={submit}>
+              {fr.security.save}
             </Button>
           </div>
         </CardContent>
-
-        <AlertDialog
-          open={pending !== null}
-          onOpenChange={(open) => {
-            if (!open) {
-              setPending(null)
-              setConfirmation('')
-            }
-          }}
-        >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>{fr.actions.confirmTitle}</AlertDialogTitle>
-              <AlertDialogDescription>
-                {pending === 'disable' ? fr.security.confirmDisable : fr.security.confirmEnable}
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            {pending === 'disable' && (
-              <div className="space-y-1">
-                <Label htmlFor="security-confirm">{fr.security.typeToConfirm}</Label>
-                <Input
-                  id="security-confirm"
-                  value={confirmation}
-                  onChange={(event) => setConfirmation(event.target.value)}
-                />
-              </div>
-            )}
-            <AlertDialogFooter>
-              <AlertDialogCancel>{fr.actions.cancel}</AlertDialogCancel>
-              <AlertDialogAction
-                disabled={pending === 'disable' && confirmation !== CONFIRM_PHRASE}
-                onClick={submit}
-              >
-                {fr.actions.confirm}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
       </Card>
 
-      {enabled && <PasswordChangeCard />}
+      {mode === 'internal' && <PasswordChangeCard />}
     </div>
   )
 }

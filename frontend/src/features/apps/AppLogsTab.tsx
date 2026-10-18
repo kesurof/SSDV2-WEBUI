@@ -1,13 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
+import { apiUrl } from '@/api/url'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAppLogs } from '@/features/apps/useAppLogs'
+import { meQueryKey } from '@/features/auth/useAuth'
 import { fr } from '@/i18n/fr'
 import { copyToClipboard } from '@/lib/clipboard'
+import { useEventStream } from '@/lib/useEventStream'
 
 const LINES_OPTIONS = [100, 200, 500, 1000]
 const MAX_STREAM_LINES = 1000
@@ -30,35 +34,43 @@ export function AppLogsTab({ app, containers }: { app: string; containers: strin
   const [paused, setPaused] = useState(false)
   const [frozen, setFrozen] = useState<string[] | null>(null)
   const preRef = useRef<HTMLPreElement>(null)
+  const queryClient = useQueryClient()
   const logs = useAppLogs(app, container, lines, !follow)
 
   useEffect(() => {
-    if (!follow || !container) {
-      return
-    }
     setStreamLines([])
     setStreamError(null)
-    const params = new URLSearchParams({ container, lines: String(lines) })
-    const source = new EventSource(`/api/v1/apps/${app}/logs/stream?${params.toString()}`)
-    source.onmessage = (event) => {
-      const payload = JSON.parse(event.data as string) as StreamPayload
-      if (payload.line) {
-        setStreamLines((current) => [
-          ...current.slice(-(MAX_STREAM_LINES - 1)),
-          payload.line as string,
-        ])
-      }
-      if (payload.error) {
-        setStreamError(payload.error)
-      }
-    }
-    source.onerror = () => {
-      setStreamError(fr.apps.logs.streamError)
-    }
-    return () => {
-      source.close()
-    }
   }, [app, container, lines, follow])
+
+  useEventStream({
+    key: follow && container ? `${app}:${container}:${lines}` : null,
+    enabled: follow && container !== '',
+    buildUrl: (after) => {
+      const params = new URLSearchParams({ container, lines: String(lines) })
+      if (after) params.set('after', after)
+      return apiUrl(`/apps/${app}/logs/stream?${params.toString()}`)
+    },
+    onMessage: (data) => {
+      try {
+        const payload = JSON.parse(data) as StreamPayload
+        if (payload.line) {
+          setStreamLines((current) => [
+            ...current.slice(-(MAX_STREAM_LINES - 1)),
+            payload.line as string,
+          ])
+        }
+        if (payload.error) {
+          setStreamError(payload.error)
+        }
+      } catch {
+        setStreamError(fr.apps.logs.streamError)
+      }
+    },
+    onAuthLost: () => {
+      setStreamError(fr.apps.logs.streamError)
+      queryClient.setQueryData(meQueryKey, null)
+    },
+  })
 
   const displayed = follow ? streamLines : (logs.data?.lines ?? [])
   const source = paused && frozen !== null ? frozen : displayed

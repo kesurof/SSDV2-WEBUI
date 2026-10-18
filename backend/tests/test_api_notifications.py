@@ -43,7 +43,17 @@ def test_notification_events_stream_once(auth_client):
 
     assert '{"ready": true}' in body
     assert f'"id": {notification.id}' in body
+    # identifiant SSE pour la reprise (Last-Event-ID / ?after=)
+    assert f"id: {notification.id}" in body
     assert "Alerte test" in body
+
+
+def test_notification_events_unauthenticated_reports_auth_required(client):
+    response = client.get("/api/v1/notifications/events")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/event-stream")
+    assert '{"auth":"required"}' in response.text
 
 
 def test_audit_lists_login(auth_client):

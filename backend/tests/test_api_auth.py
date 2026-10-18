@@ -32,10 +32,15 @@ def test_login_invalid_credentials(client):
 def test_login_logout_flow(client):
     response = client.post("/api/v1/auth/login", json=login_payload())
     assert response.status_code == 200
-    assert response.json() == {"username": "admin", "internal_auth": True}
+    assert response.json() == {
+        "username": "admin",
+        "internal_auth": True,
+        "auth_mode": "internal",
+    }
     assert client.get("/api/v1/auth/me").json() == {
         "username": "admin",
         "internal_auth": True,
+        "auth_mode": "internal",
     }
 
     csrf = client.cookies.get("ssdv2_webui_csrf")
@@ -134,14 +139,21 @@ def test_change_password_invalidates_other_sessions(client, restore_admin_passwo
         assert client.get("/api/v1/auth/me").status_code == 200
 
 
-def test_change_password_disabled_internal_auth(client):
+def test_change_password_disabled_internal_auth(client, monkeypatch):
+    from app.core.config import get_settings
+
+    monkeypatch.setenv("WEBUI_TRUST_PROXY", "true")
+    get_settings.cache_clear()
+
     client.post("/api/v1/auth/login", json=login_payload())
     csrf = client.cookies.get("ssdv2_webui_csrf")
-    client.patch("/api/v1/security", json={"internal_auth": False})
+    disabled = client.patch("/api/v1/security", json={"mode": "proxy"})
+    assert disabled.status_code == 200
 
+    # Mode proxy : l'identité vient de l'en-tête, le mot de passe n'est pas géré ici.
     response = client.post(
         "/api/v1/auth/password",
-        headers={"x-csrf-token": csrf},
+        headers={"x-csrf-token": csrf, "X-Auth-Request-User": "alice"},
         json={"current_password": TEST_ADMIN_PASSWORD, "new_password": "nouveau-mot-de-passe"},
     )
     assert response.status_code == 409

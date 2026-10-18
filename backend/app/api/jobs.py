@@ -1,18 +1,24 @@
+import asyncio
 import json
-import time
-from collections.abc import Iterator
+from collections.abc import AsyncIterator
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, Header, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy import select
+from starlette.concurrency import run_in_threadpool
 
 from app.db.models import Job, utcnow
 from app.db.session import get_session_factory
-from app.deps import CurrentUser, DbDep
+from app.deps import CurrentUser, DbDep, SettingsDep, StreamUser
 from app.schemas.job import JobInputRequest, JobOut
 from app.services.jobs import TERMINAL_STATUSES, job_manager
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
+
+HEARTBEAT_SECONDS = 25
+POLL_SECONDS = 0.5
+
+SSE_HEADERS = {"Cache-Control": "no-cache", "X-Accel-Buffering": "no"}
 
 
 @router.get("", response_model=list[JobOut])
@@ -58,23 +64,46 @@ def submit_job_input(job_id: int, payload: JobInputRequest, db: DbDep, _user: Cu
 
 
 @router.get("/{job_id}/events")
-def job_events(job_id: int, _user: CurrentUser) -> StreamingResponse:
+async def job_events(
+    job_id: int,
+    settings: SettingsDep,
+    _user: StreamUser,
+    after: int = Query(default=0, ge=0),
+    last_event_id: str | None = Header(default=None),
+) -> StreamingResponse:
+    # Non authentifié : flux « propre » (EventSource n'expose pas le code HTTP), sans
+    # révéler l'existence du job.
+    if _user is None:
+
+        async def auth_required() -> AsyncIterator[str]:
+            yield 'retry: 5000\ndata: {"auth":"required"}\n\n'
+
+        return StreamingResponse(
+            auth_required(), media_type="text/event-stream", headers=SSE_HEADERS
+        )
+
     # Vérification d'existence via une session courte : ne jamais conserver une
-    # connexion du pool pendant toute la durée du flux SSE (sinon épuisement).
+    # connexion du pool pendant toute la durée du flux SSE.
     with get_session_factory()() as session:
         if session.get(Job, job_id) is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, f"job inconnu: {job_id}")
 
-    def stream() -> Iterator[str]:
-        last_id = 0
+    async def stream() -> AsyncIterator[str]:
+        yield "retry: 5000\n\n"
+        last_id = after
+        if last_event_id and last_event_id.isascii() and last_event_id.isdecimal():
+            last_id = max(after, int(last_event_id))
+        loop = asyncio.get_running_loop()
+        started = loop.time()
+        last_ping = started
         last_prompt: str | None = None
         while True:
-            events, job = job_manager.events_after(job_id, last_id)
+            events, job = await run_in_threadpool(job_manager.events_after, job_id, last_id)
             for event in events:
                 last_id = event.id
                 payload = json.dumps({"id": event.id, "line": event.line}, ensure_ascii=False)
-                yield f"data: {payload}\n\n"
-            prompt = job_manager.pending_prompt(job_id)
+                yield f"id: {event.id}\ndata: {payload}\n\n"
+            prompt = await run_in_threadpool(job_manager.pending_prompt, job_id)
             if prompt is not None and prompt["id"] != last_prompt:
                 last_prompt = prompt["id"]
                 yield f"data: {json.dumps({'prompt': prompt}, ensure_ascii=False)}\n\n"
@@ -82,10 +111,14 @@ def job_events(job_id: int, _user: CurrentUser) -> StreamingResponse:
                 done = json.dumps({"status": job.status if job else "unknown", "done": True})
                 yield f"data: {done}\n\n"
                 return
-            time.sleep(0.5)
+            now = loop.time()
+            # Durée maximale : fermeture propre, le client reprend via ?after / Last-Event-ID.
+            if now - started >= settings.sse_max_seconds:
+                yield f"data: {json.dumps({'done': False, 'reconnect': True})}\n\n"
+                return
+            if now - last_ping >= HEARTBEAT_SECONDS:
+                yield ": keep-alive\n\n"
+                last_ping = now
+            await asyncio.sleep(POLL_SECONDS)
 
-    return StreamingResponse(
-        stream(),
-        media_type="text/event-stream",
-        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
-    )
+    return StreamingResponse(stream(), media_type="text/event-stream", headers=SSE_HEADERS)

@@ -1430,13 +1430,29 @@ export interface components {
         };
         /** SecurityOut */
         SecurityOut: {
-            /** Internal Auth */
+            /** Mode */
+            mode: string;
+            /** Mode Source */
+            mode_source: string;
+            /**
+             * Internal Auth
+             * @default true
+             */
             internal_auth: boolean;
+            /** External Logout Url */
+            external_logout_url?: string | null;
+            /**
+             * Trusted Proxies Configured
+             * @default false
+             */
+            trusted_proxies_configured: boolean;
         };
         /** SecurityUpdateRequest */
         SecurityUpdateRequest: {
+            /** Mode */
+            mode?: string | null;
             /** Internal Auth */
-            internal_auth: boolean;
+            internal_auth?: boolean | null;
         };
         /** ServiceCheck */
         ServiceCheck: {
@@ -1458,11 +1474,10 @@ export interface components {
             username: string;
             /** Password */
             password: string;
-            /**
-             * Internal Auth
-             * @default true
-             */
-            internal_auth: boolean;
+            /** Auth Mode */
+            auth_mode?: string | null;
+            /** Internal Auth */
+            internal_auth?: boolean | null;
             /**
              * Instance Name
              * @default SSDV2 WebUI
@@ -1482,6 +1497,23 @@ export interface components {
             token_required: boolean;
             /** Instance Name */
             instance_name: string;
+            /**
+             * External Auth
+             * @default false
+             */
+            external_auth: boolean;
+            /**
+             * Auth Mode
+             * @default internal
+             */
+            auth_mode: string;
+            /** External Logout Url */
+            external_logout_url?: string | null;
+            /**
+             * Trusted Proxies Configured
+             * @default false
+             */
+            trusted_proxies_configured: boolean;
         };
         /** SsddbAppOut */
         SsddbAppOut: {
@@ -1626,6 +1658,11 @@ export interface components {
              * @default true
              */
             internal_auth: boolean;
+            /**
+             * Auth Mode
+             * @default internal
+             */
+            auth_mode: string;
         };
         /** ValidationError */
         ValidationError: {
@@ -2711,8 +2748,12 @@ export interface operations {
     };
     job_events_api_v1_jobs__job_id__events_get: {
         parameters: {
-            query?: never;
-            header?: never;
+            query?: {
+                after?: number;
+            };
+            header?: {
+                "last-event-id"?: string | null;
+            };
             path: {
                 job_id: number;
             };
@@ -2830,7 +2871,9 @@ export interface operations {
                 after?: number;
                 once?: boolean;
             };
-            header?: never;
+            header?: {
+                "last-event-id"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };

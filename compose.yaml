@@ -23,6 +23,12 @@ services:
       WEBUI_DATA: /data
       WEBUI_ADMIN_USER: ${WEBUI_ADMIN_USER:-admin}
       WEBUI_ADMIN_PASSWORD: ${WEBUI_ADMIN_PASSWORD:-}
+      WEBUI_SSE_MAX_SECONDS: ${WEBUI_SSE_MAX_SECONDS:-900}
+      WEBUI_AUTH_MODE: ${WEBUI_AUTH_MODE:-}
+      WEBUI_TRUST_PROXY: ${WEBUI_TRUST_PROXY:-false}
+      WEBUI_TRUSTED_PROXIES: ${WEBUI_TRUSTED_PROXIES:-}
+      WEBUI_PROXY_IDENTITY_HEADER: ${WEBUI_PROXY_IDENTITY_HEADER:-X-Auth-Request-User}
+      WEBUI_EXTERNAL_LOGOUT_URL: ${WEBUI_EXTERNAL_LOGOUT_URL:-}
       # Pour tester un ssdv2ctl en cours de développement, décommenter la variable
       # ci-dessous et le montage correspondant plus bas.
       # SSDV2CTL_PATH: /opt/ssdv2ctl/ssdv2ctl
