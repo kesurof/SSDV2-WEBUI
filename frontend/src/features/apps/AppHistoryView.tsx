@@ -2,6 +2,7 @@ import { ClipboardList, Download } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import { EmptyState } from '@/components/app/empty-state'
+import { MobileCards, MobileCard, MobileField } from '@/components/app/mobile-cards'
 import { PageHeader } from '@/components/app/page-header'
 import { StatusPill } from '@/components/app/status-pill'
 import type { StatusTone } from '@/components/app/status-pill'
@@ -134,8 +135,29 @@ export function AppHistoryView({
       ) : events.length === 0 ? (
         <EmptyState icon={ClipboardList} message={fr.history.empty} />
       ) : (
-        <div className="overflow-hidden rounded-2xl border bg-card">
-          <div className="overflow-x-auto">
+        <>
+          <MobileCards label="Historique (vue mobile)">
+            {events.map((event, index) => (
+              <MobileCard key={`${event.kind}-${event.at}-${index}`}>
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <span className="min-w-0 break-words text-sm font-semibold">{eventLabel(event)}</span>
+                  <StatusPill tone={resultTone(event.result)}>{event.result}</StatusPill>
+                </div>
+                <dl className="mt-3 space-y-2 border-t pt-3">
+                  <MobileField label={fr.history.columns.date}>{formatDate(event.at)}</MobileField>
+                  <MobileField label={fr.history.columns.actor}>{event.actor ?? fr.history.system}</MobileField>
+                  <MobileField label="Type">{event.kind}</MobileField>
+                </dl>
+                {event.kind === 'job' && event.job_id && (
+                  <Link to={`/jobs/${event.job_id}`} className="mt-3 inline-block text-sm text-primary hover:underline">
+                    Consulter le job #{event.job_id} →
+                  </Link>
+                )}
+              </MobileCard>
+            ))}
+          </MobileCards>
+          <div className="hidden overflow-hidden rounded-xl border bg-card lg:block">
+            <div className="overflow-x-auto">
             <table className="w-full min-w-[720px] text-sm">
               <thead className="bg-secondary/60 text-left text-xs text-muted-foreground uppercase">
                 <tr>
@@ -165,8 +187,9 @@ export function AppHistoryView({
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   )

@@ -12,6 +12,7 @@ import {
 import { Link } from 'react-router-dom'
 
 import { MetricCard } from '@/components/app/metric-card'
+import { AppLink } from '@/components/app/app-link'
 import { PageHeader } from '@/components/app/page-header'
 import { ProgressBar } from '@/components/app/progress-bar'
 import { StatusPill } from '@/components/app/status-pill'
@@ -216,21 +217,20 @@ export function DashboardView({
               <p className="text-sm text-muted-foreground">{fr.jobs.empty}</p>
             ) : (
               recentJobs.map((job) => (
-                <Link
-                  key={job.id}
-                  to={`/jobs/${job.id}`}
-                  className="flex items-center gap-3 rounded-xl border px-3 py-2.5 hover:bg-secondary/60"
-                >
+                <div key={job.id} className="flex flex-wrap items-center gap-3 rounded-xl border px-3 py-2.5 hover:bg-secondary/60">
                   <JobStatusBadge status={job.status} />
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-medium">
-                      {jobTypeLabel(job.type)} → {job.target}
-                    </span>
-                    <span className="block text-xs text-muted-foreground">
-                      {formatDate(job.created_at)}
-                    </span>
+                    <Link to={`/jobs/${job.id}`} className="block truncate text-sm font-medium text-foreground hover:text-primary hover:underline">
+                      {jobTypeLabel(job.type)} · #{job.id}
+                    </Link>
+                    <span className="block text-xs text-muted-foreground">{formatDate(job.created_at)}</span>
                   </span>
-                </Link>
+                  {job.type.startsWith('app_') ? (
+                    <AppLink name={job.target} className="break-all text-sm" />
+                  ) : (
+                    <span className="break-all text-sm text-muted-foreground">{job.target}</span>
+                  )}
+                </div>
               ))
             )}
           </CardContent>

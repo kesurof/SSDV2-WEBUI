@@ -4,17 +4,18 @@ import { DiagnosticsActions } from '@/features/diagnostics/DiagnosticsActions'
 import { DiagnosticsStaleApps } from '@/features/diagnostics/DiagnosticsStaleApps'
 import { useDiagnostics } from '@/features/system/useSystem'
 import { PageHeader } from '@/components/app/page-header'
+import { AppLink } from '@/components/app/app-link'
 import { fr } from '@/i18n/fr'
 import type { Diagnostics } from '@/api/types'
 
-function ValueList({ values }: { values: string[] }) {
+function ValueList({ values, appNames = false }: { values: string[]; appNames?: boolean }) {
   if (values.length === 0) {
     return <p className="text-sm text-muted-foreground">{fr.diagnostics.none}</p>
   }
   return (
     <ul className="list-inside list-disc font-mono text-xs">
       {values.map((value) => (
-        <li key={value}>{value}</li>
+        <li key={value}>{appNames ? <AppLink name={value} className="font-mono text-xs" /> : value}</li>
       ))}
     </ul>
   )
@@ -57,7 +58,7 @@ export function DiagnosticsView({
           <CardContent className="space-y-2">
             <p className="text-xs text-muted-foreground">{fr.diagnostics.missingRegistriesHelp}</p>
             <p className="text-xs text-muted-foreground">{fr.diagnostics.missingRegistriesCause}</p>
-            <ValueList values={repairable} />
+            <ValueList values={repairable} appNames />
             <p className="text-xs text-primary">{fr.diagnostics.missingRegistriesAction}</p>
           </CardContent>
         </Card>

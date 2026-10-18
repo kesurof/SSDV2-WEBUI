@@ -1,5 +1,7 @@
 import { ArrowUpCircle, DownloadCloud, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
+import { AppLink } from '@/components/app/app-link'
+import { MobileCards, MobileCard, MobileField } from '@/components/app/mobile-cards'
 
 import { EmptyState } from '@/components/app/empty-state'
 import { PageHeader } from '@/components/app/page-header'
@@ -17,7 +19,7 @@ const STATUS_TONES: Record<string, StatusTone> = {
   unknown: 'muted',
 }
 
-function UpdateRow({ entry, onUpdated }: { entry: UpdateEntry; onUpdated: () => void }) {
+function UpdateRow({ entry, onUpdated, mobile = false }: { entry: UpdateEntry; onUpdated: () => void; mobile?: boolean }) {
   const action = useAppAction(entry.app)
 
   async function launch() {
@@ -30,9 +32,39 @@ function UpdateRow({ entry, onUpdated }: { entry: UpdateEntry; onUpdated: () => 
     }
   }
 
+  const updateButton = entry.status === 'available' ? (
+    <Button size="sm" variant="outline" disabled={action.isPending} onClick={launch}>
+      <ArrowUpCircle className="size-3.5" aria-hidden />
+      {fr.updates.update}
+    </Button>
+  ) : null
+
+  if (mobile) {
+    return (
+      <MobileCard>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <AppLink name={entry.app} className="text-base" />
+          <StatusPill tone={STATUS_TONES[entry.status] ?? 'muted'}>{fr.updates.status[entry.status]}</StatusPill>
+        </div>
+        <dl className="mt-3 space-y-2 border-t pt-3">
+          <MobileField label={fr.updates.columns.current}>
+            <span className="break-all font-mono">{entry.current_digest ?? fr.common.none}</span>
+          </MobileField>
+          <MobileField label={fr.updates.columns.available}>
+            <span className="break-all font-mono">
+              {entry.available_digest && entry.status === 'available' ? entry.available_digest : fr.common.none}
+            </span>
+          </MobileField>
+          <MobileField label={fr.updates.columns.type}>{fr.updates.types.application}</MobileField>
+        </dl>
+        {updateButton && <div className="mt-3 border-t pt-3">{updateButton}</div>}
+      </MobileCard>
+    )
+  }
+
   return (
     <tr className="border-b last:border-b-0">
-      <td className="px-3 py-2.5 font-medium">{entry.app}</td>
+      <td className="px-3 py-2.5"><AppLink name={entry.app} /></td>
       <td className="px-3 py-2.5 font-mono text-xs text-muted-foreground">
         {entry.current_digest ?? fr.common.none}
       </td>
@@ -50,12 +82,7 @@ function UpdateRow({ entry, onUpdated }: { entry: UpdateEntry; onUpdated: () => 
         </StatusPill>
       </td>
       <td className="px-3 py-2.5 text-right">
-        {entry.status === 'available' ? (
-          <Button size="sm" variant="outline" disabled={action.isPending} onClick={launch}>
-            <ArrowUpCircle className="size-3.5" aria-hidden />
-            {fr.updates.update}
-          </Button>
-        ) : null}
+        {updateButton}
       </td>
     </tr>
   )
@@ -103,8 +130,14 @@ export function UpdatesView({
       ) : updates.entries.length === 0 ? (
         <EmptyState icon={DownloadCloud} message={fr.updates.empty} />
       ) : (
-        <div className="overflow-hidden rounded-2xl border bg-card">
-          <div className="overflow-x-auto">
+        <>
+          <MobileCards label="Mises à jour (vue mobile)">
+            {updates.entries.map((entry) => (
+              <UpdateRow key={entry.app} entry={entry} onUpdated={onRefresh} mobile />
+            ))}
+          </MobileCards>
+          <div className="mt-4 hidden overflow-hidden rounded-xl border bg-card lg:block">
+            <div className="overflow-x-auto">
             <table className="w-full min-w-[720px] text-sm">
               <thead className="bg-secondary/60 text-left text-xs text-muted-foreground uppercase">
                 <tr>
@@ -123,8 +156,11 @@ export function UpdatesView({
               </tbody>
             </table>
           </div>
-          <p className="border-t px-3 py-2 text-xs text-muted-foreground">{fr.updates.unknownHint}</p>
-        </div>
+          </div>
+        </>
+      )}
+      {updates && updates.entries.length > 0 && (
+        <p className="mt-3 text-xs text-muted-foreground">{fr.updates.unknownHint}</p>
       )}
     </div>
   )

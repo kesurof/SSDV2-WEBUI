@@ -11,6 +11,8 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
+import { AppLink } from '@/components/app/app-link'
+import { MobileCards, MobileCard, MobileField } from '@/components/app/mobile-cards'
 import { Label } from '@/components/ui/label'
 import {
   Table,
@@ -79,7 +81,39 @@ export function AuthAppsView({
         </Button>
       </div>
 
-      <div className="rounded-md border">
+      <div className="flex items-center gap-2 lg:hidden">
+        <input
+          type="checkbox"
+          aria-label={`${fr.authApps.selectAll} (mobile)`}
+          checked={allSelected}
+          onChange={onToggleAll}
+        />
+        <span className="text-xs text-muted-foreground">{fr.authApps.selectAll}</span>
+      </div>
+      <MobileCards label="Authentification des applications (vue mobile)">
+        {apps.map((app) => (
+          <MobileCard key={app.name}>
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                aria-label={`${app.name} (mobile)`}
+                checked={selected.includes(app.name)}
+                onChange={() => onToggle(app.name)}
+              />
+              <AppLink name={app.name} className="min-w-0 break-all text-base" />
+            </div>
+            <dl className="mt-3 space-y-2 border-t pt-3">
+              <MobileField label={fr.apps.fields.auth}>{authByApp[app.name] ?? '—'}</MobileField>
+              <MobileField label={fr.apps.columns.domain}>
+                {app.domain && app.url
+                  ? <a href={app.url} target="_blank" rel="noreferrer" className="break-all text-primary hover:underline">{app.domain}</a>
+                  : '—'}
+              </MobileField>
+            </dl>
+          </MobileCard>
+        ))}
+      </MobileCards>
+      <div className="hidden rounded-xl border bg-card lg:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -107,7 +141,7 @@ export function AuthAppsView({
                     onChange={() => onToggle(app.name)}
                   />
                 </TableCell>
-                <TableCell className="font-medium">{app.name}</TableCell>
+                <TableCell><AppLink name={app.name} /></TableCell>
                 <TableCell>{authByApp[app.name] ?? '—'}</TableCell>
                 <TableCell>
                   {app.domain && app.url ? (

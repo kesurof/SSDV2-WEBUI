@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
 
@@ -50,15 +50,16 @@ describe('AppsTable', () => {
   it('renders application rows with status', () => {
     renderTable(APPS)
 
-    expect(screen.getByText('sonarr')).toBeInTheDocument()
-    expect(screen.getByText('En marche')).toBeInTheDocument()
-    expect(screen.getByText('wallos')).toBeInTheDocument()
-    expect(screen.getByText('Non installé')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'sonarr.example.com' })).toHaveAttribute(
+    const desktop = within(screen.getByRole('table'))
+    expect(desktop.getByText('sonarr')).toBeInTheDocument()
+    expect(desktop.getByText('En marche')).toBeInTheDocument()
+    expect(desktop.getByText('wallos')).toBeInTheDocument()
+    expect(desktop.getByText('Non installé')).toBeInTheDocument()
+    expect(desktop.getByRole('link', { name: 'sonarr.example.com' })).toHaveAttribute(
       'href',
       'https://sonarr.example.com',
     )
-    expect(screen.getByRole('link', { name: 'Ouvrir l\'application sonarr' })).toHaveAttribute(
+    expect(desktop.getByRole('link', { name: 'Ouvrir l\'application sonarr' })).toHaveAttribute(
       'href',
       'https://sonarr.example.com',
     )
@@ -67,7 +68,8 @@ describe('AppsTable', () => {
   it('links application names to the detail page', () => {
     renderTable(APPS)
 
-    expect(screen.getByRole('link', { name: 'sonarr' })).toHaveAttribute('href', '/apps/sonarr')
+    expect(within(screen.getByRole('table')).getByRole('link', { name: 'sonarr' })).toHaveAttribute('href', '/apps/sonarr')
+    expect(within(screen.getByRole('list', { name: 'Applications (vue mobile)' })).getByRole('link', { name: 'sonarr' })).toHaveAttribute('href', '/apps/sonarr')
   })
 
   it('shows an empty message', () => {
@@ -86,9 +88,9 @@ describe('AppsTable', () => {
       },
     })
 
-    expect(screen.getByRole('button', { name: 'Arrêter' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Redémarrer' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Mettre à jour sonarr' })).toBeInTheDocument()
+    expect(within(screen.getByRole('table')).getByRole('button', { name: 'Arrêter' })).toBeInTheDocument()
+    expect(within(screen.getByRole('table')).getByRole('button', { name: 'Redémarrer' })).toBeInTheDocument()
+    expect(within(screen.getByRole('list', { name: 'Applications (vue mobile)' })).getByRole('button', { name: 'Mettre à jour sonarr' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Installer' })).not.toBeInTheDocument()
   })
 })

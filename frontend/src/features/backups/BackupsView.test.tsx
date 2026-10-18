@@ -1,5 +1,6 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
+import { MemoryRouter } from 'react-router-dom'
 
 import { BackupsView } from '@/features/backups/BackupsView'
 import type { Backup } from '@/api/types'
@@ -21,16 +22,18 @@ const BACKUPS: Backup[] = [
 
 describe('BackupsView', () => {
   it('renders backups with size', () => {
-    render(<BackupsView backups={BACKUPS} />)
+    render(<MemoryRouter><BackupsView backups={BACKUPS} /></MemoryRouter>)
 
-    expect(screen.getByText('sonarr')).toBeInTheDocument()
-    expect(screen.getByText('sonarr-20260917-1200.tar.gz')).toBeInTheDocument()
-    expect(screen.getByText('12.0 Mo')).toBeInTheDocument()
-    expect(screen.getByText('2 Ko')).toBeInTheDocument()
+    const desktop = within(screen.getByRole('table'))
+    expect(desktop.getByRole('link', { name: 'sonarr' })).toHaveAttribute('href', '/apps/sonarr')
+    expect(within(screen.getByRole('list', { name: 'Sauvegardes (vue mobile)' })).getByRole('link', { name: 'sonarr' })).toBeInTheDocument()
+    expect(desktop.getByText('sonarr-20260917-1200.tar.gz')).toBeInTheDocument()
+    expect(desktop.getByText('12.0 Mo')).toBeInTheDocument()
+    expect(desktop.getByText('2 Ko')).toBeInTheDocument()
   })
 
   it('renders an empty message', () => {
-    render(<BackupsView backups={[]} />)
+    render(<MemoryRouter><BackupsView backups={[]} /></MemoryRouter>)
 
     expect(screen.getByText('Aucune sauvegarde.')).toBeInTheDocument()
   })

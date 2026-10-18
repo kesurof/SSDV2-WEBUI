@@ -15,6 +15,7 @@ import { Link } from 'react-router-dom'
 import { StatusPill } from '@/components/app/status-pill'
 import type { StatusTone } from '@/components/app/status-pill'
 import { KeyValueList } from '@/components/app/key-value-list'
+import { MobileCards, MobileCard, MobileField } from '@/components/app/mobile-cards'
 import { ProgressBar } from '@/components/app/progress-bar'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -83,8 +84,25 @@ function ContainerTable({ containers }: { containers: Container[] }) {
     return <p className="text-sm text-muted-foreground">{fr.apps.emptyList}</p>
   }
   return (
-    <div className="overflow-x-auto rounded-xl border bg-card">
-      <Table>
+    <>
+      <MobileCards label="Conteneurs (vue mobile)">
+        {containers.map((container) => (
+          <MobileCard key={container.name}>
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0 break-all text-sm font-semibold">{container.name}</div>
+              <StatusPill tone={containerTone(container)}>{stateLabel(container.state)}</StatusPill>
+            </div>
+            <dl className="mt-3 space-y-2 border-t pt-3">
+              <MobileField label={fr.apps.containerColumns.image}>
+                <span className="font-mono break-all">{container.image ?? '—'}</span>
+              </MobileField>
+              <MobileField label={fr.apps.containerColumns.health}>{healthLabel(container.health)}</MobileField>
+            </dl>
+          </MobileCard>
+        ))}
+      </MobileCards>
+      <div className="hidden overflow-x-auto rounded-xl border bg-card lg:block">
+        <Table>
         <TableHeader>
           <TableRow>
             <TableHead>{fr.apps.containerColumns.name}</TableHead>
@@ -104,7 +122,8 @@ function ContainerTable({ containers }: { containers: Container[] }) {
           ))}
         </TableBody>
       </Table>
-    </div>
+      </div>
+    </>
   )
 }
 

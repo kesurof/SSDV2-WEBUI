@@ -7,6 +7,8 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { PageHeader } from '@/components/app/page-header'
+import { AppLink } from '@/components/app/app-link'
+import { MobileCards, MobileCard, MobileField } from '@/components/app/mobile-cards'
 import { fr } from '@/i18n/fr'
 import type { Backup } from '@/api/types'
 
@@ -33,8 +35,21 @@ export function BackupsView({ backups }: { backups: Backup[] }) {
       {backups.length === 0 ? (
         <p className="text-sm text-muted-foreground">{fr.backups.empty}</p>
       ) : (
-        <div className="rounded-md border">
-          <Table>
+        <>
+          <MobileCards label="Sauvegardes (vue mobile)">
+            {backups.map((backup) => (
+              <MobileCard key={`${backup.app}/${backup.file}`}>
+                <AppLink name={backup.app} className="text-base" />
+                <p className="mt-1 break-all font-mono text-xs text-muted-foreground">{backup.file}</p>
+                <dl className="mt-3 space-y-2 border-t pt-3">
+                  <MobileField label={fr.backups.columns.size}>{formatSize(backup.size)}</MobileField>
+                  <MobileField label={fr.backups.columns.date}>{formatDate(backup.created_at)}</MobileField>
+                </dl>
+              </MobileCard>
+            ))}
+          </MobileCards>
+          <div className="hidden rounded-xl border bg-card lg:block">
+            <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>{fr.backups.columns.app}</TableHead>
@@ -46,7 +61,7 @@ export function BackupsView({ backups }: { backups: Backup[] }) {
             <TableBody>
               {backups.map((backup) => (
                 <TableRow key={`${backup.app}/${backup.file}`}>
-                  <TableCell className="font-medium">{backup.app}</TableCell>
+                  <TableCell><AppLink name={backup.app} /></TableCell>
                   <TableCell className="font-mono text-xs">{backup.file}</TableCell>
                   <TableCell>{formatSize(backup.size)}</TableCell>
                   <TableCell className="text-xs text-muted-foreground">
@@ -55,8 +70,9 @@ export function BackupsView({ backups }: { backups: Backup[] }) {
                 </TableRow>
               ))}
             </TableBody>
-          </Table>
-        </div>
+            </Table>
+          </div>
+        </>
       )}
     </div>
   )

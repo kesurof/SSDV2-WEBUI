@@ -1,7 +1,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { MemoryRouter } from 'react-router-dom'
 
 import { UpdatesView } from '@/features/updates/UpdatesView'
 import type { Updates } from '@/api/types'
@@ -32,7 +33,7 @@ function renderUpdates(updates: Updates) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={queryClient}>
-      <UpdatesView updates={updates} onRefresh={() => {}} />
+      <MemoryRouter><UpdatesView updates={updates} onRefresh={() => {}} /></MemoryRouter>
     </QueryClientProvider>,
   )
 }
@@ -46,12 +47,14 @@ describe('UpdatesView', () => {
     renderUpdates(UPDATES)
 
     expect(screen.getByRole('heading', { name: 'Centre de mises à jour' })).toBeInTheDocument()
-    expect(screen.getByText('dozzle')).toBeInTheDocument()
-    expect(screen.getByText('prowlarr')).toBeInTheDocument()
-    expect(screen.getByText('Mise à jour disponible')).toBeInTheDocument()
-    expect(screen.getByText('À jour')).toBeInTheDocument()
+    const desktop = within(screen.getByRole('table'))
+    expect(desktop.getByRole('link', { name: 'dozzle' })).toHaveAttribute('href', '/apps/dozzle')
+    expect(desktop.getByRole('link', { name: 'prowlarr' })).toHaveAttribute('href', '/apps/prowlarr')
+    expect(within(screen.getByRole('list', { name: 'Mises à jour (vue mobile)' })).getByRole('link', { name: 'dozzle' })).toBeInTheDocument()
+    expect(desktop.getByText('Mise à jour disponible')).toBeInTheDocument()
+    expect(desktop.getByText('À jour')).toBeInTheDocument()
     expect(screen.getByText('1 mise(s) à jour disponible(s)')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Mettre à jour/ })).toBeInTheDocument()
+    expect(desktop.getByRole('button', { name: /Mettre à jour/ })).toBeInTheDocument()
   })
 
   it('renders unknown statuses', () => {
@@ -69,7 +72,7 @@ describe('UpdatesView', () => {
       ],
     })
 
-    expect(screen.getByText('Inconnu')).toBeInTheDocument()
+    expect(within(screen.getByRole('table')).getByText('Inconnu')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Mettre à jour/ })).not.toBeInTheDocument()
   })
 
@@ -95,7 +98,7 @@ describe('UpdatesView', () => {
     vi.stubGlobal('fetch', fetchMock)
 
     renderUpdates(UPDATES)
-    await user.click(screen.getByRole('button', { name: /Mettre à jour/ }))
+    await user.click(within(screen.getByRole('list', { name: 'Mises à jour (vue mobile)' })).getByRole('button', { name: /Mettre à jour/ }))
 
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/v1/apps/dozzle/update',

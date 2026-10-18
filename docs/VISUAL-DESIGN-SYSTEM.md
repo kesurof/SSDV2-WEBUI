@@ -37,3 +37,11 @@ L'interface existante repose sur shadcn/ui + Tailwind 4 + next-themes. Les token
 - Vérifier les pages en clair/sombre et à 375, 768, 1280, 1920 px.
 - Tester clavier, menu mobile, sidebar repliée, modal des actions critiques, consultation logs SSE et authentification externe.
 - Exécuter la CI backend inchangée et le workflow Docker multiarchitecture avant d'annoncer une publication terminée.
+
+## Responsive mobile et liens contextuels
+
+- Sur les écrans inférieurs à 1024 px, les données tabulaires passent en **listes de cartes** (applications, conteneurs, authentification, mises à jour, sauvegardes, historique, audit, paramètres). Les tableaux denses sont conservés sur desktop ; pagination et filtres restent identiques.
+- La présentation mobile n'altère aucune commande : boutons de cycle de vie, mises à jour, sélection d'authentification et confirmations conservent leurs mutations habituelles.
+- Le composant `MobileCards` / `MobileCard` / `MobileField` centralise la structure responsive. Les labels explicites évitent d'avoir à deviner le sens des valeurs.
+- `AppLink` construit uniquement des **liens internes** vers `/apps/:app`, jamais des URL d'accès public. Il est utilisé dans les sauvegardes, mises à jour, authentification, audit des actions applicatives, diagnostics et jobs. Les cibles qui ne sont pas des apps (conteneurs orphelins, opérations génériques) restent du texte.
+- Pour un job applicatif, la navigation vers le job et la navigation vers l'application sont deux liens distincts, sans lien imbriqué.

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { AppLink } from '@/components/app/app-link'
 import { toast } from 'sonner'
 
 import {
@@ -74,7 +75,7 @@ export function DiagnosticsStaleApps({ apps }: { apps: string[] }) {
                     checked={selectedApps.includes(app)}
                     onChange={() => toggle(app)}
                   />
-                  <span className="font-mono text-xs">{app}</span>
+                  <AppLink name={app} className="min-w-0 break-all font-mono text-xs" />
                 </li>
               ))}
             </ul>

@@ -1,6 +1,5 @@
 import { createColumnHelper, tableFeatures, useTable } from '@tanstack/react-table'
 import { ExternalLink, TriangleAlert } from 'lucide-react'
-import { Link } from 'react-router-dom'
 
 import {
   Table,
@@ -11,6 +10,8 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { buttonVariants } from '@/components/ui/button'
+import { AppLink } from '@/components/app/app-link'
+import { MobileCards, MobileCard, MobileField } from '@/components/app/mobile-cards'
 import { AppRowActions, AppRowUpdate } from '@/features/apps/AppRowActions'
 import { StatusBadge } from '@/features/apps/StatusBadge'
 import { fr } from '@/i18n/fr'
@@ -29,9 +30,7 @@ function buildColumns(updatesByApp?: Record<string, UpdateEntry>) {
     header: fr.apps.columns.name,
     cell: (ctx) => (
       <div className="min-w-40">
-        <Link to={`/apps/${ctx.getValue()}`} className="font-medium hover:underline">
-          {ctx.getValue()}
-        </Link>
+        <AppLink name={ctx.getValue()} />
         <div className="max-w-md truncate text-xs text-muted-foreground">
           {ctx.row.original.description}
         </div>
@@ -126,8 +125,43 @@ export function AppsTable({
   }
 
   return (
-    <div className="control-app-table overflow-x-auto rounded-xl border bg-card">
-      <Table className="min-w-[880px]">
+    <>
+      <MobileCards label="Applications (vue mobile)">
+        {apps.map((app) => (
+          <MobileCard key={app.name}>
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <AppLink name={app.name} className="text-base" />
+                {app.description && <p className="mt-1 break-words text-xs text-muted-foreground">{app.description}</p>}
+              </div>
+              <StatusBadge status={app.runtime_status} />
+            </div>
+            <dl className="mt-3 space-y-2 border-t pt-3">
+              <MobileField label={fr.apps.columns.domain}>
+                {app.url && app.domain ? (
+                  <a href={app.url} target="_blank" rel="noreferrer" className="break-all text-primary hover:underline">{app.domain}</a>
+                ) : fr.common.none}
+              </MobileField>
+              <MobileField label={fr.apps.columns.containers}>{app.containers}</MobileField>
+              {app.warnings.length > 0 && (
+                <MobileField label={fr.apps.columns.warnings}>
+                  <span className="inline-flex items-center gap-1 text-warning" title={app.warnings.map(warningLabel).join(', ')}>
+                    <TriangleAlert className="size-4" aria-hidden /> {app.warnings.length}
+                  </span>
+                </MobileField>
+              )}
+            </dl>
+            {app.installed && (
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t pt-2">
+                <AppRowActions app={app} />
+                <AppRowUpdate app={app} update={updatesByApp?.[app.name]} />
+              </div>
+            )}
+          </MobileCard>
+        ))}
+      </MobileCards>
+      <div className="control-app-table hidden overflow-x-auto rounded-xl border bg-card lg:block">
+        <Table className="min-w-[880px]">
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
@@ -151,6 +185,7 @@ export function AppsTable({
           ))}
         </TableBody>
       </Table>
-    </div>
+      </div>
+    </>
   )
 }
