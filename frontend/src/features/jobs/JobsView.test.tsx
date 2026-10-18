@@ -32,6 +32,21 @@ describe('JobsView', () => {
     expect(screen.getAllByText('Succès').length).toBeGreaterThan(0)
   })
 
+  it('contains long job targets and keeps job/app links separate', () => {
+    const longTarget = 'mon-application-'.repeat(25)
+    render(
+      <MemoryRouter>
+        <JobsView jobs={[{ ...JOB, target: longTarget }]} />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByRole('link', { name: longTarget })).toHaveAttribute(
+      'href', `/apps/${longTarget}`,
+    )
+    expect(screen.getByRole('link', { name: longTarget })).toHaveClass('break-all')
+    expect(screen.getByRole('link', { name: /#3/ })).toHaveAttribute('href', '/jobs/3')
+  })
+
   it('renders an empty message', () => {
     render(
       <MemoryRouter>

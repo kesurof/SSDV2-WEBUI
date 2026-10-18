@@ -49,12 +49,12 @@ function JobPromptPanel({
   }, [prompt.id, prompt.default])
 
   return (
-    <div className="rounded-md border border-warning/50 bg-warning/10 p-4">
+    <div className="min-w-0 max-w-full rounded-lg border border-warning/50 bg-warning/10 p-3 sm:p-4">
       <div className="flex items-center gap-2 text-sm font-medium text-warning">
         <CircleHelp className="size-4" aria-hidden />
         {fr.jobs.prompt.title}
       </div>
-      <p className="mt-1 text-sm">{prompt.label}</p>
+      <p className="mt-1 break-words text-sm [overflow-wrap:anywhere]">{prompt.label}</p>
 
       {prompt.kind === 'choice' ? (
         <div className="mt-3 flex flex-wrap gap-2">
@@ -63,6 +63,7 @@ function JobPromptPanel({
               key={option.value}
               size="sm"
               variant="outline"
+              className="h-auto min-h-9 max-w-full whitespace-normal break-all text-left"
               disabled={busy}
               onClick={() => onSubmit(option.value)}
             >
@@ -83,7 +84,7 @@ function JobPromptPanel({
         </div>
       ) : (
         <form
-          className="mt-3 space-y-2"
+          className="mt-3 min-w-0 space-y-2"
           onSubmit={(event) => {
             event.preventDefault()
             onSubmit(value)
@@ -94,6 +95,7 @@ function JobPromptPanel({
           </Label>
           <Input
             id="job-prompt-input"
+            className="min-w-0 w-full max-w-full"
             type={prompt.secret ? 'password' : 'text'}
             autoComplete="off"
             autoFocus
@@ -134,13 +136,13 @@ export function JobDetailView({
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h2 className="text-lg font-semibold">
-            #{job.id} — {jobTypeLabel(job.type)} {job.type.startsWith('app_') ? <AppLink name={job.target} className="text-primary" /> : job.target}
+    <div className="min-w-0 w-full max-w-full space-y-4">
+      <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <h2 className="break-words text-lg font-semibold [overflow-wrap:anywhere]">
+            #{job.id} — {jobTypeLabel(job.type)} {job.type.startsWith('app_') ? <AppLink name={job.target} className="break-all text-primary" /> : job.target}
           </h2>
-          <div className="mt-1.5 flex items-center gap-2">
+          <div className="mt-1.5 flex flex-wrap items-center gap-2">
             <JobStatusBadge status={job.status} />
             <span className="text-xs text-muted-foreground">{formatDate(job.created_at)}</span>
           </div>
@@ -156,7 +158,7 @@ export function JobDetailView({
       {job.status === 'failed' && job.message && (
         <Alert variant="destructive">
           <AlertTitle>{fr.jobs.status.failed}</AlertTitle>
-          <AlertDescription>{job.message}</AlertDescription>
+          <AlertDescription className="break-words [overflow-wrap:anywhere]">{job.message}</AlertDescription>
         </Alert>
       )}
 
@@ -183,7 +185,7 @@ export function JobDetailView({
         ]}
       />
 
-      <div className="space-y-1">
+      <div className="min-w-0 max-w-full space-y-1">
         <div className="flex items-center justify-between gap-2">
           <div className="text-xs text-muted-foreground">{fr.jobs.events}</div>
           <Button
@@ -196,7 +198,7 @@ export function JobDetailView({
             {fr.common.copy}
           </Button>
         </div>
-        <pre className="control-console max-h-[480px] min-h-36 overflow-auto rounded-lg p-4 font-mono text-xs leading-relaxed">
+        <pre data-testid="job-log-console" className="control-console block w-full min-w-0 max-w-full max-h-[55svh] min-h-36 overflow-x-auto overflow-y-auto overscroll-x-contain rounded-lg p-3 font-mono text-xs leading-relaxed whitespace-pre sm:p-4 lg:max-h-[480px]">
           {lines.length === 0
             ? done
               ? fr.apps.logs.empty
