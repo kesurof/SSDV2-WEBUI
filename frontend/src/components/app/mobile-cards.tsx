@@ -6,7 +6,7 @@ export function MobileCards({ label, children }: { label: string; children: Reac
 }
 
 export function MobileCard({ children }: { children: ReactNode }) {
-  return <li className="min-w-0 rounded-xl border bg-card p-4 shadow-sm">{children}</li>
+  return <li className="ssdv2-list-card min-w-0 rounded-xl border bg-card p-4">{children}</li>
 }
 
 export function MobileField({ label, children }: { label: string; children: ReactNode }) {
