@@ -5,6 +5,8 @@ import { DiagnosticsStaleApps } from '@/features/diagnostics/DiagnosticsStaleApp
 import { useDiagnostics } from '@/features/system/useSystem'
 import { PageHeader } from '@/components/app/page-header'
 import { AppLink } from '@/components/app/app-link'
+import { BrandPanel, BrandSectionHeading } from '@/components/app/brand-panel'
+import { CircleAlert, ShieldCheck } from 'lucide-react'
 import { fr } from '@/i18n/fr'
 import type { Diagnostics } from '@/api/types'
 
@@ -35,7 +37,20 @@ export function DiagnosticsView({
         subtitle="Vérifiez l'état de votre instance et réparez les problèmes courants."
       />
 
-      <p className="text-sm text-muted-foreground">{fr.diagnostics.intro}</p>
+      <BrandPanel as="div" className="flex min-w-0 items-center gap-3 p-4">
+        <div className="ssdv2-resource-icon">
+          {repairable.length + checks.orphan_containers.length + checks.dangling_volumes > 0
+            ? <CircleAlert className="size-5 text-warning" aria-hidden />
+            : <ShieldCheck className="size-5 text-success" aria-hidden />}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="ssdv2-eyebrow">État des contrôles</div>
+          <p className="mt-1 text-xs text-muted-foreground">{fr.diagnostics.intro}</p>
+        </div>
+        <div className="ssdv2-metric-value shrink-0 font-mono text-2xl font-semibold tabular-nums">
+          {repairable.length + checks.orphan_containers.length + checks.dangling_volumes}
+        </div>
+      </BrandPanel>
 
       {warnings.length > 0 && (
         <Alert variant="destructive">
@@ -50,9 +65,10 @@ export function DiagnosticsView({
         </Alert>
       )}
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader>
+      <BrandSectionHeading>Vérifications détaillées</BrandSectionHeading>
+      <div className="grid gap-3 md:grid-cols-3">
+        <Card className="ssdv2-diagnostic-panel" data-check-state={repairable.length ? 'warn' : 'ok'}>
+          <CardHeader className="ssdv2-card-header">
             <CardTitle className="text-sm">{fr.diagnostics.missingRegistries}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -62,8 +78,8 @@ export function DiagnosticsView({
             <p className="text-xs text-primary">{fr.diagnostics.missingRegistriesAction}</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader>
+        <Card className="ssdv2-diagnostic-panel" data-check-state={checks.orphan_containers.length ? 'warn' : 'ok'}>
+          <CardHeader className="ssdv2-card-header">
             <CardTitle className="text-sm">{fr.diagnostics.orphanContainers}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -73,13 +89,13 @@ export function DiagnosticsView({
             <p className="text-xs text-primary">{fr.diagnostics.orphanContainersAction}</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader>
+        <Card className="ssdv2-diagnostic-panel" data-check-state={checks.dangling_volumes ? 'warn' : 'ok'}>
+          <CardHeader className="ssdv2-card-header">
             <CardTitle className="text-sm">{fr.diagnostics.danglingVolumes}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             <p className="text-xs text-muted-foreground">{fr.diagnostics.danglingVolumesHelp}</p>
-            <p className="text-2xl font-semibold">{checks.dangling_volumes}</p>
+            <p className="ssdv2-metric-value font-mono text-2xl font-semibold tabular-nums">{checks.dangling_volumes}</p>
             <p className="text-xs text-primary">{fr.diagnostics.danglingVolumesAction}</p>
           </CardContent>
         </Card>

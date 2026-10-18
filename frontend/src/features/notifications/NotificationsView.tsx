@@ -5,6 +5,9 @@ import { AppLink } from '@/components/app/app-link'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { PageHeader } from '@/components/app/page-header'
+import { BrandStatusRail } from '@/components/app/brand-status-rail'
+import { EmptyState } from '@/components/app/empty-state'
+import { Bell } from 'lucide-react'
 import { fr } from '@/i18n/fr'
 import type { Notification } from '@/api/types'
 
@@ -81,9 +84,9 @@ export function NotificationsView({
       )}
 
       {items.length === 0 ? (
-        <p className="text-sm text-muted-foreground">{fr.notifications.empty}</p>
+        <EmptyState icon={Bell} message={fr.notifications.empty} illustrated />
       ) : (
-        <ul className="space-y-2">
+        <ul className="ssdv2-notification-feed space-y-2">
           {items.map((notification, index) => {
             const match = notification.link?.match(/^\/jobs\/(\d+)(?:[/?#]|$)/)
             const appName = match ? appByJobId[Number(match[1])] : undefined
@@ -91,11 +94,13 @@ export function NotificationsView({
             return (
             <Fragment key={notification.id}>
               {(index === 0 || day !== dayKey(items[index - 1].created_at)) && (
-                <li className="pt-3 pb-1 text-xs font-semibold text-muted-foreground" aria-label={day}>{day}</li>
+                <li className="ssdv2-feed-date pt-3 pb-1 text-xs font-semibold text-muted-foreground" aria-label={day}>{day}</li>
               )}
-            <li
-              className={`rounded-xl border p-4 ${notification.read_at ? 'bg-card' : 'border-primary/20 bg-accent/30'}`}
-            >
+            <li className="min-w-0">
+              <BrandStatusRail
+                tone={notification.severity === 'error' ? 'err' : notification.severity === 'warning' ? 'warn' : notification.severity === 'success' ? 'ok' : 'info'}
+                className={`ssdv2-notification-item min-w-0 rounded-lg border p-3 sm:p-4 ${notification.read_at ? 'bg-card' : 'border-primary/25 bg-accent/20'}`}
+              >
               <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
@@ -132,6 +137,7 @@ export function NotificationsView({
                   )}
                 </div>
               </div>
+              </BrandStatusRail>
             </li>
             </Fragment>
             )

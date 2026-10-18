@@ -49,8 +49,8 @@ function PasswordChangeCard() {
   }
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="ssdv2-module-panel">
+      <CardHeader className="ssdv2-card-header">
         <CardTitle className="text-sm">{fr.security.passwordTitle}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -141,8 +141,8 @@ export function SecuritySettings() {
 
   return (
     <div className="space-y-4">
-      <Card>
-        <CardHeader>
+      <Card className="ssdv2-module-panel">
+        <CardHeader className="ssdv2-card-header">
           <CardTitle className="text-sm">{fr.security.title}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -159,7 +159,7 @@ export function SecuritySettings() {
               <label
                 key={option.value}
                 className={cn(
-                  'flex cursor-pointer items-start gap-3 rounded-lg border p-3 text-sm',
+                  'ssdv2-auth-choice flex min-w-0 cursor-pointer items-start gap-3 rounded-lg border p-3 text-sm',
                   selected === option.value ? 'border-primary bg-secondary/40' : '',
                   option.disabled && 'cursor-not-allowed opacity-60',
                 )}
@@ -181,7 +181,7 @@ export function SecuritySettings() {
             ))}
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 flex-wrap items-center gap-3">
             <Badge variant="outline" className="border-transparent bg-secondary text-foreground">
               {fr.security.currentMode} : {mode === 'proxy' ? fr.security.proxy : fr.security.internal}
             </Badge>

@@ -49,6 +49,7 @@ describe('NotificationsView', () => {
 
     expect(screen.getByText(/\(1 non lues\)/)).toBeInTheDocument()
     expect(screen.getByText('Échec : Installation wallos')).toBeInTheDocument()
+    expect(screen.getByText('Échec : Installation wallos').closest('[data-rail-tone]')).toHaveAttribute('data-rail-tone', 'err')
     expect(screen.getByText('ssdv2ctl a retourné le code 1')).toBeInTheDocument()
     expect(
       screen.getAllByRole('link', { name: 'Ouvrir' }).map((link) => link.getAttribute('href')),

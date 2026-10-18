@@ -53,6 +53,8 @@ describe('UpdatesView', () => {
     expect(within(screen.getByRole('list', { name: 'Mises à jour (vue mobile)' })).getByRole('link', { name: 'dozzle' })).toBeInTheDocument()
     expect(desktop.getByText('Mise à jour disponible')).toBeInTheDocument()
     expect(desktop.getByText('À jour')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Versions et disponibilité' })).toBeInTheDocument()
+    expect(desktop.getByRole('row', { name: /dozzle/ })).toHaveAttribute('data-update-status', 'available')
     expect(screen.getByText('1 mise(s) à jour disponible(s)')).toBeInTheDocument()
     expect(desktop.getByRole('button', { name: /Mettre à jour/ })).toBeInTheDocument()
   })

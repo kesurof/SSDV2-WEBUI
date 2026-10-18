@@ -7,6 +7,9 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { PageHeader } from '@/components/app/page-header'
+import { EmptyState } from '@/components/app/empty-state'
+import { BrandSectionHeading } from '@/components/app/brand-panel'
+import { ScrollText } from 'lucide-react'
 import { AppLink } from '@/components/app/app-link'
 import { MobileCards, MobileCard, MobileField } from '@/components/app/mobile-cards'
 import { fr } from '@/i18n/fr'
@@ -24,15 +27,16 @@ export function AuditView({ events }: { events: AuditEvent[] }) {
         title={fr.audit.title}
         subtitle="Historique des actions sensibles et changements administratifs."
       />
+      <BrandSectionHeading>Journal des événements</BrandSectionHeading>
       {events.length === 0 ? (
-        <p className="text-sm text-muted-foreground">{fr.audit.empty}</p>
+        <EmptyState icon={ScrollText} message={fr.audit.empty} illustrated />
       ) : (
         <>
           <MobileCards label="Audit (vue mobile)">
             {events.map((event) => (
               <MobileCard key={event.id}>
                 <div className="flex flex-wrap items-start justify-between gap-2">
-                  <span className="min-w-0 break-all text-sm font-semibold">{event.action}</span>
+                  <span className="min-w-0 break-all font-mono text-sm font-semibold">{event.action}</span>
                   <span className="text-xs text-muted-foreground">{formatDate(event.created_at)}</span>
                 </div>
                 <dl className="mt-3 space-y-2 border-t pt-3">
@@ -47,7 +51,7 @@ export function AuditView({ events }: { events: AuditEvent[] }) {
               </MobileCard>
             ))}
           </MobileCards>
-          <div className="hidden rounded-xl border bg-card lg:block">
+          <div className="ssdv2-module-panel hidden lg:block">
             <Table>
             <TableHeader>
               <TableRow>

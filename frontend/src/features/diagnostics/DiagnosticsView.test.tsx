@@ -21,6 +21,7 @@ describe('DiagnosticsView', () => {
 
     expect(screen.getByText('appname')).toBeInTheDocument()
     expect(screen.getByText('boostsuitev2')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Vérifications détaillées' })).toBeInTheDocument()
     expect(screen.getByText('Aucun')).toBeInTheDocument()
     expect(screen.getByText('2')).toBeInTheDocument()
   })

@@ -7,6 +7,9 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { PageHeader } from '@/components/app/page-header'
+import { BrandPanel, BrandSectionHeading } from '@/components/app/brand-panel'
+import { EmptyState } from '@/components/app/empty-state'
+import { Archive, DatabaseBackup } from 'lucide-react'
 import { AppLink } from '@/components/app/app-link'
 import { MobileCards, MobileCard, MobileField } from '@/components/app/mobile-cards'
 import { fr } from '@/i18n/fr'
@@ -31,16 +34,29 @@ export function BackupsView({ backups }: { backups: Backup[] }) {
   return (
     <div className="space-y-4">
       <PageHeader title={fr.backups.title} subtitle={fr.backups.hint} />
-      <p className="text-xs text-muted-foreground">{fr.backups.hint}</p>
+      <BrandPanel as="div" className="flex min-w-0 items-center gap-3 p-4">
+        <div className="ssdv2-resource-icon"><DatabaseBackup className="size-5" aria-hidden /></div>
+        <div className="min-w-0 flex-1">
+          <div className="ssdv2-eyebrow">Archives / stockage</div>
+          <p className="mt-1 text-xs text-muted-foreground">{fr.backups.hint}</p>
+        </div>
+        <div className="ssdv2-metric-value shrink-0 font-mono text-2xl font-semibold tabular-nums">{backups.length}</div>
+      </BrandPanel>
+      <BrandSectionHeading>Historique des sauvegardes</BrandSectionHeading>
       {backups.length === 0 ? (
-        <p className="text-sm text-muted-foreground">{fr.backups.empty}</p>
+        <EmptyState icon={Archive} message={fr.backups.empty} illustrated />
       ) : (
         <>
           <MobileCards label="Sauvegardes (vue mobile)">
             {backups.map((backup) => (
               <MobileCard key={`${backup.app}/${backup.file}`}>
-                <AppLink name={backup.app} className="text-base" />
-                <p className="mt-1 break-all font-mono text-xs text-muted-foreground">{backup.file}</p>
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="ssdv2-resource-icon"><Archive className="size-4" aria-hidden /></div>
+                  <div className="min-w-0">
+                    <AppLink name={backup.app} className="text-base font-semibold" />
+                    <p className="mt-1 break-all font-mono text-xs text-muted-foreground">{backup.file}</p>
+                  </div>
+                </div>
                 <dl className="mt-3 space-y-2 border-t pt-3">
                   <MobileField label={fr.backups.columns.size}>{formatSize(backup.size)}</MobileField>
                   <MobileField label={fr.backups.columns.date}>{formatDate(backup.created_at)}</MobileField>
@@ -48,7 +64,7 @@ export function BackupsView({ backups }: { backups: Backup[] }) {
               </MobileCard>
             ))}
           </MobileCards>
-          <div className="hidden rounded-xl border bg-card lg:block">
+          <div className="ssdv2-module-panel hidden lg:block">
             <Table>
             <TableHeader>
               <TableRow>

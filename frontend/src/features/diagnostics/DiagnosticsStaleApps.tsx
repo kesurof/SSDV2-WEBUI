@@ -56,8 +56,8 @@ export function DiagnosticsStaleApps({ apps }: { apps: string[] }) {
   }
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="ssdv2-module-panel">
+      <CardHeader className="ssdv2-card-header">
         <CardTitle className="text-sm">{fr.diagnostics.staleTitle}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -68,7 +68,7 @@ export function DiagnosticsStaleApps({ apps }: { apps: string[] }) {
             <p className="text-xs text-muted-foreground">{fr.diagnostics.staleHelp}</p>
             <ul className="space-y-1">
               {apps.map((app) => (
-                <li key={app} className="flex items-center gap-2 text-sm">
+                <li key={app} className="flex min-w-0 items-center gap-2 rounded-lg border border-border/70 bg-secondary/20 px-3 py-2 text-sm">
                   <input
                     type="checkbox"
                     aria-label={app}

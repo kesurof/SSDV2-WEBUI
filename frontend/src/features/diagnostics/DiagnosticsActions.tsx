@@ -71,8 +71,8 @@ export function DiagnosticsActions() {
   }
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="ssdv2-module-panel">
+      <CardHeader className="ssdv2-card-header">
         <CardTitle className="text-sm">{fr.diagnostics.actions}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -93,9 +93,9 @@ export function DiagnosticsActions() {
             </Button>
           ))}
         </div>
-        <ul className="space-y-1">
+        <ul className="ssdv2-action-list space-y-2">
           {ACTIONS.map((item) => (
-            <li key={item.action} className="text-xs text-muted-foreground">
+            <li key={item.action} data-action-risk={item.destructive ? 'destructive' : 'normal'} className="rounded-lg border border-border/70 bg-secondary/15 px-3 py-2 text-xs text-muted-foreground">
               <span className="font-medium text-foreground">{item.label} : </span>
               {item.help}
             </li>

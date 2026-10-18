@@ -5,6 +5,7 @@ import { MobileCards, MobileCard, MobileField } from '@/components/app/mobile-ca
 
 import { EmptyState } from '@/components/app/empty-state'
 import { PageHeader } from '@/components/app/page-header'
+import { BrandPanel, BrandSectionHeading } from '@/components/app/brand-panel'
 import { StatusPill } from '@/components/app/status-pill'
 import type { StatusTone } from '@/components/app/status-pill'
 import { Button } from '@/components/ui/button'
@@ -42,8 +43,8 @@ function UpdateRow({ entry, onUpdated, mobile = false }: { entry: UpdateEntry; o
   if (mobile) {
     return (
       <MobileCard>
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <AppLink name={entry.app} className="text-base" />
+        <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
+          <AppLink name={entry.app} className="break-all text-base font-semibold" />
           <StatusPill tone={STATUS_TONES[entry.status] ?? 'muted'}>{fr.updates.status[entry.status]}</StatusPill>
         </div>
         <dl className="mt-3 space-y-2 border-t pt-3">
@@ -63,7 +64,7 @@ function UpdateRow({ entry, onUpdated, mobile = false }: { entry: UpdateEntry; o
   }
 
   return (
-    <tr className="border-b last:border-b-0">
+    <tr data-update-status={entry.status} className="ssdv2-update-row border-b last:border-b-0">
       <td className="px-3 py-2.5"><AppLink name={entry.app} /></td>
       <td className="px-3 py-2.5 font-mono text-xs text-muted-foreground">
         {entry.current_digest ?? fr.common.none}
@@ -115,7 +116,7 @@ export function UpdatesView({
         }
       />
 
-      <div className="mb-4 rounded-2xl border bg-card p-4 text-sm">
+      <BrandPanel as="div" className="mb-4 p-4 text-sm">
         <div className="flex items-center gap-2 font-medium">
           <DownloadCloud className="size-4 text-muted-foreground" aria-hidden />
           {updates && updates.available > 0
@@ -123,12 +124,13 @@ export function UpdatesView({
             : fr.updates.status.up_to_date}
         </div>
         <p className="mt-1 text-xs text-muted-foreground">{fr.updates.appsOnlyHint}</p>
-      </div>
+      </BrandPanel>
+      <BrandSectionHeading className="mb-3">Versions et disponibilité</BrandSectionHeading>
 
       {!updates ? (
         <EmptyState icon={DownloadCloud} message={fr.common.loading} />
       ) : updates.entries.length === 0 ? (
-        <EmptyState icon={DownloadCloud} message={fr.updates.empty} />
+        <EmptyState icon={DownloadCloud} message={fr.updates.empty} illustrated />
       ) : (
         <>
           <MobileCards label="Mises à jour (vue mobile)">
@@ -136,7 +138,7 @@ export function UpdatesView({
               <UpdateRow key={entry.app} entry={entry} onUpdated={onRefresh} mobile />
             ))}
           </MobileCards>
-          <div className="mt-4 hidden overflow-hidden rounded-xl border bg-card lg:block">
+          <div className="ssdv2-module-panel mt-4 hidden lg:block">
             <div className="overflow-x-auto">
             <table className="w-full min-w-[720px] text-sm">
               <thead className="bg-secondary/60 text-left text-xs text-muted-foreground uppercase">

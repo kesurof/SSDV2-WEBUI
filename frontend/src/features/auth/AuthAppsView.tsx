@@ -12,6 +12,8 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { AppLink } from '@/components/app/app-link'
+import { BrandPanel, BrandSectionHeading } from '@/components/app/brand-panel'
+import { ShieldCheck, Shield } from 'lucide-react'
 import { MobileCards, MobileCard, MobileField } from '@/components/app/mobile-cards'
 import { Label } from '@/components/ui/label'
 import {
@@ -53,9 +55,26 @@ export function AuthAppsView({
 
   return (
     <div className="space-y-4">
-      <h1 className="text-lg font-semibold">{fr.authApps.title}</h1>
+      <div className="ssdv2-eyebrow"><span className="ssdv2-triad" aria-hidden /> SSDv2 / sécurité</div>
+      <h1 className="text-xl font-bold tracking-tight">{fr.authApps.title}</h1>
       <p className="text-xs text-muted-foreground">{fr.authApps.hint}</p>
 
+      <BrandPanel as="div" className="flex min-w-0 flex-wrap items-center gap-3 p-4">
+        <div className="ssdv2-resource-icon"><ShieldCheck className="size-5" aria-hidden /></div>
+        <div className="min-w-0 flex-1">
+          <div className="ssdv2-eyebrow">Applications protégées</div>
+          <div className="mt-1 text-xs text-muted-foreground">Selon les protections déclarées par SSDv2</div>
+        </div>
+        <div className="ssdv2-metric-value font-mono text-2xl font-semibold tabular-nums">
+          {apps.filter((app) => {
+            const mode = authByApp[app.name]
+            return mode && mode !== 'aucune'
+          }).length} <span className="text-sm text-muted-foreground">/ {apps.length}</span>
+        </div>
+      </BrandPanel>
+
+      <BrandPanel as="div" className="space-y-3 p-4">
+      <BrandSectionHeading>Modification groupée</BrandSectionHeading>
       <div className="flex flex-wrap items-end gap-3">
         <div className="space-y-1">
           <Label htmlFor="bulk-auth">{fr.authApps.target}</Label>
@@ -81,6 +100,8 @@ export function AuthAppsView({
         </Button>
       </div>
 
+      </BrandPanel>
+      <BrandSectionHeading>Applications et protections</BrandSectionHeading>
       <div className="flex items-center gap-2 lg:hidden">
         <input
           type="checkbox"
@@ -93,14 +114,15 @@ export function AuthAppsView({
       <MobileCards label="Authentification des applications (vue mobile)">
         {apps.map((app) => (
           <MobileCard key={app.name}>
-            <div className="flex items-center gap-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="ssdv2-resource-icon"><Shield className="size-4" aria-hidden /></div>
               <input
                 type="checkbox"
                 aria-label={`${app.name} (mobile)`}
                 checked={selected.includes(app.name)}
                 onChange={() => onToggle(app.name)}
               />
-              <AppLink name={app.name} className="min-w-0 break-all text-base" />
+              <AppLink name={app.name} className="min-w-0 break-all text-base font-semibold" />
             </div>
             <dl className="mt-3 space-y-2 border-t pt-3">
               <MobileField label={fr.apps.fields.auth}>{authByApp[app.name] ?? '—'}</MobileField>
@@ -113,7 +135,7 @@ export function AuthAppsView({
           </MobileCard>
         ))}
       </MobileCards>
-      <div className="hidden rounded-xl border bg-card lg:block">
+      <div className="ssdv2-module-panel hidden lg:block">
         <Table>
           <TableHeader>
             <TableRow>

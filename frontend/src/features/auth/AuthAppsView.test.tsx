@@ -47,6 +47,8 @@ describe('AuthAppsView', () => {
     )
 
     expect(screen.getByRole('cell', { name: 'authelia' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Modification groupée' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Applications et protections' })).toBeInTheDocument()
     expect(within(screen.getByRole('table')).getByRole('link', { name: 'sonarr.example.com' })).toHaveAttribute(
       'href',
       'https://sonarr.example.com',

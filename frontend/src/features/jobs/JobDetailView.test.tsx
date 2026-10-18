@@ -30,6 +30,8 @@ describe('JobDetailView', () => {
     expect(screen.getByRole('heading', { name: '#3 — Redémarrage sonarr' })).toBeInTheDocument()
     expect(screen.getAllByRole('link', { name: 'sonarr' })[0]).toHaveAttribute('href', '/apps/sonarr')
     expect(screen.getByText('ssdv2ctl a retourné le code 1')).toBeInTheDocument()
+    expect(screen.getByRole('list', { name: 'Chronologie du job' })).toHaveTextContent('Job créé')
+    expect(screen.getByRole('list', { name: 'Chronologie du job' })).toHaveTextContent('Exécution terminée')
     expect(screen.getByText(/ligne 1/)).toBeInTheDocument()
   })
 

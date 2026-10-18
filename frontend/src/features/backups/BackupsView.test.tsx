@@ -29,6 +29,7 @@ describe('BackupsView', () => {
     expect(within(screen.getByRole('list', { name: 'Sauvegardes (vue mobile)' })).getByRole('link', { name: 'sonarr' })).toBeInTheDocument()
     expect(desktop.getByText('sonarr-20260917-1200.tar.gz')).toBeInTheDocument()
     expect(desktop.getByText('12.0 Mo')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Historique des sauvegardes' })).toBeInTheDocument()
     expect(desktop.getByText('2 Ko')).toBeInTheDocument()
   })
 

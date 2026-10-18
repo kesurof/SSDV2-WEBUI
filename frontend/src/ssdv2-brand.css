@@ -235,3 +235,28 @@
 .control-app-table [data-app-status='partial'] td:first-child,
 .control-app-table [data-app-status='unknown'] td:first-child { box-shadow: inset 3px 0 0 var(--warning); }
 .control-app-table [data-app-status='stopped'] td:first-child { box-shadow: inset 3px 0 0 var(--muted-foreground); }
+
+/* Modules & Flow — shared language across every administration page. */
+.ssdv2-resource-icon {display:grid;height:40px;width:40px;flex:none;place-items:center;border:1px solid color-mix(in srgb,var(--primary) 25%,var(--border));border-radius:12px;background:var(--accent);color:var(--primary)}
+.ssdv2-list-card {position:relative;min-width:0;overflow:hidden;border-color:var(--ssdv2-module-edge);box-shadow:var(--shadow-panel)}
+.ssdv2-list-card::before {content:'';position:absolute;top:0;left:16px;width:52px;height:2px;background:linear-gradient(90deg,var(--ssdv2-brand-blue),var(--ssdv2-brand-cyan));opacity:.8;pointer-events:none}
+.ssdv2-health-tile {min-width:0}
+.ssdv2-health-tile > div:first-child {min-height:22px}
+.ssdv2-health-check {box-shadow:var(--shadow-panel)}
+.ssdv2-service-row[data-service-state='ok'] {border-left:3px solid var(--success)}
+.ssdv2-service-row[data-service-state='degraded'] {border-left:3px solid var(--destructive)}
+.ssdv2-service-row[data-service-state='unknown'] {border-left:3px solid var(--border)}
+.ssdv2-diagnostic-panel {position:relative;min-width:0;overflow:hidden;border-color:var(--ssdv2-module-edge);box-shadow:var(--shadow-panel)}
+.ssdv2-diagnostic-panel::before {content:'';position:absolute;top:13px;bottom:13px;left:0;width:3px;border-radius:0 3px 3px 0;background:var(--success)}
+.ssdv2-diagnostic-panel[data-check-state='warn']::before {background:var(--warning)}
+.ssdv2-update-row[data-update-status='available'] td:first-child {box-shadow:inset 3px 0 0 var(--warning)}
+.ssdv2-update-row[data-update-status='up_to_date'] td:first-child {box-shadow:inset 3px 0 0 var(--success)}
+.ssdv2-notification-feed {min-width:0}
+.ssdv2-notification-item {overflow-wrap:anywhere}
+.ssdv2-feed-date {letter-spacing:.04em}
+.ssdv2-auth-choice {border-color:var(--ssdv2-module-edge);transition:border-color .15s ease,background-color .15s ease}
+.ssdv2-auth-choice:focus-within {outline:2px solid var(--ring);outline-offset:2px}
+.ssdv2-auth-choice:has(input:checked) {border-color:var(--primary);background:var(--accent)}
+.ssdv2-auth-choice:has(input:disabled) {cursor:not-allowed}
+.ssdv2-action-list [data-action-risk='destructive'] {border-left:3px solid var(--warning)}
+@media (prefers-reduced-motion:reduce) {.ssdv2-auth-choice {transition:none}}
