@@ -94,6 +94,15 @@ describe('AppDetailView', () => {
     expect(screen.getByText('Recréation')).toBeInTheDocument()
   })
 
+  it('supports the mobile More menu without hiding the extra content', async () => {
+    const user = userEvent.setup()
+    renderDetail()
+    expect(screen.getByRole('link', { name: 'Retour aux applications' })).toHaveAttribute('href', '/apps')
+    await user.click(screen.getByRole('button', { name: 'Autres rubriques' }))
+    await user.click(await screen.findByRole('menuitem', { name: 'Volumes' }))
+    expect(screen.getByText('sonarr-config')).toBeInTheDocument()
+  })
+
   it('renders containers, volumes, dns and variables tabs', async () => {
     const user = userEvent.setup()
     renderDetail()
