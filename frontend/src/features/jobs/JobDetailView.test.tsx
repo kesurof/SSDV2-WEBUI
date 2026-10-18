@@ -33,6 +33,25 @@ describe('JobDetailView', () => {
     expect(screen.getByText(/ligne 1/)).toBeInTheDocument()
   })
 
+  it('contains long log lines, long errors and application names', () => {
+    const longTarget = 'target-'.repeat(70)
+    render(
+      <MemoryRouter>
+        <JobDetailView
+          job={{ ...JOB, target: longTarget, message: 'Error'.repeat(150) }}
+          lines={['single-very-long-log-line-'.repeat(100)]}
+          done
+        />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByTestId('job-log-console')).toHaveClass(
+      'overflow-x-auto', 'min-w-0', 'max-w-full', 'whitespace-pre',
+    )
+    expect(screen.getByRole('heading', { name: new RegExp(longTarget) })).toHaveClass('break-words')
+    expect(screen.getAllByRole('link', { name: longTarget })[0]).toHaveClass('break-all')
+  })
+
   it('renders a secret prompt and submits the value', async () => {
     const user = userEvent.setup()
     const onInput = vi.fn()
