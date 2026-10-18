@@ -13,7 +13,9 @@ import { Link } from 'react-router-dom'
 
 import { MetricCard } from '@/components/app/metric-card'
 import { AppLink } from '@/components/app/app-link'
-import { PageHeader } from '@/components/app/page-header'
+import { BrandHero } from '@/components/app/brand-hero'
+import { BrandSectionHeading } from '@/components/app/brand-panel'
+import { BrandStatusRail } from '@/components/app/brand-status-rail'
 import { ProgressBar } from '@/components/app/progress-bar'
 import { StatusPill } from '@/components/app/status-pill'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -52,10 +54,10 @@ export function DashboardView({
 
   return (
     <div className="space-y-5">
-      <PageHeader
+      <BrandHero
         title={fr.dashboard.title}
-        subtitle="Vue d'ensemble de votre instance SSDV2."
-        actions={
+        subtitle="Vue d'ensemble de votre instance SSDV2. Pilotez vos applications, opérations et ressources au même endroit."
+        status={
           <StatusPill tone={summary.status === 'ok' ? 'ok' : 'warn'}>
             {summary.status === 'ok' ? fr.health.operational : fr.health.degraded}
           </StatusPill>
@@ -75,6 +77,7 @@ export function DashboardView({
         </Alert>
       )}
 
+      <BrandSectionHeading>Indicateurs clés</BrandSectionHeading>
       <div className="grid grid-cols-2 gap-2 sm:gap-4 xl:grid-cols-4">
         <MetricCard
           icon={Boxes}
@@ -106,8 +109,8 @@ export function DashboardView({
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        <Card>
-          <CardHeader>
+        <Card className="ssdv2-module-panel">
+          <CardHeader className="ssdv2-card-header">
             <CardTitle className="flex items-center gap-2 text-sm">
               <Cpu className="size-4 text-muted-foreground" aria-hidden />
               Santé du serveur
@@ -158,8 +161,8 @@ export function DashboardView({
           </CardContent>
         </Card>
 
-        <Card className="hidden lg:flex">
-          <CardHeader>
+        <Card className="ssdv2-module-panel hidden lg:flex">
+          <CardHeader className="ssdv2-card-header">
             <CardTitle className="flex items-center gap-2 text-sm">
               <Server className="size-4 text-muted-foreground" aria-hidden />
               {fr.dashboard.ssdv2}
@@ -185,7 +188,7 @@ export function DashboardView({
       </div>
 
       {updatesCount !== undefined && updatesCount > 0 && (
-        <div className="flex flex-wrap items-center gap-3 rounded-xl border bg-card p-4">
+        <div className="ssdv2-module-panel flex flex-wrap items-center gap-3 p-4">
           <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-warning-soft text-warning">
             <ArrowUpCircle className="size-5" aria-hidden />
           </div>
@@ -203,8 +206,8 @@ export function DashboardView({
       )}
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
+        <Card className="ssdv2-module-panel">
+          <CardHeader className="ssdv2-card-header">
             <CardTitle className="text-sm">Jobs récents</CardTitle>
             <CardAction>
               <Button variant="ghost" size="sm" nativeButton={false} render={<Link to="/jobs" />}>
@@ -230,14 +233,14 @@ export function DashboardView({
                   ) : (
                     <span className="break-all text-sm text-muted-foreground">{job.target}</span>
                   )}
-                </div>
+                </BrandStatusRail>
               ))
             )}
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
+        <Card className="ssdv2-module-panel">
+          <CardHeader className="ssdv2-card-header">
             <CardTitle className="text-sm">Alertes actives</CardTitle>
             <CardAction>
               <Button variant="ghost" size="sm" nativeButton={false} render={<Link to="/notifications" />}>
@@ -250,9 +253,10 @@ export function DashboardView({
               <p className="text-sm text-muted-foreground">{fr.notifications.empty}</p>
             ) : (
               alerts.map((notification) => (
-                <div
+                <BrandStatusRail
                   key={notification.id}
-                  className="flex items-center gap-3 rounded-xl border px-3 py-2.5"
+                  tone={notification.severity === 'error' ? 'err' : 'warn'}
+                  className="flex min-w-0 items-center gap-3 rounded-lg border border-border/70 bg-card px-3 py-2.5"
                 >
                   <StatusPill tone={notification.severity === 'error' ? 'err' : 'warn'}>
                     {notification.severity === 'error' ? 'Erreur' : 'Attention'}

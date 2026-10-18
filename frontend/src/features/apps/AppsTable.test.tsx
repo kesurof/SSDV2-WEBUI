@@ -69,7 +69,9 @@ describe('AppsTable', () => {
     renderTable(APPS)
 
     expect(within(screen.getByRole('table')).getByRole('link', { name: 'sonarr' })).toHaveAttribute('href', '/apps/sonarr')
-    expect(within(screen.getByRole('list', { name: 'Applications (vue mobile)' })).getByRole('link', { name: 'sonarr' })).toHaveAttribute('href', '/apps/sonarr')
+    const mobile = within(screen.getByRole('list', { name: 'Applications (vue mobile)' }))
+    expect(mobile.getByRole('link', { name: 'sonarr' })).toHaveAttribute('href', '/apps/sonarr')
+    expect(mobile.getByText('sonarr').closest('[data-app-status]')).toHaveAttribute('data-app-status', 'running')
   })
 
   it('shows an empty message', () => {

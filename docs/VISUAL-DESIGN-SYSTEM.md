@@ -81,3 +81,22 @@ L'interface existante repose sur shadcn/ui + Tailwind 4 + next-themes. Les token
 - Boutons menu/recherche de top bar : 40 px et icônes 20 px. Titre contextualisé sur mobile (nom de rubrique, application ou job).
 - Top bar mobile automatiquement masquée après une descente d'au moins 20 px cumulés, réapparition lors de la remontée et à proximité du haut ; maintenue visible quand un menu ou une recherche est ouvert. Desktop inchangé.
 - Le comportement conserve la gestion focus, le défilement, Échap et la réduction d'animations ; les tests automatisés ne remplacent pas la validation visuelle sur un iPhone réel.
+
+## Évolution « Modules & Flow » — source officielle SSDv2
+
+**Source de vérité :** [projetssd/branding](https://github.com/projetssd/branding) — `source/symbol-master.svg`, `source/wordmark-master.svg`, `design-system/tokens.json`, `docs/brand-guidelines.md` et `assets/illustrations/*.svg`. Ne pas redessiner les rubans du logo ; les accents CSS (ligne trois couleurs) ne sont pas le logo et ne doivent pas être substitués au logotype.
+
+### Règles
+
+- **Sombre par défaut** : `next-themes` utilise `defaultTheme=dark`, système désactivé. La préférence explicite sauvegardée sous `ssdv2-theme` reste prioritaire ; le bouton clair/sombre demeure. L'HTML démarre avec `.dark` pour limiter le flash avant hydratation.
+- **Primitives de marques** : `BrandHero`, `BrandPanel`, `BrandSectionHeading`, `BrandStatusRail`, `MetricCard` et `BrandAppCard`; styles séparés sous `frontend/src/ssdv2-brand.css`. Contrôles, formulaires, popovers, Sheet et alert-dialog restent des composants shadcn/Base UI.
+- **Signal, pas décoration** : ligne tricolore cyan → bleu → violet pour en-têtes et modules. Elle ne représente jamais l'état d'une application. Vert/ambre/rouge exclusivement pour succès/avertissement/erreur.
+- **Surfaces** : modules peu élevés avec bordures nettes, contenus denses, titres plus techniques et chiffres monospace. Ne pas poser de dégradés sur toutes les cartes. Les logos SVG sont conservés à l'identique.
+- **Illustrations** : copies exactes des cinq illustrations officielles dans `frontend/public/branding/illustrations/`; l'illustration Administration habille le Dashboard, État vide intervient sur les listes vides. Images purement décoratives avec `alt=""` ; ne remplacent jamais un statut textuel.
+- **Apps** : cartes mobiles spécifiques avec indicateur vertical sémantique, icône neutre, nom, état, domaine, conteneurs et actions existantes ; desktop reste tableau. La fiche utilise les surfaces modulaires, sans toucher aux actions ni aux confirmations.
+- **Jobs** : liste conçue en flux temporel avec des marqueurs correspondant au vrai statut ; console de logs et saisies sensibles restent inchangées. Les contrôles tactiles et les liens directs vers les applications sont conservés.
+- **Accessibilité et mouvement** : focus visible, labels et couleurs contrastées, animations réduites, préférences système de réduction d'animation respectées. Tester sur Safari iPhone, mobile 320–430px et desktop clair/sombre avant d'affirmer une validation visuelle complète.
+
+### Validation du kit graphique
+
+`projetssd/branding` signale que l'emblème a été reconstruit depuis une référence raster approuvée, et non extrait de vecteurs originaux. Les exports officiels sont l'unique source utilisable dans la WebUI. Toute retouche au symbole doit se faire dans les fichiers maîtres du dépôt Branding et être régénérée depuis les scripts officiels.

@@ -54,6 +54,8 @@ describe('DashboardView', () => {
     )
 
     expect(screen.getByText('instance-exemple')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Tableau de bord' })).toBeInTheDocument()
+    expect(screen.getByText('Indicateurs clés')).toBeInTheDocument()
     expect(screen.getByText('24.0 Go')).toBeInTheDocument()
     expect(screen.getByText('main')).toBeInTheDocument()
     expect(screen.getByText('0123456789')).toBeInTheDocument()
