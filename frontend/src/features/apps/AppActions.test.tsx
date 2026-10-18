@@ -60,7 +60,8 @@ describe('AppActions', () => {
     vi.unstubAllGlobals()
   })
 
-  it('shows the relevant power action according to the application state', () => {
+  it('shows the relevant power action according to the application state', async () => {
+    const user = userEvent.setup()
     const { unmount } = renderActions(makeApp({ runtime_status: 'stopped' }))
 
     expect(screen.getByRole('button', { name: 'Démarrer' })).toBeEnabled()
@@ -69,8 +70,10 @@ describe('AppActions', () => {
     unmount()
 
     renderActions(makeApp({ runtime_status: 'running' }))
-    expect(screen.getByRole('button', { name: 'Arrêter' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Redémarrer' })).toBeEnabled()
     expect(screen.queryByRole('button', { name: 'Démarrer' })).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Plus d’actions' }))
+    expect(await screen.findByRole('menuitem', { name: 'Arrêter' })).toBeInTheDocument()
   })
 
   it("affiche le bouton Ouvrir uniquement avec une URL", () => {
@@ -163,7 +166,8 @@ describe('AppActions', () => {
     vi.stubGlobal('fetch', fetchMock)
 
     renderActions(makeApp())
-    await user.click(screen.getByRole('button', { name: 'Sauvegarder' }))
+    await user.click(screen.getByRole('button', { name: 'Plus d’actions' }))
+    await user.click(await screen.findByRole('menuitem', { name: 'Sauvegarder' }))
     await user.click(screen.getByRole('button', { name: 'Confirmer' }))
 
     expect(fetchMock).toHaveBeenCalledWith(
