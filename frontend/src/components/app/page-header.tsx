@@ -12,6 +12,7 @@ export function PageHeader({
   return (
     <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
       <div className="min-w-0">
+        <div className="ssdv2-eyebrow mb-2"><span className="ssdv2-triad" aria-hidden /> SSDv2 / Control</div>
         <h1 className="text-[1.5rem] font-bold tracking-tight sm:text-[1.65rem]">{title}</h1>
         {subtitle ? <p className="mt-1.5 text-sm text-muted-foreground">{subtitle}</p> : null}
       </div>

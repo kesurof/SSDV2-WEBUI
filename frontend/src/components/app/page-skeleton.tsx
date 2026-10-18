@@ -10,10 +10,10 @@ export function PageSkeleton() {
       </div>
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         {Array.from({ length: 4 }).map((_, index) => (
-          <div key={index} className="h-24 rounded-2xl border bg-card/60" />
+          <div key={index} className="ssdv2-module-panel h-24 rounded-2xl border bg-card/60" />
         ))}
       </div>
-      <div className="space-y-3 rounded-2xl border bg-card/60 p-4">
+      <div className="ssdv2-module-panel space-y-3 rounded-2xl border bg-card/60 p-4">
         {Array.from({ length: 6 }).map((_, index) => (
           <div key={index} className="h-5 rounded-md bg-secondary/70" />
         ))}

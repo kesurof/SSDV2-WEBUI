@@ -47,7 +47,7 @@ export function AppSidebar({
   return (
     <div className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden bg-sidebar text-sidebar-foreground">
       <div className={cn(
-        'flex min-h-20 shrink-0 items-center gap-2 border-b border-sidebar-border px-4 py-4',
+        'ssdv2-sidebar-header flex min-h-20 shrink-0 items-center gap-2 border-b border-sidebar-border px-4 py-4',
         collapsed && 'lg:flex-col lg:justify-center lg:gap-1 lg:px-2 lg:py-1.5',
       )}>
         <div className={cn('min-w-0 flex-1', collapsed && 'lg:hidden')}>
@@ -90,7 +90,7 @@ export function AppSidebar({
         {sections.map((section) => (
           <div key={section.label}>
             <div className={cn(
-              'px-2 pb-1.5 text-[11px] font-bold tracking-wider text-muted-foreground uppercase',
+              'ssdv2-sidebar-label px-2 pb-1.5 text-[11px] font-bold tracking-wider text-muted-foreground uppercase',
               collapsed && 'lg:sr-only',
             )}>
               {section.label}
@@ -108,7 +108,7 @@ export function AppSidebar({
                     onClick={onNavigate}
                     title={item.label}
                     className={({ isActive }) => cn(
-                      'flex min-h-11 min-w-0 items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors',
+                      'ssdv2-sidebar-link flex min-h-11 min-w-0 items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors',
                       collapsed && 'lg:justify-center',
                       isActive
                         ? 'bg-sidebar-accent font-semibold text-sidebar-accent-foreground'
