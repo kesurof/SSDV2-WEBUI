@@ -15,6 +15,8 @@ import {
 import type { LucideIcon } from 'lucide-react'
 
 import { EmptyState } from '@/components/app/empty-state'
+import { BrandPanel, BrandSectionHeading } from '@/components/app/brand-panel'
+import { BrandStatusRail } from '@/components/app/brand-status-rail'
 import { PageHeader } from '@/components/app/page-header'
 import { ProgressBar } from '@/components/app/progress-bar'
 import { StatusPill } from '@/components/app/status-pill'
@@ -55,19 +57,19 @@ function Tile({
   tone?: 'info' | 'ok' | 'warn' | 'err'
 }) {
   return (
-    <div className="rounded-xl border bg-card p-4">
+    <BrandPanel as="div" className="ssdv2-health-tile p-4" >
       <div className="mb-3 flex items-center justify-between gap-3">
         <span className="flex items-center gap-2 text-sm font-semibold">
           <Icon className="size-4 text-muted-foreground" aria-hidden />
           {title}
         </span>
       </div>
-      <div className="text-2xl font-bold tracking-tight">{value}</div>
+      <div className="ssdv2-metric-value break-words font-mono text-2xl font-semibold tracking-tight tabular-nums">{value}</div>
       {hint ? <div className="mt-1 text-xs text-muted-foreground">{hint}</div> : null}
       {percent !== undefined && percent !== null ? (
         <ProgressBar className="mt-4" value={percent} tone={tone} />
       ) : null}
-    </div>
+    </BrandPanel>
   )
 }
 
@@ -81,13 +83,13 @@ function InfoCard({
   children: React.ReactNode
 }) {
   return (
-    <div className="rounded-xl border bg-card p-4">
-      <div className="mb-3 flex items-center justify-between gap-3">
+    <BrandStatusRail tone={tone} className="ssdv2-health-check rounded-lg border border-border/80 bg-card p-3.5">
+      <div className="mb-3 flex min-w-0 flex-wrap items-center justify-between gap-2">
         <span className="text-sm font-semibold">{title}</span>
         <StatusPill tone={tone}>{tone === 'ok' ? 'OK' : tone === 'err' ? fr.health.degraded : '—'}</StatusPill>
       </div>
-      <div className="space-y-1 text-xs text-muted-foreground">{children}</div>
-    </div>
+      <div className="min-w-0 space-y-1 break-words text-xs text-muted-foreground">{children}</div>
+    </BrandStatusRail>
   )
 }
 
@@ -104,7 +106,7 @@ export function HealthView({
 }) {
   if (!health) {
     return (
-      <EmptyState icon={HeartPulse} message={fr.common.loading} />
+      <EmptyState icon={HeartPulse} message={fr.common.loading} illustrated />
     )
   }
 
@@ -135,7 +137,8 @@ export function HealthView({
         }
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <BrandSectionHeading className="mb-3">Ressources et disponibilité</BrandSectionHeading>
+      <div className="grid grid-cols-2 gap-2 sm:gap-4 xl:grid-cols-4">
         <Tile
           icon={HeartPulse}
           title={fr.health.global}
@@ -176,7 +179,8 @@ export function HealthView({
         />
       </div>
 
-      <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <BrandSectionHeading className="mt-6 mb-3">Contrôles de l'infrastructure</BrandSectionHeading>
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <InfoCard title={fr.health.dockerEngine} tone={serviceTone(health.services.find((s) => s.key === 'docker')?.status ?? 'unknown')}>
           <div>{metrics?.cpu_count ? `${metrics.cpu_count} ${fr.health.cores}` : '—'}</div>
         </InfoCard>
@@ -247,13 +251,13 @@ export function HealthView({
         </InfoCard>
       </div>
 
-      <div className="mt-4 rounded-xl border bg-card p-4">
-        <h2 className="mb-3 text-sm font-semibold">{fr.health.services}</h2>
+      <BrandPanel as="div" className="mt-4 p-4">
+        <BrandSectionHeading className="mb-3">{fr.health.services}</BrandSectionHeading>
         <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
           {health.services.map((service) => (
             <div
               key={service.key}
-              className="flex items-center justify-between gap-3 rounded-xl border px-3 py-2.5 text-sm"
+              className="ssdv2-service-row flex min-w-0 flex-wrap items-center justify-between gap-3 rounded-lg border px-3 py-2.5 text-sm" data-service-state={service.status}
             >
               <span className="flex items-center gap-2">
                 {service.key === 'docker' ? (
@@ -283,7 +287,7 @@ export function HealthView({
             {fr.health.degradedHint}
           </p>
         ) : null}
-      </div>
+      </BrandPanel>
     </div>
   )
 }
