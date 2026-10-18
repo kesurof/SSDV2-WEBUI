@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import { EmptyState } from '@/components/app/empty-state'
+import { BrandStatusRail } from '@/components/app/brand-status-rail'
 import { AppLink } from '@/components/app/app-link'
 import { Pagination } from '@/components/app/pagination'
 import { Button } from '@/components/ui/button'
@@ -90,15 +91,17 @@ export function JobsView({ jobs, selectedId }: { jobs: Job[]; selectedId?: numbe
       </div>
 
       {filtered.length === 0 ? (
-        <EmptyState icon={ListChecks} message={fr.jobs.empty} />
+        <EmptyState icon={ListChecks} message={fr.jobs.empty} illustrated />
       ) : (
-        <div className="min-w-0 w-full overflow-hidden rounded-xl border bg-card">
+        <div className="ssdv2-timeline min-w-0 w-full">
           {pageItems.map((job) => (
-            <div
+            <BrandStatusRail
               key={job.id}
+              tone={job.status === 'success' ? 'ok' : job.status === 'failed' ? 'err' : job.status === 'interrupted' ? 'warn' : job.status === 'running' ? 'info' : 'muted'}
+              status={job.status}
               className={cn(
-                'min-w-0 border-b border-l-2 border-l-transparent px-3 py-3 last:border-b-0 hover:bg-secondary/60',
-                selectedId === job.id && 'border-l-primary bg-accent/60',
+                'ssdv2-flow-event relative mb-2 rounded-lg border border-border/80 bg-card px-3 py-3 shadow-sm last:mb-0 hover:bg-secondary/60',
+                selectedId === job.id && 'border-primary/40 bg-accent/60',
               )}
             >
               <div className="flex min-w-0 items-start justify-between gap-2">
@@ -120,7 +123,7 @@ export function JobsView({ jobs, selectedId }: { jobs: Job[]; selectedId?: numbe
                 )}
                 <span className="text-xs text-muted-foreground">{formatDate(job.created_at)}</span>
               </div>
-            </div>
+            </BrandStatusRail>
           ))}
         </div>
       )}

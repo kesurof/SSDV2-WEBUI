@@ -30,6 +30,7 @@ describe('JobsView', () => {
     expect(screen.getByText(/Redémarrage/)).toBeInTheDocument()
     expect(screen.getByText(/sonarr/)).toBeInTheDocument()
     expect(screen.getAllByText('Succès').length).toBeGreaterThan(0)
+    expect(screen.getByRole('link', { name: /#3/ }).closest('[data-rail-tone]')).toHaveAttribute('data-rail-tone', 'ok')
   })
 
   it('contains long job targets and keeps job/app links separate', () => {

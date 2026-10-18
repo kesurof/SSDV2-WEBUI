@@ -24,7 +24,7 @@ export function StatusPill({
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold',
+        'ssdv2-state-pill inline-flex items-center gap-1.5 rounded-md border border-current/15 px-2.5 py-1 text-xs font-semibold',
         TONE_CLASSES[tone],
         className,
       )}

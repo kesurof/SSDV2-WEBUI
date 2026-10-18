@@ -30,7 +30,7 @@ export function MetricCard({
 }) {
   const interactive = Boolean(to || onClick)
   const className = cn(
-    'flex min-w-0 flex-col items-start gap-2 rounded-xl border bg-card p-3 text-left shadow-sm sm:flex-row sm:items-center sm:gap-3 sm:p-3.5',
+    'ssdv2-metric-card flex min-w-0 flex-col items-start gap-2 rounded-xl border p-3.5 text-left sm:flex-row sm:items-center sm:gap-3 sm:p-4',
     interactive &&
       'transition-colors hover:border-primary/40 hover:bg-secondary/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
     active && 'border-primary/60 ring-1 ring-primary/30',
@@ -41,7 +41,7 @@ export function MetricCard({
         <Icon className="size-4.5" aria-hidden />
       </div>
       <div className="min-w-0">
-        <div className="text-xl leading-none font-bold tracking-tight sm:text-2xl">{value}</div>
+        <div className="ssdv2-metric-value font-mono text-2xl leading-none font-semibold sm:text-[1.7rem]">{value}</div>
         <div className="mt-1 truncate text-xs text-muted-foreground">{label}</div>
       </div>
     </>
@@ -49,17 +49,17 @@ export function MetricCard({
 
   if (to) {
     return (
-      <Link to={to} className={className}>
+      <Link to={to} data-tone={tone} className={className}>
         {content}
       </Link>
     )
   }
   if (onClick) {
     return (
-      <button type="button" onClick={onClick} className={cn(className, 'w-full cursor-pointer')}>
+      <button type="button" data-tone={tone} onClick={onClick} className={cn(className, 'w-full cursor-pointer')}>
         {content}
       </button>
     )
   }
-  return <div className={className}>{content}</div>
+  return <div data-tone={tone} className={className}>{content}</div>
 }

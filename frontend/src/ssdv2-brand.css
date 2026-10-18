@@ -1,0 +1,237 @@
+/*
+ * SSDv2 Modules & Flow — interface system.
+ * Visual language derived from projetssd/branding, not from reconstructed logos.
+ * Scoped classes avoid overriding Base UI/Shadcn interaction primitives.
+ */
+:root {
+  --ssdv2-brand-blue: #2563eb;
+  --ssdv2-brand-cyan: #06b6d4;
+  --ssdv2-brand-violet: #7c3aed;
+  --ssdv2-module-highlight: rgb(37 99 235 / .07);
+  --ssdv2-module-edge: color-mix(in srgb, var(--border) 86%, var(--primary) 14%);
+  --ssdv2-hero-bg: #ffffff;
+  --ssdv2-hero-glow: rgb(37 99 235 / .07);
+}
+.dark {
+  --ssdv2-module-highlight: rgb(59 130 246 / .07);
+  --ssdv2-module-edge: #30425f;
+  --ssdv2-hero-bg: #0d1a30;
+  --ssdv2-hero-glow: rgb(59 130 246 / .16);
+}
+.ssdv2-triad {
+  display: inline-block;
+  width: 25px;
+  height: 7px;
+  flex: none;
+  border-radius: 2px;
+  transform: skewX(-21deg);
+  background: linear-gradient(90deg, var(--ssdv2-brand-cyan) 0 32%, var(--ssdv2-brand-blue) 32% 68%, var(--ssdv2-brand-violet) 68%);
+}
+.ssdv2-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+.ssdv2-hero {
+  border-color: var(--ssdv2-module-edge);
+  background: radial-gradient(ellipse at 88% 3%, var(--ssdv2-hero-glow), transparent 70%), var(--ssdv2-hero-bg);
+  box-shadow: 0 14px 36px rgb(4 10 27 / .08);
+}
+.ssdv2-hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 3px;
+  width: min(320px, 70%);
+  background: linear-gradient(90deg, var(--ssdv2-brand-blue), var(--ssdv2-brand-cyan) 58%, var(--ssdv2-brand-violet));
+}
+.ssdv2-hero-art {
+  max-height: 90%;
+  object-fit: contain;
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 25%);
+  mask-image: linear-gradient(to right, transparent 0%, #000 25%);
+}
+.ssdv2-module-panel {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--ssdv2-module-edge);
+  border-radius: var(--radius-xl);
+  background: var(--card);
+  box-shadow: var(--shadow-panel);
+}
+.ssdv2-module-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 20px;
+  width: 72px;
+  height: 2px;
+  border-radius: 0 0 4px 4px;
+  background: linear-gradient(90deg, var(--ssdv2-brand-blue), var(--ssdv2-brand-cyan), var(--ssdv2-brand-violet));
+  opacity: .85;
+  pointer-events: none;
+}
+.ssdv2-section-heading {
+  position: relative;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 12px;
+  padding-left: 12px;
+}
+.ssdv2-section-heading::before {
+  content: '';
+  position: absolute;
+  inset: 1px auto 13px 0;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--ssdv2-brand-blue);
+}
+.ssdv2-metric-card {
+  position: relative;
+  border-color: var(--ssdv2-module-edge);
+  background: var(--card);
+  overflow: hidden;
+  box-shadow: var(--shadow-panel);
+}
+.ssdv2-metric-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 13px;
+  bottom: 13px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--ssdv2-brand-blue);
+}
+.ssdv2-metric-card[data-tone='ok']::before { background: var(--success); }
+.ssdv2-metric-card[data-tone='warn']::before { background: var(--warning); }
+.ssdv2-metric-card[data-tone='err']::before { background: var(--destructive); }
+.ssdv2-metric-card:hover { background: color-mix(in srgb, var(--card) 95%, var(--primary)); }
+.ssdv2-metric-value { font-variant-numeric: tabular-nums; letter-spacing: -.045em; }
+.ssdv2-app-card {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--ssdv2-module-edge);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  box-shadow: var(--shadow-panel);
+}
+.ssdv2-app-card::before {
+  content: '';
+  position: absolute;
+  top: 13px;
+  bottom: 13px;
+  left: 0;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--muted-foreground);
+  opacity: .8;
+}
+.ssdv2-app-card[data-app-status='running']::before { background: var(--success); opacity: 1; }
+.ssdv2-app-card[data-app-status='partial']::before,
+.ssdv2-app-card[data-app-status='unknown']::before { background: var(--warning); opacity: 1; }
+.ssdv2-app-card[data-app-status='stopped']::before { background: var(--muted-foreground); }
+.ssdv2-app-card[data-app-status='not_installed']::before { opacity: .35; }
+.ssdv2-app-card-header { background: linear-gradient(90deg, var(--ssdv2-module-highlight), transparent 90%); }
+.ssdv2-app-monogram {
+  display: grid;
+  height: 38px;
+  width: 38px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--primary) 25%, var(--border));
+  border-radius: 11px;
+  background: var(--accent);
+  color: var(--primary);
+}
+.ssdv2-status-rail { position: relative; border-left: 3px solid var(--muted-foreground); }
+.ssdv2-status-rail[data-rail-tone='ok'] { border-left-color: var(--success); }
+.ssdv2-status-rail[data-rail-tone='warn'] { border-left-color: var(--warning); }
+.ssdv2-status-rail[data-rail-tone='err'] { border-left-color: var(--destructive); }
+.ssdv2-status-rail[data-rail-tone='info'] { border-left-color: var(--primary); }
+.ssdv2-status-rail[data-rail-tone='muted'] { border-left-color: var(--border); }
+.ssdv2-app-identity-panel { position: relative; isolation: isolate; border-color: var(--ssdv2-module-edge); overflow: hidden; }
+.ssdv2-app-identity-panel::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 3px;
+  width: 175px;
+  background: linear-gradient(90deg, var(--ssdv2-brand-cyan), var(--ssdv2-brand-blue), var(--ssdv2-brand-violet));
+}
+.ssdv2-app-identity-panel::after {
+  content: '';
+  position: absolute;
+  right: -16px;
+  top: -46px;
+  width: 152px;
+  height: 150px;
+  transform: rotate(-27deg);
+  border: 1px solid color-mix(in srgb, var(--primary) 14%, transparent);
+  border-radius: 24px;
+  background: color-mix(in srgb, var(--primary) 4%, transparent);
+  z-index: -1;
+  pointer-events: none;
+}
+.ssdv2-readouts { border-color: var(--ssdv2-module-edge); background: var(--card); }
+.ssdv2-timeline {
+  border-left: 1px solid var(--border);
+  margin-left: 7px;
+  padding-left: 17px;
+}
+.ssdv2-flow-event { position: relative; }
+.ssdv2-flow-event::before {
+  content: '';
+  position: absolute;
+  top: 16px;
+  left: -23px;
+  width: 11px;
+  height: 11px;
+  border: 2px solid var(--card);
+  border-radius: 50%;
+  background: var(--muted-foreground);
+  box-shadow: 0 0 0 1px var(--border);
+}
+.ssdv2-flow-event[data-job-status='running']::before { background: var(--primary); }
+.ssdv2-flow-event[data-job-status='success']::before { background: var(--success); }
+.ssdv2-flow-event[data-job-status='failed']::before { background: var(--destructive); }
+.ssdv2-flow-event[data-job-status='interrupted']::before { background: var(--warning); }
+.ssdv2-sidebar-link[aria-current='page'] {
+  box-shadow: inset 3px 0 0 var(--ssdv2-brand-blue);
+  background: var(--sidebar-accent);
+}
+.ssdv2-sidebar-label { letter-spacing: .11em; }
+.ssdv2-sidebar-header { position: relative; }
+.ssdv2-sidebar-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 16px;
+  width: 72px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--ssdv2-brand-blue), var(--ssdv2-brand-cyan), var(--ssdv2-brand-violet));
+}
+.ssdv2-illustrated-empty { border-color: var(--ssdv2-module-edge); background: var(--card); }
+.ssdv2-illustrated-empty img { max-width: min(100%, 235px); max-height: 140px; object-fit: contain; }
+@media (max-width: 640px) {
+  .ssdv2-hero-art { display: none; }
+  .ssdv2-hero { box-shadow: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ssdv2-metric-card { transition: none !important; }
+}
+
+/* Distinct header treatment for shadcn Cards without replacing primitives. */
+.ssdv2-card-header { position: relative; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
+.ssdv2-card-header::after { content: ''; position: absolute; left: 23px; bottom: -1px; height: 2px; width: 36px; background: var(--ssdv2-brand-blue); }
+.control-app-table [data-app-status='running'] td:first-child { box-shadow: inset 3px 0 0 var(--success); }
+.control-app-table [data-app-status='partial'] td:first-child,
+.control-app-table [data-app-status='unknown'] td:first-child { box-shadow: inset 3px 0 0 var(--warning); }
+.control-app-table [data-app-status='stopped'] td:first-child { box-shadow: inset 3px 0 0 var(--muted-foreground); }
