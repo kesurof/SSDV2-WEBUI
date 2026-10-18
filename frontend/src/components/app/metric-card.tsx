@@ -30,18 +30,18 @@ export function MetricCard({
 }) {
   const interactive = Boolean(to || onClick)
   const className = cn(
-    'flex items-center gap-3 rounded-xl border bg-card p-3.5 text-left shadow-sm',
+    'flex min-w-0 flex-col items-start gap-2 rounded-xl border bg-card p-3 text-left shadow-sm sm:flex-row sm:items-center sm:gap-3 sm:p-3.5',
     interactive &&
       'transition-colors hover:border-primary/40 hover:bg-secondary/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
     active && 'border-primary/60 ring-1 ring-primary/30',
   )
   const content = (
     <>
-      <div className={cn('grid size-9 shrink-0 place-items-center rounded-lg', TONE_CLASSES[tone])}>
+      <div className={cn('grid size-8 shrink-0 place-items-center rounded-lg sm:size-9', TONE_CLASSES[tone])}>
         <Icon className="size-4.5" aria-hidden />
       </div>
       <div className="min-w-0">
-        <div className="text-2xl leading-none font-bold tracking-tight">{value}</div>
+        <div className="text-xl leading-none font-bold tracking-tight sm:text-2xl">{value}</div>
         <div className="mt-1 truncate text-xs text-muted-foreground">{label}</div>
       </div>
     </>
