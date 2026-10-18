@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import { EmptyState } from '@/components/app/empty-state'
+import { AppLink } from '@/components/app/app-link'
 import { Pagination } from '@/components/app/pagination'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -92,25 +93,25 @@ export function JobsView({ jobs, selectedId }: { jobs: Job[]; selectedId?: numbe
       ) : (
         <div className="overflow-hidden rounded-xl border bg-card">
           {pageItems.map((job) => (
-            <Link
+            <div
               key={job.id}
-              to={`/jobs/${job.id}`}
               className={cn(
-                'flex items-center gap-3 border-b border-l-2 border-l-transparent px-3 py-3 transition-colors last:border-b-0 hover:bg-secondary/60',
+                'flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 border-b border-l-2 border-l-transparent px-3 py-3 last:border-b-0 hover:bg-secondary/60',
                 selectedId === job.id && 'border-l-primary bg-accent/60',
               )}
             >
-              <span className="font-mono text-xs text-muted-foreground">#{job.id}</span>
-              <JobStatusBadge status={job.status} />
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-medium">
-                  {jobTypeLabel(job.type)} → {job.target}
-                </span>
-                <span className="block text-xs text-muted-foreground">
-                  {formatDate(job.created_at)}
-                </span>
-              </span>
-            </Link>
+              <Link to={`/jobs/${job.id}`} className="flex min-w-0 flex-1 items-center gap-2.5 rounded-sm focus-visible:outline-2 focus-visible:outline-ring">
+                <span className="font-mono text-xs text-muted-foreground">#{job.id}</span>
+                <JobStatusBadge status={job.status} />
+                <span className="min-w-0 flex-1 truncate text-sm font-medium">{jobTypeLabel(job.type)}</span>
+              </Link>
+              {job.type.startsWith('app_') ? (
+                <AppLink name={job.target} className="max-w-full break-all text-sm" />
+              ) : (
+                <span className="break-all text-sm text-muted-foreground">{job.target}</span>
+              )}
+              <span className="w-full text-xs text-muted-foreground">{formatDate(job.created_at)}</span>
+            </div>
           ))}
         </div>
       )}

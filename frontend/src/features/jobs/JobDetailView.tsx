@@ -3,6 +3,7 @@ import { CircleHelp, Copy, RotateCw } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { KeyValueList } from '@/components/app/key-value-list'
+import { AppLink } from '@/components/app/app-link'
 import { StatusPill } from '@/components/app/status-pill'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -137,7 +138,7 @@ export function JobDetailView({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h2 className="text-lg font-semibold">
-            #{job.id} — {jobTypeLabel(job.type)} {job.target}
+            #{job.id} — {jobTypeLabel(job.type)} {job.type.startsWith('app_') ? <AppLink name={job.target} className="text-primary" /> : job.target}
           </h2>
           <div className="mt-1.5 flex items-center gap-2">
             <JobStatusBadge status={job.status} />
@@ -164,7 +165,7 @@ export function JobDetailView({
       <KeyValueList
         items={[
           { label: fr.jobs.columns.type, value: jobTypeLabel(job.type) },
-          { label: fr.jobs.columns.target, value: job.target },
+          { label: fr.jobs.columns.target, value: job.type.startsWith('app_') ? <AppLink name={job.target} /> : job.target },
           { label: fr.jobs.detail.launchedAt, value: formatDate(job.created_at) },
           { label: fr.jobs.detail.duration, value: formatDuration(job) },
           {

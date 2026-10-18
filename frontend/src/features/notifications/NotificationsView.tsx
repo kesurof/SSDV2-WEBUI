@@ -77,12 +77,11 @@ export function NotificationsView({
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
                   {notification.link && (
-                    <Link
-                      to={notification.link}
-                      className="text-xs text-primary hover:underline"
-                    >
-                      {fr.notifications.open}
-                    </Link>
+                    <>
+                      <Link to={notification.link} className="text-xs text-primary hover:underline">
+                        {fr.notifications.open}
+                      </Link>
+                    </>
                   )}
                   {!notification.read_at && (
                     <Button
