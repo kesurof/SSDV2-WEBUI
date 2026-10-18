@@ -6,18 +6,25 @@
 
 ## Chantier actif
 
-**Optimisation du chargement front (ADR-0027)**.
+**Mises à jour « image seule » et `lxml` Ansible (ADR-0028)**.
 
-- Réseau : `GZipMiddleware` (SSE exclus), assets hachés en `immutable`, `index.html` en
-  `no-cache`.
-- Front : découpage par route (`React.lazy` + `Suspense` + `PageSkeleton`), chunks
-  `react`/`tanstack`/`icons`, coquille montée sans attendre `/auth/me`, requêtes non
-  critiques conditionnées à l'authentification, SSE notifications après auth ;
-  `npm run analyze` pour le rapport de bundle.
-- Backend : snapshot Docker mutualisé (cache mémoire TTL 3 s, `clear_docker_cache`).
-- Preuves : `ruff`/`pytest` (204 tests) et `lint`/`typecheck`/`test`/`build` front verts ;
-  bundle initial réduit de ~725 Ko à une coquille ~276 Ko + `react` ~211 Ko (reste par
-  route).
+- Correctif : `lxml` ajouté à la couche Ansible de l'image (requis par le module Ansible
+  `xml` des playbooks SSDV2). Sans lui, un `recreate` de Plex supprimait
+  `Preferences.xml` et créait un nouveau serveur.
+- Nouveau job `app_update` + `POST /api/v1/apps/{app}/update` : `pull` de l'image puis
+  recréation des conteneurs de l'application à l'identique (SDK Docker, sans playbook ni
+  Ansible), volumes nommés réutilisés.
+- Front : le bouton « Mettre à jour » appelle l'action `update` (centre de mises à jour,
+  colonne de la table, menu du détail) ; `recreate`/`reinstall` restent des actions
+  avancées explicites.
+- Preuves : `ruff`/`ruff format`/`pytest` backend et `lint`/`typecheck`/`test`/`build`
+  front verts (nouveau `tests/test_app_update.py`, test du dispatch `app_update`).
+
+## Derniers chantiers terminés (2026-10-18)
+
+**Optimisation du chargement front (ADR-0027)** — terminé : JS initial réduit (coquille
+~276 Ko + `react` ~211 Ko), compression SSE-safe, découpage par route, snapshot Docker
+mutualisé.
 
 ## Derniers chantiers terminés (2026-09-17)
 

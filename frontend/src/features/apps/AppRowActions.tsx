@@ -85,7 +85,7 @@ export function AppRowUpdate({ app, update }: { app: AppState; update?: UpdateEn
         variant="outline"
         disabled={busy}
         aria-label={`${fr.updates.update} ${app.name}`}
-        onClick={() => run('recreate')}
+        onClick={() => run('update')}
       >
         <ArrowUpCircle className="size-3.5 text-warning" aria-hidden />
         {fr.updates.update}

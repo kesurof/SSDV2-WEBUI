@@ -22,8 +22,8 @@ function UpdateRow({ entry, onUpdated }: { entry: UpdateEntry; onUpdated: () => 
 
   async function launch() {
     try {
-      const job = await action.mutateAsync({ action: 'recreate' })
-      toast.success(fr.updates.recreateLaunched.replace('{app}', entry.app).replace('{id}', String(job.id)))
+      const job = await action.mutateAsync({ action: 'update' })
+      toast.success(fr.updates.updateLaunched.replace('{app}', entry.app).replace('{id}', String(job.id)))
       onUpdated()
     } catch {
       toast.error(fr.common.error)

@@ -19,7 +19,10 @@ COPY backend/pyproject.toml ./
 COPY backend/app ./app
 RUN --mount=type=cache,target=/root/.cache/pip pip install .
 
-RUN --mount=type=cache,target=/root/.cache/pip pip install "ansible-core==2.21.0" \
+# `lxml` est requis par le module Ansible `xml` utilisé par les playbooks SSDV2
+# (ex. plex.yml). Sans lui, le module échoue ; sur SSDV2 cette erreur pouvait
+# déclencher à tort la suppression de `Preferences.xml` (nouveau serveur Plex).
+RUN --mount=type=cache,target=/root/.cache/pip pip install "ansible-core==2.21.0" lxml \
     && mkdir -p /opt/ansible/collections /opt/ansible/roles \
     && ansible-galaxy collection install -p /opt/ansible/collections \
         community.docker:5.2.0 community.general:13.0.1 ansible.posix:2.2.0 \

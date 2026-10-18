@@ -16,13 +16,15 @@
   `GET /api/v1/apps/{app}/auth` (type d'authentification via `ssdv2ctl auth get`),
   `GET /api/v1/apps/{app}/logs` (conteneur rattaché à l'application, lignes, horodatage)
   et `GET /api/v1/apps/{app}/logs/stream` (SSE, suivi en direct),
-  `POST /api/v1/apps/{app}/start|stop|restart|install|remove|reinstall|recreate`
+  `POST /api/v1/apps/{app}/start|stop|restart|install|remove|reinstall|recreate|update`
   (crée un job, 202), `GET /api/v1/jobs` et `/api/v1/jobs/{id}` (file de jobs, état en
   SQLite), `GET /api/v1/jobs/{id}/events` (SSE), `POST /api/v1/jobs/{id}/cancel` et
   `POST /api/v1/jobs/{id}/input` (saisie guidée ; install/reinstall/recreate exécutent le
   dispatcher SSDV2 direct avec logs en direct — ADR-0026, `app/adapters/ssdv2_bash.py` ;
   les invites SSDV2 marquées `SSDV2_PROMPT {…}` sont détectées de façon structurée, avec
-  repli heuristique — `app/services/prompts.py`),
+  repli heuristique — `app/services/prompts.py` ; `update` est une mise à jour **image
+  seule** via le SDK Docker — pull + recréation des conteneurs de l'app sans playbook —
+  ADR-0028, `app/services/app_update.py`),
   `GET /api/v1/system/summary` (hôte via Docker info, branche/commit SSDV2, compteurs),
   `GET /api/v1/system/metrics` (CPU/RAM hôte depuis `/host/proc`, disque, conteneurs),
   `GET /api/v1/system/health` (contrôles de services, sauvegardes, jobs, alertes, DNS,
@@ -72,7 +74,8 @@
   `GZipMiddleware` — flux SSE exclus — et assets hachés servis `immutable`, ADR-0027),
   healthcheck `/health`, runtime SSDV2 : ansible (`ansible-core` 2.21.0, collections
   `community.docker`/`community.general`/`ansible.posix`, rôles `kwoodson.yedit`/
-  `geerlingguy.docker` dans `/opt/ansible`), outils CLI `jq`, `sqlite3`, `curl`,
+  `geerlingguy.docker` dans `/opt/ansible`, **`lxml`** requis par le module Ansible `xml` —
+  ADR-0028), outils CLI `jq`, `sqlite3`, `curl`,
   `gettext`, `htpasswd`, `pigz`, `sudo`, `tzdata` (image ~505 Mo) ; CLI Docker
   embarquée (binaire statique `download.docker.com`, par architecture) et `ssdv2ctl`
   vendored dans `/usr/local/bin` (copie épinglée, resynchronisée par
@@ -141,8 +144,9 @@
 - Aucune écriture de configuration depuis la WebUI : les paramètres sont en lecture seule
   (les modifications passent par les procédures SSDV2, ex. `menu_change_domaine`).
 - Aucune mise à jour système (Docker Engine, OS, SSDV2 Core) ni restauration depuis la
-  WebUI : le centre de mises à jour couvre uniquement les images d'applications
-  (ADR-0022, Phase 5 pour le reste).
+  WebUI : le centre de mises à jour couvre uniquement les images d'applications, désormais
+  appliquées par l'action `update` (pull + recréation image-only, ADR-0028 ; ADR-0022 pour
+  le reste, Phase 5).
 - `ghcr.io/kesurof/ssdv2-webui` publiée en multiarchitecture (tags `:latest` et `:dev`,
   dépôt et paquet publics, licence GPL-3.0) ; release automatique sur push `main`
   (`:dev` + `:latest`), tag `v*` pour les versions (ADR-0021).

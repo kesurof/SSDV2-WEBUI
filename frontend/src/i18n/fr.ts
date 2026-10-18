@@ -256,6 +256,7 @@ export const fr = {
       app_remove: 'Suppression',
       app_reinstall: 'Réinstallation',
       app_recreate: 'Recréation',
+      app_update: 'Mise à jour',
       app_backup: 'Sauvegarde',
       auth_bulk: 'Authentification en masse',
       diagnostics_rebuild_registries: 'Régénération des registres',
@@ -285,6 +286,7 @@ export const fr = {
     install: 'Installer',
     reinstall: 'Réinstaller',
     recreate: 'Recréer',
+    update: 'Mettre à jour',
     backup: 'Sauvegarder',
     remove: 'Supprimer',
     more: 'Plus d’actions',
@@ -300,6 +302,8 @@ export const fr = {
     removeDelete: 'Supprimer aussi les données',
     removeTypeToConfirm: 'Tapez « {app} » pour confirmer',
     recreateConfirm: 'Recréer les conteneurs de {app} (image mise à jour, données conservées) ?',
+    updateConfirm:
+      "Mettre à jour {app} : pull de l'image et recréation des conteneurs à l'identique (sans réinstallation, données conservées) ?",
     reinstallConfirm:
       'Réinstaller {app} depuis la configuration source (données conservées) ?',
   },
@@ -522,7 +526,7 @@ export const fr = {
     update: 'Mettre à jour',
     empty: 'Aucune application installée.',
     lastCheck: 'Dernière vérification',
-    recreateLaunched: 'Mise à jour de {app} lancée (job #{id})',
+    updateLaunched: 'Mise à jour de {app} lancée (job #{id})',
     countAvailable: '{count} mise(s) à jour disponible(s)',
     unknownHint:
       'Les images sans digest comparable (registre privé ou limite atteinte) sont marquées inconnues.',

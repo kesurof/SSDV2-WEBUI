@@ -13,7 +13,7 @@ from app.adapters.ssdv2_bash import InteractiveProcess, PromptTimeout, Ssdv2Bash
 from app.adapters.ssdv2_cli import Ssdv2CtlError, Ssdv2CtlRunner
 from app.db.models import Job, JobEvent, utcnow
 from app.db.session import get_session_factory
-from app.services import audit, notifications, self_update
+from app.services import app_update, audit, notifications, self_update
 from app.services import settings as webui_settings
 from app.services.prompts import PromptSpec, detect, parse_marker, strip_ansi, to_payload
 
@@ -40,6 +40,7 @@ JOB_LABELS = {
     "app_remove": "Suppression",
     "app_reinstall": "Réinstallation",
     "app_recreate": "Recréation",
+    "app_update": "Mise à jour",
     "app_backup": "Sauvegarde",
     "auth_bulk": "Changement d'authentification",
     "app_start": "Démarrage",
@@ -56,6 +57,7 @@ NOTIFY_JOB_TYPES = (
     "app_remove",
     "app_reinstall",
     "app_recreate",
+    "app_update",
     "app_backup",
     "auth_bulk",
 )
@@ -83,6 +85,7 @@ ACTION_TIMEOUTS = {
     "app_remove": 900,
     "app_reinstall": 1800,
     "app_recreate": 1800,
+    "app_update": 1800,
     "app_backup": 1800,
     "auth_bulk": 900,
     "diagnostics_rebuild_registries": 900,
@@ -284,6 +287,46 @@ class JobManager:
         except docker.errors.DockerException:
             return None
 
+    def _settings(self):
+        if self._runner_provider is not None:
+            return self._runner_provider().settings
+        if self._bash_provider is not None:
+            return self._bash_provider().settings
+        raise Ssdv2CtlError("jobs_unavailable", "gestionnaire de jobs non configuré")
+
+    def _run_app_update(self, job_id: int, target: str, timeout: int) -> tuple[int, str | None]:
+        """Mise à jour « image seule » : pull + recréation, sans playbook SSDV2."""
+        client = self._docker_client()
+        if client is None:
+            raise Ssdv2CtlError("docker_unavailable", "Docker est indisponible")
+        settings = self._settings()
+        if self_update.is_self_update(client, target):
+            # La WebUI ne peut pas se recréer elle-même : on délègue à un
+            # conteneur d'assistance qui exécute le même service image-only.
+            for image in app_update.app_images(settings, client, target):
+                self._add_event(job_id, f"Récupération de l'image {image}")
+                try:
+                    client.images.pull(image)
+                except docker.errors.DockerException as exc:
+                    raise Ssdv2CtlError(
+                        "docker_pull_failed", f"échec du pull de {image}: {exc}"
+                    ) from exc
+            name = self_update.launch_updater(
+                client,
+                settings,
+                target,
+                ["python", "-m", "app.services.app_update", target],
+            )
+            self._add_event(
+                job_id,
+                f"Mise à jour de {target} lancée en arrière-plan ({name}) : "
+                "l'interface va redémarrer.",
+            )
+            return 0, None
+        return app_update.update_app(
+            client, settings, target, lambda line: self._add_event(job_id, line)
+        )
+
     def _steps_script(self, runner: Ssdv2BashRunner, target: str, steps: list[tuple]) -> str:
         storage = runner.settings.ssdv2_storage
         dispatcher = shlex.quote(str(runner.dispatcher))
@@ -436,6 +479,8 @@ class JobManager:
                 exit_code, message = self._run_interactive_job(
                     job_id, job_type, target, params, timeout
                 )
+            elif job_type == "app_update":
+                exit_code, message = self._run_app_update(job_id, target, timeout)
             else:
                 if self._runner_provider is None:
                     raise Ssdv2CtlError("jobs_unavailable", "gestionnaire de jobs non configuré")

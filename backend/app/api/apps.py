@@ -245,6 +245,16 @@ def recreate_app(
     return _submit_job(app, "app_recreate", settings, _user)
 
 
+@router.post("/{app}/update", response_model=JobOut, status_code=status.HTTP_202_ACCEPTED)
+def update_app(
+    app: str,
+    settings: SettingsDep,
+    _user: CurrentUser,
+) -> JobOut:
+    """Mise à jour image seule (pull + recréation), sans playbook SSDV2."""
+    return _submit_job(app, "app_update", settings, _user)
+
+
 @router.post("/{app}/backup", response_model=JobOut, status_code=status.HTTP_202_ACCEPTED)
 def backup_app(
     app: str,

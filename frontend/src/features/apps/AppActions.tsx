@@ -46,6 +46,7 @@ const AUTH_TYPES = ['aucune', 'basique', 'authelia', 'oauth', 'oauth2-proxy'] as
 type AuthType = (typeof AUTH_TYPES)[number]
 
 const CUSTOM_CONFIRMATIONS: Partial<Record<AppAction, string>> = {
+  update: fr.actions.updateConfirm,
   recreate: fr.actions.recreateConfirm,
   reinstall: fr.actions.reinstallConfirm,
 }
@@ -193,6 +194,9 @@ export function AppActions({ app }: { app: AppDetail }) {
           <MoreVertical className="size-4" aria-hidden />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={() => setPending('update')}>
+            {fr.actions.update}
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setPending('recreate')}>
             {fr.actions.recreate}
           </DropdownMenuItem>

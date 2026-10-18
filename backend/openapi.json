@@ -524,6 +524,49 @@
         }
       }
     },
+    "/api/v1/apps/{app}/update": {
+      "post": {
+        "tags": [
+          "apps"
+        ],
+        "summary": "Update App",
+        "description": "Mise à jour image seule (pull + recréation), sans playbook SSDV2.",
+        "operationId": "update_app_api_v1_apps__app__update_post",
+        "parameters": [
+          {
+            "name": "app",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "App"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/apps/{app}/backup": {
       "post": {
         "tags": [

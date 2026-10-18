@@ -298,3 +298,40 @@ def test_run_job_auth_bulk_reports_partial_failure() -> None:
     assert stored.status == "failed"
     assert "lidarr" in (stored.message or "")
     assert any("lidarr" in line and "pas installé" in line for line in stored_events(job.id))
+
+
+def test_run_job_app_update_invokes_image_only_service(settings, monkeypatch) -> None:
+    import docker
+
+    from app.services import app_update
+
+    init_db()
+    manager = JobManager()
+
+    class RunnerWithSettings:
+        def __init__(self) -> None:
+            self.settings = settings
+
+    manager.configure(RunnerWithSettings)
+
+    class FakeContainers:
+        @staticmethod
+        def get(name: str):
+            raise docker.errors.NotFound(name)
+
+    class FakeClient:
+        containers = FakeContainers()
+
+    monkeypatch.setattr(manager, "_docker_client", lambda: FakeClient())
+    updated: list[str] = []
+    monkeypatch.setattr(
+        app_update,
+        "update_app",
+        lambda client, config, target, on_event: updated.append(target) or (0, None),
+    )
+
+    job = manager.submit("app_update", "plex", "admin")
+    manager.run_job(job.id)
+
+    assert stored_job(job.id).status == "success"
+    assert updated == ["plex"]

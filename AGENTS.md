@@ -25,7 +25,9 @@ publication GHCR si vert — ADR-0023). Détails : `docs/ARCHITECTURE-CURRENT.md
   `~/seedbox/docker/<utilisateur>/ssdv2webui/data`). Mise à jour : pousser sur `main`
   (publication automatique si la CI est verte), puis sur le serveur
   `relance_container ssdv2webui` (fonction SSDV2 chargée au login via `profile.sh` ;
-  recrée le conteneur et pull `:latest` via `generique.yml`, `pull` par défaut).
+  recrée le conteneur et pull `:latest` via `generique.yml`, `pull` par défaut) pour le
+  premier déploiement/l'amorçage ; ensuite l'action `update` de la WebUI (pull + recréation
+  image-only, ADR-0028) permet l'auto-mise à jour sans playbook.
   `ssdv2ctl` n'est présent que dans l'image, pas sur l'hôte. Le compose local reste la
   voie de développement (voir `.env.example`).
 - `ssdv2ctl` (Phase 0 complète, clone local `~/Developer/ssdv2`, branche `wip/ssdv2ctl`,

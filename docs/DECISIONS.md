@@ -659,6 +659,44 @@ pointe vers son remplaçant. Une décision non tranchée reste dans « Décision
   déjà en place).
 - **Références** : ADR-0004 ; `ARCHITECTURE-CURRENT.md` ; `AGENTS.md` (conventions).
 
+## ADR-0028 — Mises à jour « image seule » et `lxml` requis par Ansible
+
+- **Statut** : acceptée — 2026-10-18
+- **Contexte** : le bouton « Mettre à jour » déclenchait `app_recreate`, c'est-à-dire le
+  playbook SSDV2 complet (`relance_container` → `launch_service`, configuration, claim,
+  settings). Sur Plex, le module Ansible `xml` échoue si la bibliothèque Python `lxml` est
+  absente de l'interpréteur d'exécution ; le playbook supprimait alors `Preferences.xml`
+  (tâche « Remove if malformed » conditionnée par l'échec du module), ce qui a créé un
+  **nouveau serveur Plex** et déconnecté l'ancien. Deux défauts distincts : l'image
+  n'installait pas `lxml`, et une « mise à jour » ne devrait pas rejouer une
+  (ré)installation.
+- **Décision** :
+  - **`lxml`** est ajouté à la couche Ansible de l'image (`pip install "ansible-core==2.21.0"
+    lxml`) : le module `xml` des playbooks SSDV2 fonctionne, sans modifier SSDV2 (ADR-0010).
+  - nouveau type de job **`app_update`** et endpoint **`POST /api/v1/apps/{app}/update`** :
+    mise à jour **image seule** via le SDK Docker — `pull` de l'image puis recréation de
+    **tous** les conteneurs de l'application à l'identique (image à jour, `Config` +
+    `HostConfig` rejoués : env, labels, binds, **volumes nommés réutilisés**, réseau,
+    ports, policies de redémarrage, log, devices, cap, healthcheck). Aucun playbook,
+    aucun Ansible, aucun `ssdv2ctl`.
+  - le front câble l'action `update` sur le centre de mises à jour, la colonne « Mise à
+    jour » de la table et le menu du détail ; `recreate`/`reinstall` restent des actions
+    avancées explicites (elles rejouent la configuration source).
+  - auto-mise à jour de la WebUI : un conteneur d'assistance exécute le **même** service
+    image-only (`python -m app.services.app_update <app>`) après le `pull`, la WebUI ne
+    pouvant pas se recréer elle-même.
+  - SSDV2 reste source de vérité : la mise à jour rejoue la configuration du conteneur
+    courant et n'écrase pas la définition SSDV2.
+- **Conséquences** : bref temps d'arrêt par conteneur (stop/remove/create/start, comme
+  Watchtower) ; données (volumes nommés, binds) conservées ; SSDV2 inchangé ; les actions
+  `recreate`/`reinstall` continuent de rejouer la configuration et bénéficient de `lxml`.
+- **Alternatives écartées** : déléguer à Watchtower (couplage, portée globale, hors
+  application) ; ajouter `app update` à `ssdv2ctl` (modification de SSDV2 interdite par
+  ADR-0010) ; conserver `recreate` pour les mises à jour (rejoue la configuration, incident
+  démontré).
+- **Références** : ADR-0015, ADR-0022, ADR-0026 ; `ARCHITECTURE-CURRENT.md` ; `AGENTS.md`
+  (règles 2, 4, 10).
+
 ## Décisions ouvertes
 
 À trancher explicitement puis consigner en ADR (voir brief §72) :

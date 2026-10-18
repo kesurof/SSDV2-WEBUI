@@ -191,6 +191,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/apps/{app}/update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Update App
+         * @description Mise à jour image seule (pull + recréation), sans playbook SSDV2.
+         */
+        post: operations["update_app_api_v1_apps__app__update_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/apps/{app}/backup": {
         parameters: {
             query?: never;
@@ -1952,6 +1972,37 @@ export interface operations {
         };
     };
     recreate_app_api_v1_apps__app__recreate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                app: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_app_api_v1_apps__app__update_post: {
         parameters: {
             query?: never;
             header?: never;
