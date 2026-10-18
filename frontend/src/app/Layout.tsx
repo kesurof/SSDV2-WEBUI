@@ -16,7 +16,7 @@ import {
 } from 'lucide-react'
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { Navigate, NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { Navigate, Outlet, useNavigate } from 'react-router-dom'
 
 import { apiUrl } from '@/api/url'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -126,7 +126,7 @@ export function Layout() {
     function onKeyDown(event: KeyboardEvent) {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault()
-        if (window.matchMedia?.('(max-width: 767px)').matches) {
+        if (window.matchMedia?.('(max-width: 1023px)').matches) {
           setMobileSearchOpen(true)
         } else {
           searchRef.current?.focus()
@@ -224,10 +224,10 @@ export function Layout() {
             <Menu className="size-6" aria-hidden />
           </Button>
 
-          <Button size="icon" variant="outline" className="size-12 shrink-0 md:hidden" aria-label="Rechercher une application" onClick={() => setMobileSearchOpen(true)}>
+          <Button size="icon" variant="outline" className="size-12 shrink-0 lg:hidden" aria-label="Rechercher une application" onClick={() => setMobileSearchOpen(true)}>
             <Search className="size-6" aria-hidden />
           </Button>
-          <div className="relative hidden w-full max-w-md md:block">
+          <div className="relative hidden w-full max-w-md lg:block">
             <Search
               className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
               aria-hidden
@@ -300,7 +300,7 @@ export function Layout() {
         </header>
 
         <Dialog open={mobileSearchOpen} onOpenChange={setMobileSearchOpen}>
-          <DialogContent className="top-4 max-w-[calc(100%-1rem)] -translate-y-0 gap-3 p-4 sm:max-w-lg md:hidden" showCloseButton={false}>
+          <DialogContent className="top-4 max-w-[calc(100%-1rem)] -translate-y-0 gap-3 p-4 sm:max-w-lg lg:hidden" showCloseButton={false}>
             <DialogHeader className="flex-row items-center justify-between gap-2">
               <DialogTitle>Rechercher une application</DialogTitle>
               <Button size="icon-sm" variant="ghost" aria-label={fr.common.close} onClick={() => setMobileSearchOpen(false)}>
