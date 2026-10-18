@@ -3,6 +3,7 @@ import { CircleHelp, Copy, RotateCw } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { KeyValueList } from '@/components/app/key-value-list'
+import { BrandPanel } from '@/components/app/brand-panel'
 import { AppLink } from '@/components/app/app-link'
 import { StatusPill } from '@/components/app/status-pill'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -164,7 +165,8 @@ export function JobDetailView({
 
       {prompt && onInput ? <JobPromptPanel prompt={prompt} busy={false} onSubmit={onInput} /> : null}
 
-      <KeyValueList
+      <BrandPanel as="div" className="p-3 sm:p-4">
+        <KeyValueList
         items={[
           { label: fr.jobs.columns.type, value: jobTypeLabel(job.type) },
           { label: fr.jobs.columns.target, value: job.type.startsWith('app_') ? <AppLink name={job.target} /> : job.target },
@@ -185,7 +187,9 @@ export function JobDetailView({
         ]}
       />
 
-      <div className="min-w-0 max-w-full space-y-1">
+      </BrandPanel>
+
+      <div className="ssdv2-module-panel min-w-0 max-w-full space-y-2 p-3 sm:p-4">
         <div className="flex items-center justify-between gap-2">
           <div className="text-xs text-muted-foreground">{fr.jobs.events}</div>
           <Button

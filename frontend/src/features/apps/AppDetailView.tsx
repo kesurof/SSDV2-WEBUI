@@ -15,6 +15,7 @@ import {
 import { Link } from 'react-router-dom'
 
 import { StatusPill } from '@/components/app/status-pill'
+import { BrandPanel, BrandSectionHeading } from '@/components/app/brand-panel'
 import type { StatusTone } from '@/components/app/status-pill'
 import { KeyValueList } from '@/components/app/key-value-list'
 import { MobileCards, MobileCard, MobileField } from '@/components/app/mobile-cards'
@@ -147,10 +148,12 @@ function List({ values }: { values: string[] }) {
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-xl border bg-card p-4 shadow-sm">
-      <h3 className="mb-3 text-sm font-semibold">{title}</h3>
+    <BrandPanel as="div" className="p-4">
+      <div className="mb-3 border-b border-border/70 pb-2.5">
+        <h3 className="text-sm font-semibold">{title}</h3>
+      </div>
       {children}
-    </div>
+    </BrandPanel>
   )
 }
 
@@ -205,7 +208,7 @@ export function AppDetailView({
       <Link to="/apps" className="inline-flex min-h-9 items-center gap-2 text-sm text-muted-foreground hover:text-primary">
         <ArrowLeft className="size-4" aria-hidden /> {fr.apps.back}
       </Link>
-      <div className="flex min-w-0 flex-wrap items-start justify-between gap-4 rounded-xl border bg-card p-4 sm:p-5">
+      <div className="ssdv2-app-identity-panel flex min-w-0 flex-wrap items-start justify-between gap-4 rounded-xl border bg-card p-4 sm:p-5">
         <div className="flex min-w-0 flex-wrap items-center gap-3">
           <div className="grid size-14 place-items-center rounded-xl bg-primary/10 text-primary">
             <Boxes className="size-7" aria-hidden />
@@ -239,7 +242,7 @@ export function AppDetailView({
         </Alert>
       )}
 
-      <div className="grid grid-cols-3 gap-2 rounded-xl border bg-card p-3 lg:hidden" aria-label="Résumé de l'application">
+      <div className="ssdv2-readouts grid grid-cols-3 gap-2 rounded-xl border p-3 lg:hidden" aria-label="Résumé de l'application">
         <div className="min-w-0 border-r pr-2"><div className="text-xs text-muted-foreground">{fr.apps.tabs.containers}</div><div className="mt-1 text-base font-semibold">{app.containers}</div></div>
         <div className="min-w-0 border-r pr-2"><div className="text-xs text-muted-foreground">{fr.health.cpu}</div><div className="mt-1 text-base font-semibold">{formatPercent(envVariables[0]?.cpu_percent)}</div></div>
         <div className="min-w-0"><div className="text-xs text-muted-foreground">{fr.health.memory}</div><div className="mt-1 text-sm font-semibold">{envVariables[0] ? formatBytes(envVariables[0].memory_used_bytes) : '—'}</div></div>

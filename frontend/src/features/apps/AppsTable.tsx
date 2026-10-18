@@ -11,7 +11,10 @@ import {
 } from '@/components/ui/table'
 import { buttonVariants } from '@/components/ui/button'
 import { AppLink } from '@/components/app/app-link'
-import { MobileCards, MobileCard, MobileField } from '@/components/app/mobile-cards'
+import { MobileCards } from '@/components/app/mobile-cards'
+import { BrandAppCard } from '@/features/apps/BrandAppCard'
+import { EmptyState } from '@/components/app/empty-state'
+import { Boxes } from 'lucide-react'
 import { AppRowActions, AppRowUpdate } from '@/features/apps/AppRowActions'
 import { StatusBadge } from '@/features/apps/StatusBadge'
 import { fr } from '@/i18n/fr'
@@ -121,43 +124,14 @@ export function AppsTable({
   const table = useTable({ features, columns: buildColumns(updatesByApp), data: apps })
 
   if (apps.length === 0) {
-    return <p className="text-sm text-muted-foreground">{fr.apps.empty}</p>
+    return <EmptyState icon={Boxes} message={fr.apps.empty} illustrated />
   }
 
   return (
     <>
       <MobileCards label="Applications (vue mobile)">
         {apps.map((app) => (
-          <MobileCard key={app.name}>
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0 flex-1">
-                <AppLink name={app.name} className="break-all text-base font-semibold" />
-                {app.description && <p className="mt-1 line-clamp-2 break-words text-xs text-muted-foreground">{app.description}</p>}
-              </div>
-              <StatusBadge status={app.runtime_status} />
-            </div>
-            <dl className="mt-2 space-y-1.5 border-t pt-2">
-              <MobileField label={fr.apps.columns.domain}>
-                {app.url && app.domain ? (
-                  <a href={app.url} target="_blank" rel="noreferrer" className="break-all text-primary hover:underline">{app.domain}</a>
-                ) : fr.common.none}
-              </MobileField>
-              <MobileField label={fr.apps.columns.containers}>{app.containers}</MobileField>
-              {app.warnings.length > 0 && (
-                <MobileField label={fr.apps.columns.warnings}>
-                  <span className="inline-flex items-center gap-1 text-warning" title={app.warnings.map(warningLabel).join(', ')}>
-                    <TriangleAlert className="size-4" aria-hidden /> {app.warnings.length}
-                  </span>
-                </MobileField>
-              )}
-            </dl>
-            {app.installed && (
-              <div className="mt-2 flex min-w-0 flex-wrap items-center justify-between gap-2 border-t pt-2">
-                <AppRowActions app={app} />
-                <AppRowUpdate app={app} update={updatesByApp?.[app.name]} />
-              </div>
-            )}
-          </MobileCard>
+          <BrandAppCard key={app.name} app={app} update={updatesByApp?.[app.name]} />
         ))}
       </MobileCards>
       <div className="control-app-table hidden overflow-x-auto rounded-xl border bg-card lg:block">
@@ -175,7 +149,7 @@ export function AppsTable({
         </TableHeader>
         <TableBody>
           {table.getRowModel().rows.map((row) => (
-            <TableRow key={row.id}>
+            <TableRow key={row.id} data-app-status={row.original.runtime_status}>
               {row.getAllCells().map((cell) => (
                 <TableCell key={cell.id}>
                   <table.FlexRender cell={cell} />

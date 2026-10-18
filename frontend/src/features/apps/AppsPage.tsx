@@ -69,7 +69,7 @@ export function AppsPage() {
         subtitle="Gérez vos applications Docker et leurs configurations."
       />
 
-      <div className="rounded-xl border bg-card px-3 pt-2 sm:px-4">
+      <div className="ssdv2-module-panel px-3 pt-2 sm:px-4">
         <div className="flex min-w-0 flex-col-reverse gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div role="group" aria-label="Filtrer les applications" className="flex w-full min-w-0 max-w-full items-end gap-1 overflow-x-auto whitespace-nowrap pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:w-auto">
             {FILTERS.map((filter) => (
