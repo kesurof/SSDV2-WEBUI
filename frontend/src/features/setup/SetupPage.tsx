@@ -69,7 +69,7 @@ export function SetupPage() {
 
   if (status.isError) {
     return (
-      <div className="flex min-h-svh items-center justify-center bg-muted/40 p-4">
+      <div className="flex min-h-svh items-center justify-center bg-background p-4">
         <Card className="w-full max-w-2xl border shadow-lg">
           <CardHeader>
             <CardTitle>{fr.setup.title}</CardTitle>

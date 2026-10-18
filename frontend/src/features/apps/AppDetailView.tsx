@@ -83,7 +83,7 @@ function ContainerTable({ containers }: { containers: Container[] }) {
     return <p className="text-sm text-muted-foreground">{fr.apps.emptyList}</p>
   }
   return (
-    <div className="overflow-hidden rounded-xl border">
+    <div className="overflow-x-auto rounded-xl border bg-card">
       <Table>
         <TableHeader>
           <TableRow>
@@ -125,7 +125,7 @@ function List({ values }: { values: string[] }) {
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-2xl border bg-card p-5">
+    <div className="rounded-xl border bg-card p-4 shadow-sm">
       <h3 className="mb-3 text-sm font-semibold">{title}</h3>
       {children}
     </div>
@@ -179,9 +179,9 @@ export function AppDetailView({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <div className="flex flex-wrap items-start justify-between gap-4 rounded-xl border bg-card p-4 sm:p-5">
         <div className="flex flex-wrap items-center gap-3">
-          <div className="grid size-14 place-items-center rounded-2xl bg-primary text-primary-foreground">
+          <div className="grid size-14 place-items-center rounded-xl bg-primary/10 text-primary">
             <Boxes className="size-7" aria-hidden />
           </div>
           <div className="min-w-0">
@@ -214,7 +214,7 @@ export function AppDetailView({
       )}
 
       <Tabs defaultValue="overview">
-        <TabsList>
+        <TabsList variant="line" className="w-full justify-start gap-2 border-b pb-1">
           <TabsTrigger value="overview">{fr.apps.tabs.overview}</TabsTrigger>
           <TabsTrigger value="containers">
             {fr.apps.tabs.containers} ({app.containers})
@@ -227,7 +227,7 @@ export function AppDetailView({
         </TabsList>
 
         <TabsContent value="overview" className="pt-4">
-          <div className="grid gap-4 lg:grid-cols-3">
+          <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
             <Card title={fr.apps.detail.info}>
               <KeyValueList
                 items={[

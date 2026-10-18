@@ -1,12 +1,10 @@
-import { Boxes, CirclePlay, CircleStop, Download, Search } from 'lucide-react'
+import { Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 
-import { MetricCard } from '@/components/app/metric-card'
 import { PageHeader } from '@/components/app/page-header'
 import { Pagination } from '@/components/app/pagination'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { AppsTable } from '@/features/apps/AppsTable'
 import { filterApps } from '@/features/apps/filter'
@@ -70,68 +68,35 @@ export function AppsPage() {
         subtitle="Gérez vos applications Docker et leurs configurations."
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard
-          icon={Boxes}
-          value={counts.all}
-          label={fr.dashboard.appsTotal}
-          active={status === 'all'}
-          onClick={() => changeFilter('all')}
-        />
-        <MetricCard
-          icon={Download}
-          value={counts.installed}
-          label={fr.dashboard.installed}
-          tone="ok"
-          active={status === 'installed'}
-          onClick={() => changeFilter('installed')}
-        />
-        <MetricCard
-          icon={CirclePlay}
-          value={counts.running}
-          label={fr.dashboard.running}
-          tone="ok"
-          active={status === 'running'}
-          onClick={() => changeFilter('running')}
-        />
-        <MetricCard
-          icon={CircleStop}
-          value={counts.stopped}
-          label={fr.dashboard.stopped}
-          tone={counts.stopped > 0 ? 'err' : 'info'}
-          active={status === 'stopped'}
-          onClick={() => changeFilter('stopped')}
-        />
-      </div>
-
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="relative">
-          <Search
-            className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
-            aria-hidden
-          />
-          <Input
-            value={search}
-            onChange={(event) => {
-              setSearch(event.target.value)
-              setPage(0)
-            }}
-            placeholder={fr.apps.search}
-            className="w-64 pl-8"
-            aria-label={fr.apps.search}
-          />
-        </div>
-        <div className="flex flex-wrap gap-1.5">
-          {FILTERS.map((filter) => (
-            <Button
-              key={filter.value}
-              size="sm"
-              variant={status === filter.value ? 'default' : 'outline'}
-              onClick={() => changeFilter(filter.value)}
-            >
-              {filter.label} {counts[filter.value]}
-            </Button>
-          ))}
+      <div className="rounded-xl border bg-card px-3 pt-2 sm:px-4">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div role="group" aria-label="Filtrer les applications" className="flex max-w-full flex-wrap items-end gap-1">
+            {FILTERS.map((filter) => (
+              <button
+                key={filter.value}
+                type="button"
+                aria-pressed={status === filter.value}
+                className="control-tab-button"
+                onClick={() => changeFilter(filter.value)}
+              >
+                {filter.label}
+                <span className="control-tab-count">{counts[filter.value]}</span>
+              </button>
+            ))}
+          </div>
+          <div className="relative mb-3 shrink-0 sm:mb-2">
+            <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+            <Input
+              value={search}
+              onChange={(event) => {
+                setSearch(event.target.value)
+                setPage(0)
+              }}
+              placeholder={fr.apps.search}
+              className="h-9 w-full pl-8 sm:w-64"
+              aria-label={fr.apps.search}
+            />
+          </div>
         </div>
       </div>
 

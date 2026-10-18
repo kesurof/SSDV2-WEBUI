@@ -11,7 +11,7 @@ Une console d'administration dense, claire, calme et fiable. Conserver toutes le
 - Nom officiel SSDv2, signature « Déployez. Gérez. Sécurisez. ».
 - Les fichiers SVG de `frontend/public/branding/` sont des copies du Brand Kit généré depuis les maîtres. Ne **jamais** redessiner les rubans à la main.
 - Bleu d'action #2563EB (clair), bleu #3B82F6 (sombre), violet #7C3AED et cyan #06B6D4 comme accents **non sémantiques**.
-- Polices : Inter en priorité, Gecko/Geist/system-ui en repli. Les polices sont chargées par CSS web dans `frontend/index.html`, sans font embarquée.
+- Polices : Inter en priorité, Geist/system-ui en repli. Les polices sont chargées par CSS web dans `frontend/index.html`, sans font embarquée.
 - Surface claire #F8FAFC, surface sombre #070F1E. État réel : vert succès, orange attention, rouge erreur.
 - Respecter l'accessibilité (contrastes, navigation clavier, libellés, réduction des animations).
 
