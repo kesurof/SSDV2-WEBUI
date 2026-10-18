@@ -16,6 +16,7 @@ describe('SettingsView', () => {
     )
 
     expect(within(screen.getByRole('table')).getByText('Domaine')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: "Configuration de l'instance" })).toBeInTheDocument()
     expect(within(screen.getByRole('table')).getByText('exemple.tld')).toBeInTheDocument()
     expect(within(screen.getByRole('table')).getByText('Dépôt SSDV2')).toBeInTheDocument()
     expect(within(screen.getByRole('table')).getByText('/home/utilisateur/seedbox-compose')).toBeInTheDocument()

@@ -100,3 +100,20 @@ L'interface existante repose sur shadcn/ui + Tailwind 4 + next-themes. Les token
 ### Validation du kit graphique
 
 `projetssd/branding` signale que l'emblème a été reconstruit depuis une référence raster approuvée, et non extrait de vecteurs originaux. Les exports officiels sont l'unique source utilisable dans la WebUI. Toute retouche au symbole doit se faire dans les fichiers maîtres du dépôt Branding et être régénérée depuis les scripts officiels.
+
+## Harmonisation des rubriques — octobre 2026
+
+Cette tranche décline **Modules & Flow** dans les écrans d'administration sans modifier leurs opérations.
+
+- **Santé système** : tuiles de mesures en deux colonnes mobiles, contrôles regroupés, services marqués par leur état réel (ok/degraded/unknown). Aucun seuil CPU ou mémoire inventé.
+- **Sauvegardes** : compteur d'archives et historique, cartes avec icône et liens vers les applications ; tableau desktop conservé.
+- **Mises à jour** : en-tête récapitulatif, distinction des versions et états disponibles/à jour ; actions identiques.
+- **Authentification** : compteur des applications déclarées protégées, modification groupée séparée des entrées, confirmation inchangée.
+- **Diagnostics** : compteur des anomalies observées, cartes différenciant anomalie et état normal. Nettoyages et confirmations par SUPPRIMER préservés.
+- **Notifications** : fil par date, repère de sévérité et filtres/liens inchangés.
+- **Paramètres / Sécurité** : modules structurés, focus des modes de sécurité, verrouillages et mots de passe conservés.
+- **Audit** : journal technique et cartes mobiles cohérentes.
+- **Jobs** : chronologie établie uniquement depuis les horodatages réels (création, début, fin) ; console SSE, invites et actions inchangées.
+- **Transversal** : cartes mobiles avec accent SSDv2 discret, styles isolés dans ssdv2-brand.css. Les couleurs ne remplacent jamais les textes d'état.
+
+**Invariants :** le Sheet iPhone, le défilement indépendant de la sidebar, la top bar intelligente, la préférence thème clair mémorisée et les confirmations destructrices restent inchangés. Tests automatisés et build ne remplacent pas une validation visuelle sur Safari iOS.

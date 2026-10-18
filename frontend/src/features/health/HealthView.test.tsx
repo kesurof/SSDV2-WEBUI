@@ -46,6 +46,8 @@ describe('HealthView', () => {
 
     expect(screen.getByRole('heading', { name: "Santé de l'infrastructure" })).toBeInTheDocument()
     expect(screen.getByText('12 %')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Ressources et disponibilité' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: "Contrôles de l'infrastructure" })).toBeInTheDocument()
     expect(screen.getAllByText('4 cœurs').length).toBeGreaterThan(0)
     expect(screen.getByText('50 %')).toBeInTheDocument()
     expect(screen.getByText('28 %')).toBeInTheDocument()
