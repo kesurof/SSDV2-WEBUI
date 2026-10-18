@@ -8,6 +8,9 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { PageHeader } from '@/components/app/page-header'
+import { BrandPanel, BrandSectionHeading } from '@/components/app/brand-panel'
+import { EmptyState } from '@/components/app/empty-state'
+import { Settings2 } from 'lucide-react'
 import { MobileCards, MobileCard } from '@/components/app/mobile-cards'
 import { fr } from '@/i18n/fr'
 
@@ -30,6 +33,8 @@ export function SettingsView({ config }: { config: Record<string, string | null>
         <AlertTitle>{fr.settings.readOnly}</AlertTitle>
         <AlertDescription>{fr.settings.hint}</AlertDescription>
       </Alert>
+      <BrandSectionHeading>Configuration de l'instance</BrandSectionHeading>
+      {Object.keys(config).length === 0 && <EmptyState icon={Settings2} message="Aucune configuration disponible." illustrated />}
       <MobileCards label="Paramètres (vue mobile)">
         {Object.entries(config).map(([key, value]) => (
           <MobileCard key={key}>
@@ -38,7 +43,7 @@ export function SettingsView({ config }: { config: Record<string, string | null>
           </MobileCard>
         ))}
       </MobileCards>
-      <div className="hidden rounded-xl border bg-card lg:block">
+      <BrandPanel as="div" className="hidden lg:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -57,7 +62,7 @@ export function SettingsView({ config }: { config: Record<string, string | null>
             ))}
           </TableBody>
         </Table>
-      </div>
+      </BrandPanel>
     </div>
   )
 }

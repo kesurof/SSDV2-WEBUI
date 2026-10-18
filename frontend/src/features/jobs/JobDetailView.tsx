@@ -3,7 +3,7 @@ import { CircleHelp, Copy, RotateCw } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { KeyValueList } from '@/components/app/key-value-list'
-import { BrandPanel } from '@/components/app/brand-panel'
+import { BrandPanel, BrandSectionHeading } from '@/components/app/brand-panel'
 import { AppLink } from '@/components/app/app-link'
 import { StatusPill } from '@/components/app/status-pill'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -164,6 +164,32 @@ export function JobDetailView({
       )}
 
       {prompt && onInput ? <JobPromptPanel prompt={prompt} busy={false} onSubmit={onInput} /> : null}
+
+      <BrandSectionHeading>Déroulement du job</BrandSectionHeading>
+      <ol aria-label="Chronologie du job" className="ssdv2-timeline space-y-2">
+        <li className="ssdv2-flow-event rounded-lg border border-border/70 bg-card px-3 py-2" data-job-status="success">
+          <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+            <span className="font-medium">Job créé</span>
+            <time className="font-mono text-xs text-muted-foreground">{formatDate(job.created_at)}</time>
+          </div>
+        </li>
+        {job.started_at && (
+          <li className="ssdv2-flow-event rounded-lg border border-border/70 bg-card px-3 py-2" data-job-status="running">
+            <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+              <span className="font-medium">Exécution démarrée</span>
+              <time className="font-mono text-xs text-muted-foreground">{formatDate(job.started_at)}</time>
+            </div>
+          </li>
+        )}
+        {job.finished_at && (
+          <li className="ssdv2-flow-event rounded-lg border border-border/70 bg-card px-3 py-2" data-job-status={job.status}>
+            <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+              <span className="font-medium">Exécution terminée</span>
+              <time className="font-mono text-xs text-muted-foreground">{formatDate(job.finished_at)}</time>
+            </div>
+          </li>
+        )}
+      </ol>
 
       <BrandPanel as="div" className="p-3 sm:p-4">
         <KeyValueList
