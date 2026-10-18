@@ -6,7 +6,7 @@ import { MemoryRouter } from 'react-router-dom'
 
 import { AppSidebar } from '@/components/app/app-sidebar'
 import type { SidebarSection } from '@/components/app/app-sidebar'
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
 
 const SECTIONS: SidebarSection[] = [
   { label: 'Pilotage', items: [
@@ -65,16 +65,17 @@ describe('AppSidebar scroll and navigation', () => {
     const onNavigate = vi.fn()
     render(
       <MemoryRouter>
-        <Dialog open>
-          <DialogContent showCloseButton={false} className="control-sidebar-drawer">
-            <DialogTitle className="sr-only">Navigation SSDv2</DialogTitle>
+        <Sheet open>
+          <SheetContent>
+            <SheetTitle className="sr-only">Navigation SSDv2</SheetTitle>
             <AppSidebar {...props} mobile onNavigate={onNavigate} onClose={onClose} />
-          </DialogContent>
-        </Dialog>
+          </SheetContent>
+        </Sheet>
       </MemoryRouter>,
     )
     const nav = await screen.findByRole('navigation', { name: 'Navigation mobile SSDv2' })
     expect(nav).toHaveClass('overflow-y-auto')
+    expect(nav.closest('[data-slot="sheet-content"]')).toHaveClass('left-0', 'inset-y-0', 'max-w-full')
     await user.click(within(nav).getByRole('link', { name: 'Applications' }))
     expect(onNavigate).toHaveBeenCalledTimes(1)
     await user.click(screen.getByRole('button', { name: 'Fermer' }))

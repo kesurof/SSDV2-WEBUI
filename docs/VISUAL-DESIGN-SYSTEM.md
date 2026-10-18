@@ -23,7 +23,7 @@ L'interface existante repose sur shadcn/ui + Tailwind 4 + next-themes. Les token
 
 ## Principes d'interface
 
-1. Navigation latérale stable et repliable sur ordinateur, zone défilante indépendante ; sur mobile, bouton flottant en verre pour ouvrir la sidebar. Plus de barre d'onglets en bas.
+1. Navigation latérale stable et repliable sur ordinateur, zone défilante indépendante ; sur mobile, bouton flottant discret de type Material pour ouvrir une sidebar de type Sheet. Plus de barre d'onglets en bas.
 2. Dashboard opérationnel : état, chiffres utiles, ressources et activité récente ; jamais une galerie décorative.
 3. Catalogue : filtres en onglets compacts et tableau lisible ; actions existantes conservées.
 4. Détail d'application : informations regroupées et hiérarchisées, onglets fonctionnels, actions du cycle de vie conservées.
@@ -73,3 +73,11 @@ L'interface existante repose sur shadcn/ui + Tailwind 4 + next-themes. Les token
 - Le menu bas à quatre destinations est supprimé ; un bouton flottant circulaire à effet verre (clair et sombre) le remplace en bas à gauche, à `8.5rem` + safe area du bas pour laisser de la place aux notifications. Il ouvre le même panneau mobile que le bouton hamburger du haut.
 - Hamburger et recherche de la top bar : zones tactiles 48 × 48 px et icônes 24 px. La search modale dédiée sous 768 px est conservée.
 - Test visuel recommandé à 320/375/430 px, paysage, Safari iOS, contenu long, clavier virtuel, réduction d'animations et notifications Sonner ; ne jamais affirmer une validation appareil tant qu'elle n'a pas eu lieu.
+
+## Correctif Safari iOS et navigation (octobre 2026)
+
+- Sheet mobile basé sur Base UI Dialog, selon le pattern shadcn/ui : positionnement à gauche sans héritage de transforms centrés. Zone de menu défilante indépendante conservée. Largeur limitée à l'écran.
+- Suppression du style personnalisé `control-sidebar-drawer` et du bouton `control-glass-fab`. Le bouton de navigation utilise les classes existantes shadcn : rond, sobre, 48 px, avec ombre discrète et marge inférieure compatible safe area.
+- Boutons menu/recherche de top bar : 40 px et icônes 20 px. Titre contextualisé sur mobile (nom de rubrique, application ou job).
+- Top bar mobile automatiquement masquée après une descente d'au moins 20 px cumulés, réapparition lors de la remontée et à proximité du haut ; maintenue visible quand un menu ou une recherche est ouvert. Desktop inchangé.
+- Le comportement conserve la gestion focus, le défilement, Échap et la réduction d'animations ; les tests automatisés ne remplacent pas la validation visuelle sur un iPhone réel.

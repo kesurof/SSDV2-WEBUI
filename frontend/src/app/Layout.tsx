@@ -16,15 +16,17 @@ import {
 } from 'lucide-react'
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { Navigate, Outlet, useNavigate } from 'react-router-dom'
+import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom'
 
 import { apiUrl } from '@/api/url'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
 import { PageSkeleton } from '@/components/app/page-skeleton'
 import { AppSidebar } from '@/components/app/app-sidebar'
+import { mobilePageTitle } from '@/app/mobile-page-title'
 import type { SidebarSection } from '@/components/app/app-sidebar'
 import { ThemeToggle } from '@/components/app/theme-toggle'
 import { UserMenu } from '@/components/app/user-menu'
@@ -34,6 +36,7 @@ import { useSetupStatus } from '@/features/setup/useSetup'
 import { useApps, useHealth, useSummary } from '@/features/system/useSystem'
 import { fr } from '@/i18n/fr'
 import { useEventStream } from '@/lib/useEventStream'
+import { useAutoHideHeader } from '@/hooks/use-auto-hide-header'
 import { cn } from '@/lib/utils'
 
 const NAV_SECTIONS: SidebarSection[] = [
@@ -79,6 +82,8 @@ export function Layout() {
   const setup = useSetupStatus()
   const logout = useLogout()
   const navigate = useNavigate()
+  const location = useLocation()
+  const { visible: headerVisible, setVisible: setHeaderVisible } = useAutoHideHeader()
   const queryClient = useQueryClient()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
@@ -93,6 +98,10 @@ export function Layout() {
   useEffect(() => {
     document.title = instanceName
   }, [instanceName])
+
+  useEffect(() => {
+    setHeaderVisible(true)
+  }, [location.pathname, setHeaderVisible])
 
   useEffect(() => {
     const media = window.matchMedia('(min-width: 1024px)')
@@ -195,9 +204,9 @@ export function Layout() {
         />
       </aside>
 
-      <Dialog open={sidebarOpen} onOpenChange={setSidebarOpen}>
-        <DialogContent className="control-sidebar-drawer lg:hidden" showCloseButton={false}>
-          <DialogTitle className="sr-only">Navigation principale SSDv2</DialogTitle>
+      <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+        <SheetContent className="lg:hidden">
+          <SheetTitle className="sr-only">Navigation principale SSDv2</SheetTitle>
           <AppSidebar
             sections={NAV_SECTIONS}
             instanceName={instanceName}
@@ -209,24 +218,36 @@ export function Layout() {
             onClose={() => setSidebarOpen(false)}
             onNavigate={() => setSidebarOpen(false)}
           />
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b bg-card/95 px-4 backdrop-blur lg:px-6">
+        <header
+          data-testid="app-topbar"
+          className={cn(
+            'sticky top-0 z-20 flex h-16 items-center gap-2 border-b bg-card/95 px-3 backdrop-blur transition-transform duration-200 ease-out motion-reduce:transition-none lg:translate-y-0 lg:gap-3 lg:px-6',
+            !(headerVisible || sidebarOpen || mobileSearchOpen) && '-translate-y-full',
+          )}
+        >
           <Button
             variant="outline"
             size="icon"
-            className="size-12 shrink-0 lg:hidden"
+            className="size-10 shrink-0 lg:hidden"
             aria-label="Ouvrir la navigation"
-            onClick={() => setSidebarOpen(true)}
+            onClick={() => {
+              setHeaderVisible(true)
+              setSidebarOpen(true)
+            }}
           >
-            <Menu className="size-6" aria-hidden />
+            <Menu className="size-5" aria-hidden />
           </Button>
 
           <Button size="icon" variant="outline" className="size-12 shrink-0 lg:hidden" aria-label="Rechercher une application" onClick={() => setMobileSearchOpen(true)}>
-            <Search className="size-6" aria-hidden />
+            <Search className="size-5" aria-hidden />
           </Button>
+          <div className="min-w-0 flex-1 truncate px-1 text-sm font-semibold lg:hidden">
+            {mobilePageTitle(location.pathname)}
+          </div>
           <div className="relative hidden w-full max-w-md lg:block">
             <Search
               className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
@@ -283,7 +304,7 @@ export function Layout() {
             )}
           </div>
 
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
             <span className={cn("hidden items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium md:inline-flex", healthy ? "text-success" : "text-warning")}>
               <span aria-hidden>●</span>{healthy ? fr.nav.systemOperational : fr.nav.systemDegraded}
             </span>
@@ -354,7 +375,7 @@ export function Layout() {
           </Alert>
         )}
 
-        <main className="mx-auto w-full max-w-[1600px] min-w-0 flex-1 p-4 pb-40 lg:p-7">
+        <main className="mx-auto w-full max-w-[1600px] min-w-0 flex-1 p-4 pb-36 lg:p-7">
           {showShell ? (
             <Suspense fallback={<PageSkeleton />}>
               <Outlet />
@@ -364,17 +385,20 @@ export function Layout() {
           )}
         </main>
         {!sidebarOpen && (
-          <button
-            type="button"
+          <Button
+            size="icon"
+            variant="secondary"
             aria-label="Ouvrir le menu de navigation"
             aria-expanded={false}
             aria-haspopup="dialog"
-            className="control-glass-fab fixed left-5 z-30 grid size-15 place-items-center rounded-full lg:hidden"
-            onClick={() => setSidebarOpen(true)}
+            className="fixed bottom-[calc(7rem+env(safe-area-inset-bottom,0px))] left-4 z-30 size-12 rounded-full border border-border bg-card text-foreground shadow-lg hover:bg-secondary focus-visible:ring-2 lg:hidden"
+            onClick={() => {
+              setHeaderVisible(true)
+              setSidebarOpen(true)
+            }}
           >
-            <Menu className="size-7" aria-hidden />
-            <span className="sr-only">Ouvrir la navigation SSDv2</span>
-          </button>
+            <Menu className="size-5" aria-hidden />
+          </Button>
         )}
       </div>
     </div>
