@@ -697,6 +697,36 @@ pointe vers son remplaçant. Une décision non tranchée reste dans « Décision
 - **Références** : ADR-0015, ADR-0022, ADR-0026 ; `ARCHITECTURE-CURRENT.md` ; `AGENTS.md`
   (règles 2, 4, 10).
 
+## ADR-0029 — Application du changement d'authentification par recréation label-only
+
+- **Statut** : acceptée — 2026-10-18
+- **Contexte** : le job `auth_bulk` écrivait `sub.<app>.auth` dans `account.yml`
+  (`ssdv2ctl auth set-many`) puis appelait `app_recreate` sur **chaque** application
+  sélectionnée (ADR-0024). `app_recreate` rejoue le playbook SSDV2 complet
+  (`relance_container` → `launch_service`), y compris les tâches de configuration. Pour
+  Plex, ce playbook peut supprimer `Preferences.xml` (incident du 2026-10-18) : changer
+  une simple authentification ne doit pas exposer à ce risque.
+- **Décision** :
+  - l'application du changement se fait par une **recréation minimale « label-only »**
+    (`app/services/app_auth.py`) : recalcul du seul label du router principal
+    `traefik.http.routers.<app>-rtr.middlewares` (mapping identique à
+    `templates/generique/traefik_labels.yml.j2`) puis recréation du conteneur à
+    l'identique via le SDK Docker (`recreate_container(..., label_overrides=…)`), **sans
+    playbook ni Ansible** ; les routers secondaires (bypass/public/torznab/relay…) et tout
+    le reste de la configuration sont conservés ;
+  - `auth_bulk` n'applique que les applications dont l'auth a réellement changé
+    (`changed=true`) ; un conteneur sans label `<app>-rtr` est ignoré avec un événement
+    explicite ;
+  - l'application à la **WebUI elle-même** est **bloquée** pour l'instant (mise à jour
+    manuelle) ;
+  - `recreate`/`reinstall` restent des actions explicites distinctes (à saisie guidée).
+- **Conséquences** : un changement d'authentification recrée bien le conteneur (les labels
+  Docker sont immuables → une recréation est nécessaire) mais **sans** tâche de
+  configuration, donc sans risque de type Plex ; cohérent avec ADR-0028.
+- **Alternatives écartées** : pur `restart` (les labels ne changent pas) ; bascule des
+  middlewares en provider fichier Traefik par application (chantier plus large).
+- **Références** : ADR-0024 (amendé), ADR-0026, ADR-0028 ; `ARCHITECTURE-CURRENT.md`.
+
 ## Décisions ouvertes
 
 À trancher explicitement puis consigner en ADR (voir brief §72) :

@@ -6,21 +6,22 @@
 
 ## Chantier actif
 
-**Mises à jour « image seule » et `lxml` Ansible (ADR-0028)**.
+**Application de l'authentification en « label-only » (ADR-0029)**.
 
-- Correctif : `lxml` ajouté à la couche Ansible de l'image (requis par le module Ansible
-  `xml` des playbooks SSDV2). Sans lui, un `recreate` de Plex supprimait
-  `Preferences.xml` et créait un nouveau serveur.
-- Nouveau job `app_update` + `POST /api/v1/apps/{app}/update` : `pull` de l'image puis
-  recréation des conteneurs de l'application à l'identique (SDK Docker, sans playbook ni
-  Ansible), volumes nommés réutilisés.
-- Front : le bouton « Mettre à jour » appelle l'action `update` (centre de mises à jour,
-  colonne de la table, menu du détail) ; `recreate`/`reinstall` restent des actions
-  avancées explicites.
-- Preuves : `ruff`/`ruff format`/`pytest` backend et `lint`/`typecheck`/`test`/`build`
-  front verts (nouveau `tests/test_app_update.py`, test du dispatch `app_update`).
+- Le job `auth_bulk` n'appelle plus `app_recreate` (playbook complet, cause de l'incident
+  Plex) : il applique le changement par une recréation minimale qui ne modifie que le
+  label `traefik.http.routers.<app>-rtr.middlewares` (SDK Docker, sans Ansible).
+- Seules les applications dont l'auth a changé sont recréées ; les routers secondaires
+  (bypass/public…) et le reste de la configuration sont conservés ; l'application à la
+  WebUI elle-même est bloquée pour l'instant.
+- Preuves : `ruff`/`format`/`pytest` backend (nouveau `tests/test_app_auth.py`) et
+  `lint`/`typecheck`/`test`/`build` front verts.
 
 ## Derniers chantiers terminés (2026-10-18)
+
+**Mises à jour « image seule » et `lxml` Ansible (ADR-0028)** — terminé : `lxml` ajouté à
+l'image ; job `app_update` (pull + recréation à l'identique, sans playbook) ; bouton
+« Mettre à jour » câblé sur l'action `update`.
 
 **Optimisation du chargement front (ADR-0027)** — terminé : JS initial réduit (coquille
 ~276 Ko + `react` ~211 Ko), compression SSE-safe, découpage par route, snapshot Docker

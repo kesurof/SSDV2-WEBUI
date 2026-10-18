@@ -13,7 +13,7 @@ from app.adapters.ssdv2_bash import InteractiveProcess, PromptTimeout, Ssdv2Bash
 from app.adapters.ssdv2_cli import Ssdv2CtlError, Ssdv2CtlRunner
 from app.db.models import Job, JobEvent, utcnow
 from app.db.session import get_session_factory
-from app.services import app_update, audit, notifications, self_update
+from app.services import app_auth, app_update, audit, notifications, self_update
 from app.services import settings as webui_settings
 from app.services.prompts import PromptSpec, detect, parse_marker, strip_ansi, to_payload
 
@@ -288,10 +288,12 @@ class JobManager:
             return None
 
     def _settings(self):
-        if self._runner_provider is not None:
-            return self._runner_provider().settings
-        if self._bash_provider is not None:
-            return self._bash_provider().settings
+        for provider in (self._runner_provider, self._bash_provider):
+            if provider is None:
+                continue
+            settings = getattr(provider(), "settings", None)
+            if settings is not None:
+                return settings
         raise Ssdv2CtlError("jobs_unavailable", "gestionnaire de jobs non configuré")
 
     def _run_app_update(self, job_id: int, target: str, timeout: int) -> tuple[int, str | None]:
@@ -428,7 +430,11 @@ class JobManager:
         if not isinstance(results, list):
             raise Ssdv2CtlError("ssdv2ctl_invalid_output", "sortie auth set-many inattendue")
 
-        to_recreate: list[str] = []
+        client = self._docker_client()
+        if client is None:
+            raise Ssdv2CtlError("docker_unavailable", "Docker est indisponible")
+        settings = self._settings()
+
         failed: list[str] = []
         for result in results:
             app = str(result.get("app", ""))
@@ -438,21 +444,25 @@ class JobManager:
                     job_id, f"Échec de l'authentification pour {app} : {result['error']}"
                 )
                 continue
-            if result.get("changed"):
-                self._add_event(job_id, f"Authentification modifiée pour {app}")
-            else:
-                self._add_event(job_id, f"Authentification déjà à jour pour {app}")
-            to_recreate.append(app)
-
-        recreate_timeout = ACTION_TIMEOUTS["app_recreate"]
-        for app in to_recreate:
-            self._add_event(job_id, f"Recréation de {app} pour appliquer l'authentification")
-            recreate_args = build_job_args("app_recreate", app, {})
-            code = runner.run_streaming(
-                recreate_args, lambda line: self._add_event(job_id, line), recreate_timeout
+            if not result.get("changed"):
+                self._add_event(job_id, f"{app} : authentification déjà à jour, rien à appliquer")
+                continue
+            self._add_event(job_id, f"{app} : authentification modifiée (label Traefik à recréer)")
+            if self_update.is_self_update(client, app):
+                self._add_event(
+                    job_id,
+                    f"{app} : la WebUI ne peut pas appliquer sa propre authentification "
+                    "ici (mise à jour manuelle requise)",
+                )
+                failed.append(app)
+                continue
+            code, message = app_auth.apply_app_auth(
+                client, settings, app, auth, lambda line: self._add_event(job_id, line)
             )
             if code != 0:
                 failed.append(app)
+                if message:
+                    self._add_event(job_id, message)
 
         if failed:
             return 1, "échec pour : " + ", ".join(failed)

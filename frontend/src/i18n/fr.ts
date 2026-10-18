@@ -317,12 +317,12 @@ export const fr = {
   },
   authApps: {
     title: 'Authentification des applications',
-    hint: 'Le changement est écrit dans account.yml puis appliqué automatiquement en recréant les applications sélectionnées.',
+    hint: 'Le changement est écrit dans account.yml puis appliqué en recréant le conteneur (labels Traefik uniquement, sans playbook de configuration).',
     target: 'Nouvelle authentification',
     apply: 'Appliquer',
     selectAll: 'Tout sélectionner',
     confirm:
-      'Changer l’authentification de {count} application(s) vers « {auth} » ? Les applications sélectionnées seront recréées pour appliquer le changement.',
+      'Changer l’authentification de {count} application(s) vers « {auth} » ? Les conteneurs des applications modifiées seront recréés (labels Traefik uniquement) pour appliquer le changement.',
   },
   security: {
     title: 'Authentification interne',

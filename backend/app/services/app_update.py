@@ -108,11 +108,14 @@ def recreate_container(
     client: docker.DockerClient,
     container: docker.models.containers.Container,
     env_overrides: dict[str, str] | None = None,
+    label_overrides: dict[str, str] | None = None,
 ) -> str:
-    """Recrée un conteneur à l'identique, avec une image à jour.
+    """Recrée un conteneur à l'identique, en appliquant des surcharges.
 
     Le conteneur est arrêté puis supprimé (le nom doit être réutilisable), et
-    recréé depuis ses attributs. Retourne l'ID du nouveau conteneur.
+    recréé depuis ses attributs ; `env_overrides` et `label_overrides` (labels
+    Traefik par ex.) remplacent les valeurs existantes, tout le reste est
+    conservé. Retourne l'ID du nouveau conteneur.
     """
     attrs = container.attrs
     cfg = attrs.get("Config") or {}
@@ -126,6 +129,10 @@ def recreate_container(
             entry for entry in environment if entry.split("=", 1)[0] not in env_overrides
         ]
         environment.extend(f"{key}={value}" for key, value in env_overrides.items())
+
+    labels = dict(cfg.get("Labels") or {})
+    if label_overrides:
+        labels.update(label_overrides)
 
     host_config = _create_host_config(
         client,
@@ -167,7 +174,7 @@ def recreate_container(
         command=cfg.get("Cmd"),
         entrypoint=cfg.get("Entrypoint"),
         environment=environment,
-        labels=cfg.get("Labels"),
+        labels=labels or None,
         ports=list((cfg.get("ExposedPorts") or {}).keys()) or None,
         user=cfg.get("User") or None,
         working_dir=cfg.get("WorkingDir") or None,

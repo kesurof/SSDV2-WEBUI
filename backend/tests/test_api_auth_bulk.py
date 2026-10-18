@@ -52,7 +52,10 @@ def test_auth_apps_adapter_failure(auth_client):
     assert auth_client.get("/api/v1/auth/apps").status_code == 503
 
 
-def test_bulk_auth_creates_job(auth_client):
+def test_bulk_auth_creates_job(auth_client, monkeypatch):
+    from app.services import app_auth
+    from tests.conftest import FakeDockerClient
+
     runner = FakeRunner(
         payload={
             "schema": 1,
@@ -66,6 +69,8 @@ def test_bulk_auth_creates_job(auth_client):
         lines=("changement",),
     )
     job_manager.configure(lambda: runner)
+    monkeypatch.setattr(job_manager, "_docker_client", lambda: FakeDockerClient([]))
+    monkeypatch.setattr(app_auth, "apply_app_auth", lambda *args, **kwargs: (0, None))
 
     response = auth_client.post(
         "/api/v1/auth/bulk", json={"apps": ["sonarr", "radarr"], "auth": "authelia"}
@@ -76,11 +81,8 @@ def test_bulk_auth_creates_job(auth_client):
     assert job["type"] == "auth_bulk"
     finished = wait_for_job(auth_client, job["id"])
     assert finished["status"] == "success"
-    assert runner.calls == [
-        ["auth", "set-many", "authelia", "sonarr", "radarr"],
-        ["app", "recreate", "sonarr"],
-        ["app", "recreate", "radarr"],
-    ]
+    # Seul le changement dans account.yml : plus aucune « app recreate » (label-only).
+    assert runner.calls == [["auth", "set-many", "authelia", "sonarr", "radarr"]]
 
 
 def test_bulk_auth_validations(auth_client):

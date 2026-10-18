@@ -5,7 +5,7 @@ from app.adapters.ssdv2_cli import Ssdv2CtlError
 from app.db.models import AuditEvent, Job, JobEvent, Notification, utcnow
 from app.db.session import get_session_factory, init_db
 from app.services.jobs import JobManager, build_job_args
-from tests.conftest import FakeRunner, FakeStreamingRunner
+from tests.conftest import FakeStreamingRunner
 
 
 def test_build_job_args_install() -> None:
@@ -237,53 +237,89 @@ def test_run_job_actions_do_not_notify() -> None:
         assert len(after) == len(before)
 
 
-def make_auth_manager(
-    payload: dict | None = None, exit_code: int = 0
-) -> tuple[JobManager, FakeRunner]:
+def make_auth_manager(payload: dict, settings, monkeypatch) -> tuple[JobManager, object, list]:
+    import docker
+
+    from app.services import app_auth
+
     init_db()
     manager = JobManager()
-    runner = FakeRunner(payload=payload, exit_code=exit_code)
+
+    class AuthRunner:
+        def __init__(self) -> None:
+            self.settings = settings
+            self.calls: list[list[str]] = []
+
+        def run(self, args, timeout=None) -> dict:
+            self.calls.append(args)
+            return payload
+
+        def run_streaming(self, args, on_line, timeout=None) -> int:
+            self.calls.append(args)
+            return 0
+
+    runner = AuthRunner()
     manager.configure(lambda: runner)
-    return manager, runner
+
+    class FakeContainers:
+        @staticmethod
+        def get(name: str):
+            raise docker.errors.NotFound(name)
+
+    class FakeClient:
+        containers = FakeContainers()
+
+    monkeypatch.setattr(manager, "_docker_client", lambda: FakeClient())
+    applied: list[tuple[str, str]] = []
+
+    def _apply(client, config, app, auth, on_event):
+        applied.append((app, auth))
+        on_event(f"{app}: authentification appliquée")
+        return 0, None
+
+    monkeypatch.setattr(app_auth, "apply_app_auth", _apply)
+    return manager, runner, applied
 
 
-def test_run_job_auth_bulk_recreates_selected_apps() -> None:
-    manager, runner = make_auth_manager(
-        payload={
+def test_run_job_auth_bulk_applies_label_only(settings, monkeypatch) -> None:
+    manager, runner, applied = make_auth_manager(
+        {
             "results": [
                 {"app": "sonarr", "changed": True, "error": None},
                 {"app": "radarr", "changed": False, "error": None},
             ]
-        }
+        },
+        settings,
+        monkeypatch,
     )
     job = manager.submit(
         "auth_bulk",
-        "authelia",
+        "aucune",
         "admin",
-        {"apps": ["sonarr", "radarr"], "auth": "authelia"},
+        {"apps": ["sonarr", "radarr"], "auth": "aucune"},
     )
 
     manager.run_job(job.id)
 
     assert stored_job(job.id).status == "success"
-    assert runner.calls == [
-        ["auth", "set-many", "authelia", "sonarr", "radarr"],
-        ["app", "recreate", "sonarr"],
-        ["app", "recreate", "radarr"],
-    ]
+    assert runner.calls == [["auth", "set-many", "aucune", "sonarr", "radarr"]]
+    # Seules les apps dont l'auth a changé sont appliquées.
+    assert applied == [("sonarr", "aucune")]
     events = stored_events(job.id)
-    assert any("sonarr" in line and "Recréation" in line for line in events)
-    assert any("radarr" in line and "Recréation" in line for line in events)
+    assert any("radarr" in line and "déjà à jour" in line for line in events)
+    assert not any("Recréation" in line for line in events)
 
 
-def test_run_job_auth_bulk_reports_partial_failure() -> None:
-    manager, runner = make_auth_manager(
-        payload={
+def test_run_job_auth_bulk_reports_partial_failure(settings, monkeypatch) -> None:
+    manager, _runner, applied = make_auth_manager(
+        {
             "results": [
                 {"app": "sonarr", "changed": True, "error": None},
                 {"app": "lidarr", "changed": False, "error": "n'est pas installé"},
             ]
-        }
+        },
+        settings,
+        monkeypatch,
     )
     job = manager.submit(
         "auth_bulk",
@@ -298,6 +334,50 @@ def test_run_job_auth_bulk_reports_partial_failure() -> None:
     assert stored.status == "failed"
     assert "lidarr" in (stored.message or "")
     assert any("lidarr" in line and "pas installé" in line for line in stored_events(job.id))
+    assert applied == [("sonarr", "authelia")]
+
+
+def test_run_job_auth_bulk_blocks_self(settings, monkeypatch) -> None:
+    from app.services import app_auth
+
+    init_db()
+    manager = JobManager()
+
+    class AuthRunner:
+        def __init__(self) -> None:
+            self.settings = settings
+
+        def run(self, args, timeout=None) -> dict:
+            return {"results": [{"app": "ssdv2webui", "changed": True, "error": None}]}
+
+        def run_streaming(self, args, on_line, timeout=None) -> int:
+            return 0
+
+    manager.configure(AuthRunner)
+
+    class SelfContainer:
+        name = "ssdv2webui"
+
+    class FakeContainers:
+        @staticmethod
+        def get(name: str):
+            return SelfContainer()
+
+    class FakeClient:
+        containers = FakeContainers()
+
+    monkeypatch.setattr(manager, "_docker_client", lambda: FakeClient())
+    called: list[bool] = []
+    monkeypatch.setattr(
+        app_auth, "apply_app_auth", lambda *a, **k: called.append(True) or (0, None)
+    )
+
+    job = manager.submit("auth_bulk", "aucune", "admin", {"apps": ["ssdv2webui"], "auth": "aucune"})
+    manager.run_job(job.id)
+
+    assert stored_job(job.id).status == "failed"
+    assert called == []
+    assert any("ssdv2webui" in line for line in stored_events(job.id))
 
 
 def test_run_job_app_update_invokes_image_only_service(settings, monkeypatch) -> None:

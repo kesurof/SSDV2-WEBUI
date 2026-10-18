@@ -38,8 +38,9 @@
   `GET /api/v1/backups` (archives `~/backup`, monté) et
   `POST /api/v1/apps/{app}/backup` (job `app_backup`, mécanisme `sauve_one_appli`) ;
   `GET /api/v1/auth/apps` (auth par application) et `POST /api/v1/auth/bulk`
-  (job `auth_bulk` : `auth set-many` puis recréation des applications sélectionnées
-  pour appliquer, ADR-0024) ; `GET /api/v1/config` (clés non secrètes,
+  (job `auth_bulk` : `auth set-many` puis application **label-only** du middleware Traefik
+  du router principal des applications modifiées, sans playbook — ADR-0029, amende
+  ADR-0024) ; `GET /api/v1/config` (clés non secrètes,
   lecture seule) ; `GET`/`PATCH /api/v1/security` (authentification interne activable ou
   désactivable, ADR-0018) et `POST /api/v1/auth/password` (changement du mot de passe du
   compte interne, autres sessions invalidées) ; `GET /api/v1/setup/status` et `POST /api/v1/setup`
