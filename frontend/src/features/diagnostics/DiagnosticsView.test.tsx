@@ -1,11 +1,14 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
+import { MemoryRouter } from 'react-router-dom'
 
 import { DiagnosticsView } from '@/features/diagnostics/DiagnosticsPage'
 
 describe('DiagnosticsView', () => {
   it('renders checks', () => {
     render(
+      <MemoryRouter>
+      <MemoryRouter>
       <DiagnosticsView
         checks={{
           missing_registries: ['appname', 'boostsuitev2'],
@@ -13,7 +16,8 @@ describe('DiagnosticsView', () => {
           dangling_volumes: 2,
         }}
         warnings={[]}
-      />,
+      />
+      </MemoryRouter>,
     )
 
     expect(screen.getByText('appname')).toBeInTheDocument()
@@ -27,7 +31,8 @@ describe('DiagnosticsView', () => {
       <DiagnosticsView
         checks={{ missing_registries: [], orphan_containers: [], dangling_volumes: 0 }}
         warnings={['ssddb_unavailable']}
-      />,
+      />
+      </MemoryRouter>,
     )
 
     expect(screen.getByText('Base ssddb illisible')).toBeInTheDocument()

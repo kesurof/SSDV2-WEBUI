@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
 
@@ -33,10 +33,11 @@ describe('AppHistoryView', () => {
     )
 
     expect(screen.getByRole('heading', { name: 'Historique — dozzle' })).toBeInTheDocument()
-    expect(screen.getByText('Redémarrage')).toBeInTheDocument()
-    expect(screen.getByText('dozzle-20260917-0200.tar.gz')).toBeInTheDocument()
-    expect(screen.getByText('admin')).toBeInTheDocument()
-    expect(screen.getByText('système')).toBeInTheDocument()
+    expect(within(screen.getByRole('table')).getByText('Redémarrage')).toBeInTheDocument()
+    expect(within(screen.getByRole('table')).getByText('dozzle-20260917-0200.tar.gz')).toBeInTheDocument()
+    expect(within(screen.getByRole('table')).getByText('admin')).toBeInTheDocument()
+    expect(within(screen.getByRole('table')).getByText('système')).toBeInTheDocument()
+    expect(within(screen.getByRole('list', { name: 'Historique (vue mobile)' })).getByRole('link', { name: /Consulter le job #12/ })).toHaveAttribute('href', '/jobs/12')
   })
 
   it('renders the empty state', () => {

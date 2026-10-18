@@ -1,5 +1,6 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
+import { MemoryRouter } from 'react-router-dom'
 
 import { AuditView } from '@/features/audit/AuditView'
 import type { AuditEvent } from '@/api/types'
@@ -27,12 +28,14 @@ const EVENTS: AuditEvent[] = [
 
 describe('AuditView', () => {
   it('renders audit events', () => {
-    render(<AuditView events={EVENTS} />)
+    render(<MemoryRouter><AuditView events={EVENTS} /></MemoryRouter>)
 
-    expect(screen.getByText('app_install')).toBeInTheDocument()
-    expect(screen.getByText('wallos')).toBeInTheDocument()
-    expect(screen.getAllByText('admin')).toHaveLength(2)
-    expect(screen.getByText('login')).toBeInTheDocument()
+    const desktop = within(screen.getByRole('table'))
+    expect(desktop.getByText('app_install')).toBeInTheDocument()
+    expect(desktop.getByRole('link', { name: 'wallos' })).toHaveAttribute('href', '/apps/wallos')
+    expect(desktop.getAllByText('admin')).toHaveLength(2)
+    expect(desktop.getByText('login')).toBeInTheDocument()
+    expect(within(screen.getByRole('list', { name: 'Audit (vue mobile)' })).getByRole('link', { name: 'wallos' })).toBeInTheDocument()
   })
 
   it('renders an empty message', () => {

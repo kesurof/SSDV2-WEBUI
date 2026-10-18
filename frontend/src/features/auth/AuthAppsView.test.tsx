@@ -1,6 +1,7 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
+import { MemoryRouter } from 'react-router-dom'
 
 import { AuthAppsView } from '@/features/auth/AuthAppsView'
 import type { AppState } from '@/api/types'
@@ -30,6 +31,7 @@ describe('AuthAppsView', () => {
     const onToggle = vi.fn()
 
     render(
+      <MemoryRouter>
       <AuthAppsView
         apps={APPS}
         authByApp={{ sonarr: 'authelia', radarr: null }}
@@ -40,14 +42,16 @@ describe('AuthAppsView', () => {
         onToggleAll={vi.fn()}
         onAuthChange={vi.fn()}
         onApply={onApply}
-      />,
+      />
+      </MemoryRouter>,
     )
 
     expect(screen.getByRole('cell', { name: 'authelia' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'sonarr.example.com' })).toHaveAttribute(
+    expect(within(screen.getByRole('table')).getByRole('link', { name: 'sonarr.example.com' })).toHaveAttribute(
       'href',
       'https://sonarr.example.com',
     )
+    expect(within(screen.getByRole('list', { name: 'Authentification des applications (vue mobile)' })).getByRole('link', { name: 'sonarr' })).toHaveAttribute('href', '/apps/sonarr')
     await user.click(screen.getByRole('checkbox', { name: 'sonarr' }))
     expect(onToggle).toHaveBeenCalledWith('sonarr')
 
@@ -63,6 +67,7 @@ describe('AuthAppsView', () => {
 
   it('disables apply without selection', () => {
     render(
+      <MemoryRouter>
       <AuthAppsView
         apps={APPS}
         authByApp={{}}
@@ -73,7 +78,8 @@ describe('AuthAppsView', () => {
         onToggleAll={vi.fn()}
         onAuthChange={vi.fn()}
         onApply={vi.fn()}
-      />,
+      />
+      </MemoryRouter>,
     )
 
     expect(screen.getByRole('button', { name: /Appliquer/ })).toBeDisabled()

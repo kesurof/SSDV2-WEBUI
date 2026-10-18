@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
@@ -99,8 +99,8 @@ describe('AppDetailView', () => {
     renderDetail()
 
     await user.click(screen.getByRole('tab', { name: /Conteneurs/ }))
-    expect(screen.getByText('db-sonarr')).toBeInTheDocument()
-    expect(screen.getByText('postgres:16')).toBeInTheDocument()
+    expect(within(screen.getByRole('list', { name: 'Conteneurs (vue mobile)' })).getByText('db-sonarr')).toBeInTheDocument()
+    expect(within(screen.getByRole('table')).getByText('postgres:16')).toBeInTheDocument()
 
     await user.click(screen.getByRole('tab', { name: 'Volumes' }))
     expect(screen.getByText('sonarr-config')).toBeInTheDocument()

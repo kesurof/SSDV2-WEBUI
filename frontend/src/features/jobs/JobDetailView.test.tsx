@@ -27,7 +27,8 @@ describe('JobDetailView', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByText('#3 — Redémarrage sonarr')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '#3 — Redémarrage sonarr' })).toBeInTheDocument()
+    expect(screen.getAllByRole('link', { name: 'sonarr' })[0]).toHaveAttribute('href', '/apps/sonarr')
     expect(screen.getByText('ssdv2ctl a retourné le code 1')).toBeInTheDocument()
     expect(screen.getByText(/ligne 1/)).toBeInTheDocument()
   })
