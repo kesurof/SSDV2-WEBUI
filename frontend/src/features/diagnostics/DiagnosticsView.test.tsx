@@ -8,8 +8,7 @@ describe('DiagnosticsView', () => {
   it('renders checks', () => {
     render(
       <MemoryRouter>
-      <MemoryRouter>
-      <DiagnosticsView
+        <DiagnosticsView
         checks={{
           missing_registries: ['appname', 'boostsuitev2'],
           orphan_containers: [],
@@ -28,6 +27,7 @@ describe('DiagnosticsView', () => {
 
   it('renders warnings', () => {
     render(
+      <MemoryRouter>
       <DiagnosticsView
         checks={{ missing_registries: [], orphan_containers: [], dangling_volumes: 0 }}
         warnings={['ssddb_unavailable']}
