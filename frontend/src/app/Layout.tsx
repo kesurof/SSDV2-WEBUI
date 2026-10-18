@@ -188,18 +188,18 @@ export function Layout() {
           sidebarOpen ? 'translate-x-0' : '-translate-x-full',
         )}
       >
-        <div className={cn('flex min-h-20 items-center gap-2 border-b border-sidebar-border px-4 py-4', sidebarCollapsed && 'lg:justify-center lg:px-2')}>
+        <div className={cn('flex min-h-20 items-center gap-2 border-b border-sidebar-border px-4 py-4', sidebarCollapsed && 'lg:flex-col lg:justify-center lg:gap-1 lg:px-2 lg:py-1.5')}>
           <div className={cn('min-w-0 flex-1', sidebarCollapsed && 'lg:hidden')}>
             <BrandLogo className="w-[130px]" />
             <div className="mt-1 truncate text-[11px] text-muted-foreground" title={instanceName}>
               {instanceName === 'SSDV2 WebUI' ? "Console d'administration" : instanceName}
             </div>
           </div>
-          {sidebarCollapsed && <BrandMark className="hidden lg:block" />}
+          {sidebarCollapsed && <BrandMark className="hidden lg:block lg:size-7" />}
           <Button
             variant="ghost"
             size="icon-sm"
-            className="ml-auto hidden shrink-0 text-muted-foreground lg:inline-flex"
+            className={cn("ml-auto hidden shrink-0 text-muted-foreground lg:inline-flex", sidebarCollapsed && "lg:ml-0 lg:size-7")}
             aria-label={sidebarCollapsed ? 'Déployer la navigation' : 'Réduire la navigation'}
             title={sidebarCollapsed ? 'Déployer la navigation' : 'Réduire la navigation'}
             onClick={() => setSidebarCollapsed((value) => !value)}
