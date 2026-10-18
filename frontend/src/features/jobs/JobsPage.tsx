@@ -1,4 +1,5 @@
 import { ArrowLeft, ListChecks } from 'lucide-react'
+import { useEffect } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 
@@ -71,6 +72,13 @@ export function JobsPage() {
   const params = useParams()
   const jobs = useJobs()
   const selectedId = params.id ? Number(params.id) : undefined
+
+  // Lorsqu'on ouvre un job depuis le bas de la liste, ramener son détail en haut.
+  useEffect(() => {
+    if (window.matchMedia?.('(max-width: 1023px)').matches) {
+      window.scrollTo({ top: 0, behavior: 'auto' })
+    }
+  }, [params.id])
 
   if (jobs.isPending) {
     return <p className="text-sm text-muted-foreground">{fr.common.loading}</p>
