@@ -98,7 +98,7 @@ export function JobsView({ jobs, selectedId }: { jobs: Job[]; selectedId?: numbe
             <BrandStatusRail
               key={job.id}
               tone={job.status === 'success' ? 'ok' : job.status === 'failed' ? 'err' : job.status === 'interrupted' ? 'warn' : job.status === 'running' ? 'info' : 'muted'}
-              data-job-status={job.status}
+              status={job.status}
               className={cn(
                 'ssdv2-flow-event relative mb-2 rounded-lg border border-border/80 bg-card px-3 py-3 shadow-sm last:mb-0 hover:bg-secondary/60',
                 selectedId === job.id && 'border-primary/40 bg-accent/60',

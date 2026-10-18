@@ -15,7 +15,7 @@ import {
 import { Link } from 'react-router-dom'
 
 import { StatusPill } from '@/components/app/status-pill'
-import { BrandPanel, BrandSectionHeading } from '@/components/app/brand-panel'
+import { BrandPanel } from '@/components/app/brand-panel'
 import type { StatusTone } from '@/components/app/status-pill'
 import { KeyValueList } from '@/components/app/key-value-list'
 import { MobileCards, MobileCard, MobileField } from '@/components/app/mobile-cards'

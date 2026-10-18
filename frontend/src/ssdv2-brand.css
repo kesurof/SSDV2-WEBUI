@@ -227,3 +227,11 @@
 @media (prefers-reduced-motion: reduce) {
   .ssdv2-metric-card { transition: none !important; }
 }
+
+/* Distinct header treatment for shadcn Cards without replacing primitives. */
+.ssdv2-card-header { position: relative; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
+.ssdv2-card-header::after { content: ''; position: absolute; left: 23px; bottom: -1px; height: 2px; width: 36px; background: var(--ssdv2-brand-blue); }
+.control-app-table [data-app-status='running'] td:first-child { box-shadow: inset 3px 0 0 var(--success); }
+.control-app-table [data-app-status='partial'] td:first-child,
+.control-app-table [data-app-status='unknown'] td:first-child { box-shadow: inset 3px 0 0 var(--warning); }
+.control-app-table [data-app-status='stopped'] td:first-child { box-shadow: inset 3px 0 0 var(--muted-foreground); }

@@ -233,7 +233,7 @@ export function DashboardView({
                   ) : (
                     <span className="break-all text-sm text-muted-foreground">{job.target}</span>
                   )}
-                </BrandStatusRail>
+                </div>
               ))
             )}
           </CardContent>
@@ -269,7 +269,7 @@ export function DashboardView({
                       {formatDate(notification.created_at)}
                     </span>
                   </span>
-                </div>
+                </BrandStatusRail>
               ))
             )}
           </CardContent>
