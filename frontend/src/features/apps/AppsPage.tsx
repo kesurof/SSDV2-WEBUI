@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 
 import { PageHeader } from '@/components/app/page-header'
+import { Button } from '@/components/ui/button'
 import { Pagination } from '@/components/app/pagination'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Input } from '@/components/ui/input'
@@ -111,6 +112,12 @@ export function AppsPage() {
 
       {apps.data && (
         <>
+          {filtered.length === 0 && apps.data.length > 0 && (
+            <Button size="sm" variant="outline" onClick={() => {
+              setSearch('')
+              changeFilter('all')
+            }}>Réinitialiser les filtres</Button>
+          )}
           <AppsTable
             apps={pageItems}
             updatesByApp={Object.fromEntries(
