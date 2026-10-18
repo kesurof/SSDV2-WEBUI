@@ -53,9 +53,9 @@ export function JobsView({ jobs, selectedId }: { jobs: Job[]; selectedId?: numbe
   const { page, setPage, pageCount, pageItems } = usePageSlice(filtered, PAGE_SIZE)
 
   return (
-    <div className="space-y-3">
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="relative">
+    <div className="min-w-0 w-full max-w-full space-y-3">
+      <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+        <div className="relative min-w-0 w-full sm:w-56">
           <Search
             className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
             aria-hidden
@@ -67,15 +67,16 @@ export function JobsView({ jobs, selectedId }: { jobs: Job[]; selectedId?: numbe
               setPage(0)
             }}
             placeholder={fr.jobs.search}
-            className="w-56 pl-8"
+            className="w-full pl-8"
             aria-label={fr.jobs.search}
           />
         </div>
-        <div className="flex flex-wrap gap-1.5">
+        <div className="grid min-w-0 grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-1.5">
           {FILTERS.map((item) => (
             <Button
               key={item.value}
               size="sm"
+              className="min-w-0"
               variant={filter === item.value ? 'default' : 'outline'}
               onClick={() => {
                 setFilter(item.value)
@@ -91,26 +92,34 @@ export function JobsView({ jobs, selectedId }: { jobs: Job[]; selectedId?: numbe
       {filtered.length === 0 ? (
         <EmptyState icon={ListChecks} message={fr.jobs.empty} />
       ) : (
-        <div className="overflow-hidden rounded-xl border bg-card">
+        <div className="min-w-0 w-full overflow-hidden rounded-xl border bg-card">
           {pageItems.map((job) => (
             <div
               key={job.id}
               className={cn(
-                'flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 border-b border-l-2 border-l-transparent px-3 py-3 last:border-b-0 hover:bg-secondary/60',
+                'min-w-0 border-b border-l-2 border-l-transparent px-3 py-3 last:border-b-0 hover:bg-secondary/60',
                 selectedId === job.id && 'border-l-primary bg-accent/60',
               )}
             >
-              <Link to={`/jobs/${job.id}`} className="flex min-w-0 flex-1 items-center gap-2.5 rounded-sm focus-visible:outline-2 focus-visible:outline-ring">
-                <span className="font-mono text-xs text-muted-foreground">#{job.id}</span>
+              <div className="flex min-w-0 items-start justify-between gap-2">
+                <Link
+                  to={`/jobs/${job.id}`}
+                  aria-current={selectedId === job.id ? 'page' : undefined}
+                  className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1 rounded-sm text-sm font-medium focus-visible:outline-2 focus-visible:outline-ring"
+                >
+                  <span className="shrink-0 font-mono text-xs text-muted-foreground">#{job.id}</span>
+                  <span className="min-w-0 break-words [overflow-wrap:anywhere]">{jobTypeLabel(job.type)}</span>
+                </Link>
                 <JobStatusBadge status={job.status} />
-                <span className="min-w-0 flex-1 truncate text-sm font-medium">{jobTypeLabel(job.type)}</span>
-              </Link>
-              {job.type.startsWith('app_') ? (
-                <AppLink name={job.target} className="max-w-full break-all text-sm" />
-              ) : (
-                <span className="break-all text-sm text-muted-foreground">{job.target}</span>
-              )}
-              <span className="w-full text-xs text-muted-foreground">{formatDate(job.created_at)}</span>
+              </div>
+              <div className="mt-2 flex min-w-0 flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                {job.type.startsWith('app_') ? (
+                  <AppLink name={job.target} className="min-w-0 max-w-full break-all text-sm" />
+                ) : (
+                  <span className="min-w-0 max-w-full break-all text-sm text-muted-foreground">{job.target}</span>
+                )}
+                <span className="text-xs text-muted-foreground">{formatDate(job.created_at)}</span>
+              </div>
             </div>
           ))}
         </div>

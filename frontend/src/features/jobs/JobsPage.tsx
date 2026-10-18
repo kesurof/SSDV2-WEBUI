@@ -1,5 +1,5 @@
-import { ListChecks } from 'lucide-react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { ArrowLeft, ListChecks } from 'lucide-react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import { EmptyState } from '@/components/app/empty-state'
@@ -11,6 +11,7 @@ import { useAppAction, useJobs, useSubmitJobInput } from '@/features/jobs/useJob
 import type { AppAction } from '@/features/jobs/useJobs'
 import { useJobEvents } from '@/features/jobs/useJobEvents'
 import { fr } from '@/i18n/fr'
+import { cn } from '@/lib/utils'
 import type { Job } from '@/api/types'
 
 function JobDetailPanel({ job }: { job: Job }) {
@@ -53,7 +54,7 @@ function JobDetailPanel({ job }: { job: Job }) {
   }
 
   return (
-    <div className="rounded-xl border bg-card p-4 sm:p-5">
+    <div className="min-w-0 max-w-full overflow-hidden rounded-xl border bg-card p-3.5 sm:p-5">
       <JobDetailView
         job={job}
         lines={lines}
@@ -89,17 +90,36 @@ export function JobsPage() {
     : jobs.data[0]
 
   return (
-    <div>
+    <div className="min-w-0 w-full max-w-full pb-20 lg:pb-0">
       <PageHeader title={fr.jobs.title} subtitle="Gérez et surveillez les tâches planifiées." />
-      <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(300px,360px)_minmax(0,1fr)]">
-        <JobsView jobs={jobs.data} selectedId={selectedJob?.id} />
-        <div className="h-fit lg:sticky lg:top-20">
+      <div className="grid min-w-0 w-full grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[minmax(280px,360px)_minmax(0,1fr)]">
+        <section
+          aria-label="Liste des jobs"
+          data-testid="jobs-list-panel"
+          className={cn('min-w-0 max-w-full', selectedId !== undefined && 'hidden lg:block')}
+        >
+          <JobsView jobs={jobs.data} selectedId={selectedJob?.id} />
+        </section>
+        <section
+          aria-label="Détail du job"
+          data-testid="jobs-detail-panel"
+          className={cn('min-w-0 max-w-full lg:sticky lg:top-20 lg:h-fit', selectedId === undefined && 'hidden lg:block')}
+        >
+          {selectedId !== undefined && (
+            <Link
+              to="/jobs"
+              className="mb-3 inline-flex min-h-10 items-center gap-2 rounded-lg px-2 text-sm font-medium text-primary hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring lg:hidden"
+            >
+              <ArrowLeft className="size-4" aria-hidden />
+              Retour aux jobs
+            </Link>
+          )}
           {selectedJob ? (
-            <JobDetailPanel job={selectedJob} />
+            <JobDetailPanel key={selectedJob.id} job={selectedJob} />
           ) : (
             <EmptyState icon={ListChecks} message={fr.jobs.empty} />
           )}
-        </div>
+        </section>
       </div>
     </div>
   )
