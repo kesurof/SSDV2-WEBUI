@@ -8,6 +8,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { PageHeader } from '@/components/app/page-header'
+import { MobileCards, MobileCard } from '@/components/app/mobile-cards'
 import { fr } from '@/i18n/fr'
 
 const KEY_LABELS: Record<string, string> = {
@@ -29,7 +30,15 @@ export function SettingsView({ config }: { config: Record<string, string | null>
         <AlertTitle>{fr.settings.readOnly}</AlertTitle>
         <AlertDescription>{fr.settings.hint}</AlertDescription>
       </Alert>
-      <div className="rounded-md border">
+      <MobileCards label="Paramètres (vue mobile)">
+        {Object.entries(config).map(([key, value]) => (
+          <MobileCard key={key}>
+            <div className="text-xs font-semibold text-muted-foreground">{KEY_LABELS[key] ?? key}</div>
+            <div className="mt-2 min-w-0 break-all font-mono text-xs">{value ?? '—'}</div>
+          </MobileCard>
+        ))}
+      </MobileCards>
+      <div className="hidden rounded-xl border bg-card lg:block">
         <Table>
           <TableHeader>
             <TableRow>

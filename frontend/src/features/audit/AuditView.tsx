@@ -7,6 +7,8 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { PageHeader } from '@/components/app/page-header'
+import { AppLink } from '@/components/app/app-link'
+import { MobileCards, MobileCard, MobileField } from '@/components/app/mobile-cards'
 import { fr } from '@/i18n/fr'
 import type { AuditEvent } from '@/api/types'
 
@@ -25,8 +27,28 @@ export function AuditView({ events }: { events: AuditEvent[] }) {
       {events.length === 0 ? (
         <p className="text-sm text-muted-foreground">{fr.audit.empty}</p>
       ) : (
-        <div className="rounded-md border">
-          <Table>
+        <>
+          <MobileCards label="Audit (vue mobile)">
+            {events.map((event) => (
+              <MobileCard key={event.id}>
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <span className="min-w-0 break-all text-sm font-semibold">{event.action}</span>
+                  <span className="text-xs text-muted-foreground">{formatDate(event.created_at)}</span>
+                </div>
+                <dl className="mt-3 space-y-2 border-t pt-3">
+                  <MobileField label={fr.audit.columns.user}>{event.username ?? '—'}</MobileField>
+                  <MobileField label={fr.audit.columns.target}>
+                    {event.target && event.action.startsWith('app_')
+                      ? <AppLink name={event.target} />
+                      : event.target ?? '—'}
+                  </MobileField>
+                  <MobileField label={fr.audit.columns.status}>{event.status}</MobileField>
+                </dl>
+              </MobileCard>
+            ))}
+          </MobileCards>
+          <div className="hidden rounded-xl border bg-card lg:block">
+            <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>{fr.audit.columns.date}</TableHead>
@@ -44,13 +66,14 @@ export function AuditView({ events }: { events: AuditEvent[] }) {
                   </TableCell>
                   <TableCell>{event.username ?? '—'}</TableCell>
                   <TableCell>{event.action}</TableCell>
-                  <TableCell>{event.target ?? '—'}</TableCell>
+                  <TableCell>{event.target && event.action.startsWith('app_') ? <AppLink name={event.target} /> : event.target ?? '—'}</TableCell>
                   <TableCell>{event.status}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
-          </Table>
-        </div>
+            </Table>
+          </div>
+        </>
       )}
     </div>
   )
