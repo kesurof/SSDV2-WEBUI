@@ -10,6 +10,7 @@ recopie aucun contenu ; il oriente vers le document de référence.
 | État actuel vérifié du dépôt | [`ARCHITECTURE-CURRENT.md`](ARCHITECTURE-CURRENT.md) |
 | Cible architecturale (non implémentée) | [`ARCHITECTURE-TARGET.md`](ARCHITECTURE-TARGET.md) |
 | Conception détaillée / spécification source | [`SSDV2_WEBUI_PROJECT_BRIEF.md`](SSDV2_WEBUI_PROJECT_BRIEF.md) |
+| Charte visuelle WebUI SSDv2 Control | [`VISUAL-DESIGN-SYSTEM.md`](VISUAL-DESIGN-SYSTEM.md) (référence pour les styles et la navigation, après branding) |
 | Maquette de référence UI (design) | [`SSDV2_WEBUI_MOCKUP_FINAL_UI.html`](SSDV2_WEBUI_MOCKUP_FINAL_UI.html) |
 | Décisions architecturales (ADR) | [`DECISIONS.md`](DECISIONS.md) |
 | Hébergement derrière un reverse proxy (SSE, auth externe) | [`REVERSE-PROXY.md`](REVERSE-PROXY.md) |
