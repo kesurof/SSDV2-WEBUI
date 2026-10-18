@@ -195,3 +195,10 @@
 @media (max-width: 1023px) {
   .control-shell { padding-bottom: 4.5rem; }
 }
+
+/* Cohérence tactile, sans modifier la densité des tableaux sur desktop. */
+@media (max-width: 767px) {
+  .control-shell [data-slot="button"] { min-height: 2.5rem; }
+  .control-shell [data-slot="tabs-list"] { min-width: 0; }
+  .control-shell main { min-width: 0; overflow-wrap: anywhere; }
+}

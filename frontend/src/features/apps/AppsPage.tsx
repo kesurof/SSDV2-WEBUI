@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 
 import { PageHeader } from '@/components/app/page-header'
+import { Button } from '@/components/ui/button'
 import { Pagination } from '@/components/app/pagination'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Input } from '@/components/ui/input'
@@ -69,14 +70,14 @@ export function AppsPage() {
       />
 
       <div className="rounded-xl border bg-card px-3 pt-2 sm:px-4">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div role="group" aria-label="Filtrer les applications" className="flex max-w-full flex-wrap items-end gap-1">
+        <div className="flex min-w-0 flex-col-reverse gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div role="group" aria-label="Filtrer les applications" className="flex w-full min-w-0 max-w-full items-end gap-1 overflow-x-auto whitespace-nowrap pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:w-auto">
             {FILTERS.map((filter) => (
               <button
                 key={filter.value}
                 type="button"
                 aria-pressed={status === filter.value}
-                className="control-tab-button"
+                className="control-tab-button shrink-0"
                 onClick={() => changeFilter(filter.value)}
               >
                 {filter.label}
@@ -84,7 +85,7 @@ export function AppsPage() {
               </button>
             ))}
           </div>
-          <div className="relative mb-3 shrink-0 sm:mb-2">
+          <div className="relative mb-1 min-w-0 sm:mb-2 sm:shrink-0">
             <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
             <Input
               value={search}
@@ -93,7 +94,7 @@ export function AppsPage() {
                 setPage(0)
               }}
               placeholder={fr.apps.search}
-              className="h-9 w-full pl-8 sm:w-64"
+              className="h-10 w-full pl-8 sm:h-9 sm:w-64"
               aria-label={fr.apps.search}
             />
           </div>
@@ -111,6 +112,12 @@ export function AppsPage() {
 
       {apps.data && (
         <>
+          {filtered.length === 0 && apps.data.length > 0 && (
+            <Button size="sm" variant="outline" onClick={() => {
+              setSearch('')
+              changeFilter('all')
+            }}>Réinitialiser les filtres</Button>
+          )}
           <AppsTable
             apps={pageItems}
             updatesByApp={Object.fromEntries(

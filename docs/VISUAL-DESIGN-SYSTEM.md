@@ -54,3 +54,13 @@ L'interface existante repose sur shadcn/ui + Tailwind 4 + next-themes. Les token
 - Les logs conservent les espaces et sont défilables **horizontalement à l'intérieur du panneau**, sans augmenter la largeur de la page. La hauteur de la console est bornée sur smartphone.
 - Les invites interactives restent accessibles : labels pouvant revenir à la ligne, boutons d'option adaptés, formulaire sans largeur minimale excessive.
 - Le détail d'une URL directe `/jobs/:id` affiche aussi un retour vers la liste ; la barre de navigation inférieure reste dégagée.
+
+## UX — navigation et hiérarchie (octobre 2026)
+
+- Fiche application : retour au catalogue, indicateurs CPU/mémoire/conteneurs sur mobile et trois onglets principaux. Les rubriques volumes, réseau, variables et historique sont dans « Plus » sous 1024 px ; les sept onglets restent disponibles sur ordinateur.
+- Actions applicatives : ouvrir et redémarrer (ou démarrer à l'arrêt) immédiatement ; arrêt, sauvegarde et mutations avancées dans le menu existant. Les confirmations graduées et demandes de nom en cas de suppression des données restent obligatoires.
+- Catalogue : filtres sur une seule ligne défilable sur mobile, recherche en pleine largeur, réinitialisation accessible et cartes compactes.
+- Dashboard : quatre compteurs en 2 × 2 sur mobile ; informations hôte détaillées masquées sur mobile mais toujours accessibles dans Santé système. Alertes recentrées sur les erreurs/avertissements non lus.
+- Recherche : icône mobile avec dialogue dédié, recherche partagée avec desktop, raccourci Cmd/Ctrl+K préservé.
+- Notifications : filtres Toutes et Non lues, regroupement par date, accès direct à la fiche applicative lorsque le job lié est identifié.
+- Divers : états vides uniformisés, skeleton adaptés aux petits écrans et dimensions tactiles minimales pour les boutons sur mobile.

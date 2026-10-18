@@ -48,7 +48,7 @@ export function DashboardView({
   updatesCount?: number
 }) {
   const recentJobs = (jobs ?? []).slice(0, 4)
-  const alerts = (notifications ?? []).slice(0, 3)
+  const alerts = (notifications ?? []).filter((item) => !item.read_at && (item.severity === 'error' || item.severity === 'warning')).slice(0, 3)
 
   return (
     <div className="space-y-5">
@@ -75,7 +75,7 @@ export function DashboardView({
         </Alert>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2 sm:gap-4 xl:grid-cols-4">
         <MetricCard
           icon={Boxes}
           value={summary.ssdv2.apps_total}
@@ -158,7 +158,7 @@ export function DashboardView({
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hidden lg:flex">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-sm">
               <Server className="size-4 text-muted-foreground" aria-hidden />
@@ -254,11 +254,13 @@ export function DashboardView({
                   key={notification.id}
                   className="flex items-center gap-3 rounded-xl border px-3 py-2.5"
                 >
-                  <StatusPill tone={notification.severity === 'error' ? 'err' : 'ok'}>
-                    {notification.severity === 'error' ? 'Erreur' : 'Succès'}
+                  <StatusPill tone={notification.severity === 'error' ? 'err' : 'warn'}>
+                    {notification.severity === 'error' ? 'Erreur' : 'Attention'}
                   </StatusPill>
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-medium">{notification.title}</span>
+                    {notification.link ? (
+                      <Link to={notification.link} className="block truncate text-sm font-medium hover:text-primary hover:underline">{notification.title}</Link>
+                    ) : <span className="block truncate text-sm font-medium">{notification.title}</span>}
                     <span className="block text-xs text-muted-foreground">
                       {formatDate(notification.created_at)}
                     </span>

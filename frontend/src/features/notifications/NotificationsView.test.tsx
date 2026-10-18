@@ -61,6 +61,29 @@ describe('NotificationsView', () => {
     expect(onReadAll).toHaveBeenCalled()
   })
 
+  it('groups items by date and provides an app link for a known job', async () => {
+    const user = userEvent.setup()
+    const onFilterChange = vi.fn()
+    render(
+      <MemoryRouter>
+        <NotificationsView
+          items={NOTIFICATIONS}
+          unread={1}
+          busy={false}
+          onRead={vi.fn()}
+          onReadAll={vi.fn()}
+          filter="all"
+          onFilterChange={onFilterChange}
+          appByJobId={{ 12: 'wallos' }}
+        />
+      </MemoryRouter>,
+    )
+    expect(screen.getAllByText(/septembre 2026/i).length).toBeGreaterThan(0)
+    expect(screen.getByRole('link', { name: 'wallos' })).toHaveAttribute('href', '/apps/wallos')
+    await user.click(screen.getByRole('button', { name: 'Non lues' }))
+    expect(onFilterChange).toHaveBeenCalledWith('unread')
+  })
+
   it('renders an empty message', () => {
     render(
       <MemoryRouter>

@@ -143,7 +143,7 @@ export function AppActions({ app }: { app: AppDetail }) {
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex w-full min-w-0 flex-wrap items-center gap-2 sm:w-auto">
       {app.url && (
         <a
           href={app.url}
@@ -155,29 +155,10 @@ export function AppActions({ app }: { app: AppDetail }) {
           {fr.apps.detail.openApp}
         </a>
       )}
-      {running ? (
-        <Button
-          size="lg"
-          variant="destructive"
-          disabled={busy}
-          onClick={() => setPending('stop')}
-        >
-          <Square className="size-4" aria-hidden />
-          {fr.actions.stop}
-        </Button>
-      ) : (
-        <Button size="lg" disabled={busy} onClick={() => setPending('start')}>
-          <Play className="size-4" aria-hidden />
-          {fr.actions.start}
-        </Button>
-      )}
+      {!running && <Button size="lg" disabled={busy} onClick={() => setPending('start')}><Play className="size-4" aria-hidden />{fr.actions.start}</Button>}
       <Button size="lg" variant="outline" disabled={busy} onClick={() => setPending('restart')}>
         <RotateCw className="size-4" aria-hidden />
         {fr.actions.restart}
-      </Button>
-      <Button size="lg" variant="outline" disabled={busy} onClick={() => setPending('backup')}>
-        <Save className="size-4" aria-hidden />
-        {fr.actions.backup}
       </Button>
       <DropdownMenu>
         <DropdownMenuTrigger
@@ -194,6 +175,8 @@ export function AppActions({ app }: { app: AppDetail }) {
           <MoreVertical className="size-4" aria-hidden />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          {running && <DropdownMenuItem onClick={() => setPending('stop')}><Square className="size-4" aria-hidden />{fr.actions.stop}</DropdownMenuItem>}
+          <DropdownMenuItem onClick={() => setPending('backup')}><Save className="size-4" aria-hidden />{fr.actions.backup}</DropdownMenuItem>
           <DropdownMenuItem onClick={() => setPending('update')}>
             {fr.actions.update}
           </DropdownMenuItem>

@@ -26,6 +26,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { PageSkeleton } from '@/components/app/page-skeleton'
 import { BrandLogo, BrandMark } from '@/components/app/brand-logo'
 import { ThemeToggle } from '@/components/app/theme-toggle'
@@ -93,6 +94,7 @@ export function Layout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [query, setQuery] = useState('')
   const [searchFocused, setSearchFocused] = useState(false)
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
   const searchRef = useRef<HTMLInputElement>(null)
 
   const instanceName = setup.data?.instance_name ?? 'SSDV2 WebUI'
@@ -125,7 +127,11 @@ export function Layout() {
     function onKeyDown(event: KeyboardEvent) {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault()
-        searchRef.current?.focus()
+        if (window.matchMedia?.('(max-width: 767px)').matches) {
+          setMobileSearchOpen(true)
+        } else {
+          searchRef.current?.focus()
+        }
       }
     }
     window.addEventListener('keydown', onKeyDown)
@@ -163,7 +169,8 @@ export function Layout() {
     setQuery('')
     setSearchFocused(false)
     searchRef.current?.blur()
-    navigate(`/apps/${name}`)
+    setMobileSearchOpen(false)
+    navigate(`/apps/${encodeURIComponent(name)}`)
   }
 
   const badges: Record<string, number> = { notifications: unread, updates: 0 }
@@ -279,7 +286,10 @@ export function Layout() {
             <Menu className="size-4" aria-hidden />
           </Button>
 
-          <div className="relative w-full max-w-md">
+          <Button size="icon" variant="outline" className="shrink-0 md:hidden" aria-label="Rechercher une application" onClick={() => setMobileSearchOpen(true)}>
+            <Search className="size-4" aria-hidden />
+          </Button>
+          <div className="relative hidden w-full max-w-md md:block">
             <Search
               className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
               aria-hidden
@@ -350,6 +360,51 @@ export function Layout() {
             )}
           </div>
         </header>
+
+        <Dialog open={mobileSearchOpen} onOpenChange={setMobileSearchOpen}>
+          <DialogContent className="top-4 max-w-[calc(100%-1rem)] -translate-y-0 gap-3 p-4 sm:max-w-lg md:hidden" showCloseButton={false}>
+            <DialogHeader className="flex-row items-center justify-between gap-2">
+              <DialogTitle>Rechercher une application</DialogTitle>
+              <Button size="icon-sm" variant="ghost" aria-label={fr.common.close} onClick={() => setMobileSearchOpen(false)}>
+                <X className="size-4" aria-hidden />
+              </Button>
+            </DialogHeader>
+            <div className="relative">
+              <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+              <Input
+                autoFocus
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' && results[0]) openApp(results[0].name)
+                }}
+                placeholder={fr.common.searchPlaceholder}
+                aria-label="Recherche mobile d'application"
+                className="h-11 w-full pl-9"
+              />
+            </div>
+            <div className="max-h-[55svh] overflow-y-auto" aria-label="Résultats de recherche">
+              {query.trim() && results.length === 0 ? (
+                <p className="p-3 text-sm text-muted-foreground">{fr.common.noResults}</p>
+              ) : results.length > 0 ? (
+                results.map((app) => (
+                  <button
+                    key={app.name}
+                    type="button"
+                    onClick={() => openApp(app.name)}
+                    className="flex min-h-12 w-full min-w-0 items-center gap-3 border-b px-2 py-2 text-left last:border-b-0 hover:bg-secondary"
+                  >
+                    <Boxes className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-medium">{app.name}</span>
+                      <span className="block truncate text-xs text-muted-foreground">{app.url ?? app.description}</span>
+                    </span>
+                  </button>
+                ))
+              ) : <p className="p-3 text-sm text-muted-foreground">{fr.common.searchPlaceholder}</p>}
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {health.data?.status === 'degraded' && (
           <Alert variant="destructive" className="rounded-none border-x-0 border-t-0">

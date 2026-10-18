@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import type { ReactNode } from 'react'
 import {
+  ArrowLeft,
   Boxes,
+  MoreHorizontal,
   Cpu,
   ExternalLink,
   Globe,
@@ -19,6 +21,7 @@ import { MobileCards, MobileCard, MobileField } from '@/components/app/mobile-ca
 import { ProgressBar } from '@/components/app/progress-bar'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Badge } from '@/components/ui/badge'
 import {
   Table,
@@ -181,6 +184,7 @@ export function AppDetailView({
   onRecreate?: () => void
 }) {
   const [historyFilter, setHistoryFilter] = useState<HistoryFilter>('all')
+  const [activeTab, setActiveTab] = useState('overview')
   const companions = app.container_list.filter((container) => container.name !== app.name)
   const appBackups = (backups ?? []).filter((backup) => backup.app === app.name)
   const lastBackup = appBackups[0]
@@ -197,15 +201,18 @@ export function AppDetailView({
       : null
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-start justify-between gap-4 rounded-xl border bg-card p-4 sm:p-5">
-        <div className="flex flex-wrap items-center gap-3">
+    <div className="min-w-0 space-y-4">
+      <Link to="/apps" className="inline-flex min-h-9 items-center gap-2 text-sm text-muted-foreground hover:text-primary">
+        <ArrowLeft className="size-4" aria-hidden /> {fr.apps.back}
+      </Link>
+      <div className="flex min-w-0 flex-wrap items-start justify-between gap-4 rounded-xl border bg-card p-4 sm:p-5">
+        <div className="flex min-w-0 flex-wrap items-center gap-3">
           <div className="grid size-14 place-items-center rounded-xl bg-primary/10 text-primary">
             <Boxes className="size-7" aria-hidden />
           </div>
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-2xl font-bold tracking-tight">{app.name}</h1>
+              <h1 className="min-w-0 break-all text-xl font-bold tracking-tight sm:text-2xl">{app.name}</h1>
               <StatusBadge status={app.runtime_status} />
               {app.warnings.length > 0 && (
                 <Badge variant="outline" className="border-warning text-warning">
@@ -213,10 +220,10 @@ export function AppDetailView({
                 </Badge>
               )}
             </div>
-            <p className="mt-1 text-sm text-muted-foreground">{app.description}</p>
+            <p className="mt-1 break-words text-sm text-muted-foreground">{app.description}</p>
           </div>
         </div>
-        {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
+        {actions ? <div className="flex min-w-0 w-full flex-wrap items-center gap-2 sm:w-auto">{actions}</div> : null}
       </div>
 
       {app.warnings.length > 0 && (
@@ -232,18 +239,36 @@ export function AppDetailView({
         </Alert>
       )}
 
-      <Tabs defaultValue="overview">
-        <TabsList variant="line" className="w-full justify-start gap-2 border-b pb-1">
-          <TabsTrigger value="overview">{fr.apps.tabs.overview}</TabsTrigger>
-          <TabsTrigger value="containers">
-            {fr.apps.tabs.containers} ({app.containers})
-          </TabsTrigger>
-          <TabsTrigger value="logs">{fr.apps.tabs.logs}</TabsTrigger>
-          <TabsTrigger value="volumes">{fr.apps.tabs.volumes}</TabsTrigger>
-          <TabsTrigger value="network">{fr.apps.tabs.network}</TabsTrigger>
-          <TabsTrigger value="variables">{fr.apps.tabs.variables}</TabsTrigger>
-          <TabsTrigger value="history">{fr.apps.tabs.history}</TabsTrigger>
-        </TabsList>
+      <div className="grid grid-cols-3 gap-2 rounded-xl border bg-card p-3 lg:hidden" aria-label="Résumé de l'application">
+        <div className="min-w-0 border-r pr-2"><div className="text-xs text-muted-foreground">{fr.apps.tabs.containers}</div><div className="mt-1 text-base font-semibold">{app.containers}</div></div>
+        <div className="min-w-0 border-r pr-2"><div className="text-xs text-muted-foreground">{fr.health.cpu}</div><div className="mt-1 text-base font-semibold">{formatPercent(envVariables[0]?.cpu_percent)}</div></div>
+        <div className="min-w-0"><div className="text-xs text-muted-foreground">{fr.health.memory}</div><div className="mt-1 text-sm font-semibold">{envVariables[0] ? formatBytes(envVariables[0].memory_used_bytes) : '—'}</div></div>
+      </div>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <div className="flex min-w-0 items-center gap-1 border-b">
+          <TabsList variant="line" className="min-w-0 flex-1 justify-start gap-0 border-0 pb-1 lg:gap-2">
+            <TabsTrigger value="overview" className="px-2 text-xs sm:text-sm">{fr.apps.tabs.overview}</TabsTrigger>
+            <TabsTrigger value="containers" className="px-2 text-xs sm:text-sm">{fr.apps.tabs.containers} ({app.containers})</TabsTrigger>
+            <TabsTrigger value="logs" className="px-2 text-xs sm:text-sm">{fr.apps.tabs.logs}</TabsTrigger>
+            <TabsTrigger value="volumes" className="hidden lg:inline-flex">{fr.apps.tabs.volumes}</TabsTrigger>
+            <TabsTrigger value="network" className="hidden lg:inline-flex">{fr.apps.tabs.network}</TabsTrigger>
+            <TabsTrigger value="variables" className="hidden lg:inline-flex">{fr.apps.tabs.variables}</TabsTrigger>
+            <TabsTrigger value="history" className="hidden lg:inline-flex">{fr.apps.tabs.history}</TabsTrigger>
+          </TabsList>
+          <DropdownMenu>
+            <DropdownMenuTrigger render={<Button size="sm" variant="ghost" className="shrink-0 lg:hidden" aria-label="Autres rubriques" />}>
+              {(['volumes', 'network', 'variables', 'history'] as string[]).includes(activeTab)
+                ? fr.apps.tabs[activeTab as 'volumes' | 'network' | 'variables' | 'history'] : 'Plus'}
+              <MoreHorizontal className="size-4" aria-hidden />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {(['volumes', 'network', 'variables', 'history'] as const).map((tab) => (
+                <DropdownMenuItem key={tab} onClick={() => setActiveTab(tab)}>{fr.apps.tabs[tab]}</DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
 
         <TabsContent value="overview" className="pt-4">
           <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
