@@ -18,9 +18,11 @@ Palier cycle de vie :
     ssdv2ctl app remove <app> [--delete-data]
     ssdv2ctl app reinstall <app>
     ssdv2ctl app recreate <app>
+    ssdv2ctl app update <app>
     ssdv2ctl app backup <app>
     ssdv2ctl auth get <app>
     ssdv2ctl auth set <app> <type>
+    ssdv2ctl auth apply <app> [<type>]
     ssdv2ctl auth list
     ssdv2ctl auth set-many <type> <app> [<app>...]
     ssdv2ctl config get <clé>
@@ -32,7 +34,12 @@ ou soient fournis par les options ; sinon la commande échoue avec ``interactive
 sans invite (suppression avec conservation des données, restauration des valeurs
 sub/auth, lancement) et échoue avec ``interactive_required`` si ces valeurs manquent ;
 ``recreate`` recrée les conteneurs avec mise à jour de l'image en conservant volumes et
-configuration.
+configuration (rejoue le playbook).
+
+``update`` met à jour l'image des conteneurs de l'application **sans rejouer le playbook**
+(pull + recréation à l'identique des conteneurs courants). ``auth apply`` applique le type
+d'authentification en ne modifiant que le label Traefik du router principal (recréation
+label-only, sans playbook) ; il écrit d'abord ``sub.<app>.auth`` si un type est fourni.
 
 ``restart`` correspond à ``docker restart`` sur les conteneurs existants ; le « relancer »
 SSDV2 (``relance_container``), qui recrée le conteneur avec mise à jour de l'image,
@@ -66,7 +73,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-VERSION = "0.4.0"
+VERSION = "0.5.0"
 SCHEMA_VERSION = 1
 
 EXIT_OK = 0
@@ -622,6 +629,22 @@ def command_app_recreate(source: Path, storage: Path, app: str) -> dict:
     )
 
 
+def command_app_update(source: Path, storage: Path, app: str) -> dict:
+    """Mise à jour « image seule » : pull + recréation, sans playbook."""
+    require_app(source, app)
+    if not is_installed(source, storage, app):
+        raise CtlError("not_installed", f"{app} n'est pas installé")
+    return run_ssdv2_mutation(
+        source,
+        storage,
+        app,
+        "update",
+        "update_container",
+        app,
+        timeout=INSTALL_TIMEOUT,
+    )
+
+
 def command_auth_list(source: Path, storage: Path) -> dict:
     apps, warning = list_ssddb_apps(source)
     if warning:
@@ -721,6 +744,27 @@ def command_auth_set(source: Path, storage: Path, app: str, auth: str) -> dict:
         "changed": True,
         "applied": False,
     }
+
+
+def command_auth_apply(source: Path, storage: Path, app: str, auth: str | None) -> dict:
+    """Applique l'auth en ne recréant que le label Traefik (sans playbook)."""
+    require_app(source, app)
+    if auth is not None and auth not in AUTH_TYPES:
+        raise CtlError(
+            "invalid_auth",
+            f"type d'authentification invalide: {auth} (valeurs: {', '.join(AUTH_TYPES)})",
+        )
+    if not is_installed(source, storage, app):
+        raise CtlError("not_installed", f"{app} n'est pas installé")
+    current = read_account_value(source, storage, f"sub.{app}.auth")
+    if auth is not None and auth != current:
+        write_account_value(source, storage, f"sub.{app}.auth", auth)
+    result = run_bash_function(
+        source, storage, "apply_auth_label", app, timeout=INSTALL_TIMEOUT
+    )
+    payload = mutation_payload(app, "apply", result)
+    payload["auth"] = auth or current
+    return payload
 
 
 def docker_cli(args: list[str], timeout: int = DIAGNOSTICS_TIMEOUT) -> subprocess.CompletedProcess:
@@ -906,7 +950,8 @@ def build_parser() -> argparse.ArgumentParser:
         "stop": "arrête les conteneurs de l'application",
         "restart": "redémarre les conteneurs de l'application",
         "reinstall": "réinstalle l'application (données conservées)",
-        "recreate": "recrée les conteneurs (image mise à jour, données conservées)",
+        "recreate": "recrée les conteneurs (playbook, données conservées)",
+        "update": "met à jour l'image des conteneurs (sans playbook)",
         "backup": "sauvegarde l'application",
     }
     for name, help_text in actions.items():
@@ -933,6 +978,13 @@ def build_parser() -> argparse.ArgumentParser:
     auth_set = auth_commands.add_parser("set", help="définit le type d'authentification")
     auth_set.add_argument("app", help="nom de l'application (catalogue SSDV2)")
     auth_set.add_argument("auth", choices=AUTH_TYPES, help="type d'authentification")
+    auth_apply = auth_commands.add_parser(
+        "apply", help="applique l'auth (recréation label-only, sans playbook)"
+    )
+    auth_apply.add_argument("app", help="nom de l'application (catalogue SSDV2)")
+    auth_apply.add_argument(
+        "auth", nargs="?", choices=AUTH_TYPES, help="type (défaut: valeur account.yml)"
+    )
     auth_commands.add_parser("list", help="liste les applications installées et leur auth")
     auth_set_many = auth_commands.add_parser(
         "set-many", help="définit l'authentification de plusieurs applications"
@@ -1006,10 +1058,25 @@ def main(argv: list[str] | None = None) -> int:
             emit(payload)
             if not payload["ok"]:
                 return fail(CtlError("action_failed", f"recréation de {args.app} en échec"))
+        elif args.command == "app" and args.app_command == "update":
+            payload = command_app_update(source, storage, args.app)
+            emit(payload)
+            if not payload["ok"]:
+                return fail(CtlError("action_failed", f"mise à jour de {args.app} en échec"))
         elif args.command == "auth" and args.auth_command == "get":
             emit(command_auth_get(source, storage, args.app))
         elif args.command == "auth" and args.auth_command == "set":
             emit(command_auth_set(source, storage, args.app, args.auth))
+        elif args.command == "auth" and args.auth_command == "apply":
+            payload = command_auth_apply(source, storage, args.app, args.auth)
+            emit(payload)
+            if not payload["ok"]:
+                return fail(
+                    CtlError(
+                        "action_failed",
+                        f"application de l'authentification de {args.app} en échec",
+                    )
+                )
         elif args.command == "auth" and args.auth_command == "list":
             emit(command_auth_list(source, storage))
         elif args.command == "auth" and args.auth_command == "set-many":

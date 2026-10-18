@@ -30,16 +30,14 @@ publication GHCR si vert — ADR-0023). Détails : `docs/ARCHITECTURE-CURRENT.md
   image-only, ADR-0028) permet l'auto-mise à jour sans playbook.
   `ssdv2ctl` n'est présent que dans l'image, pas sur l'hôte. Le compose local reste la
   voie de développement (voir `.env.example`).
-- `ssdv2ctl` (Phase 0 complète, clone local `~/Developer/ssdv2`, branche `wip/ssdv2ctl`,
-  jamais de push — ADR-0010) : tests
-  `docker run --rm -v "$PWD:/src:ro" -w / python:3.13-slim sh -c "cp -r /src /work && cd /work && python3 -m unittest discover -s tests/python"` ;
-  validation serveur : `rsync` vers `~/ssdv2-ctl-dev` puis exécution avec
-  `SETTINGS_SOURCE=~/seedbox-compose SETTINGS_STORAGE=~/seedbox`.
+- `ssdv2ctl` vit désormais **dans le dépôt SSDV2** (`~/seedbox-compose/ssdv2ctl`, publié
+  sur `projetssd/ssdv2`) ; ADR-0010 est levé pour ces évolutions. La copie de l'image est
+  resynchronisée par `scripts/sync-ssdv2ctl.sh` (source : `$SSDV2_REPO`, défaut
+  `~/seedbox-compose`).
 - Adaptateur WebUI : `SSDV2CTL_PATH` (défaut `/usr/local/bin/ssdv2ctl`, embarqué dans
-  l'image — `scripts/sync-ssdv2ctl.sh` resynchronise la copie vendored) et
-  `SSDV2CTL_TIMEOUT` ; le compose de développement monte `SSDV2CTL_DIR` (défaut
-  `~/ssdv2-ctl-dev`) sur `/opt/ssdv2ctl`. Toute nouvelle commande ssdv2ctl exposée doit
-  être ajoutée à l'allowlist de `app/adapters/ssdv2_cli.py` (jamais de shell).
+  l'image) et `SSDV2CTL_TIMEOUT` ; le compose de développement monte `SSDV2CTL_DIR`
+  (défaut `~/ssdv2-ctl-dev`) sur `/opt/ssdv2ctl`. Toute nouvelle commande ssdv2ctl exposée
+  doit être ajoutée à l'allowlist de `app/adapters/ssdv2_cli.py` (jamais de shell).
 
 ## Documentation
 

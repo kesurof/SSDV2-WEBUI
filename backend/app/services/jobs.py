@@ -13,7 +13,7 @@ from app.adapters.ssdv2_bash import InteractiveProcess, PromptTimeout, Ssdv2Bash
 from app.adapters.ssdv2_cli import Ssdv2CtlError, Ssdv2CtlRunner
 from app.db.models import Job, JobEvent, utcnow
 from app.db.session import get_session_factory
-from app.services import app_auth, app_update, audit, notifications, self_update
+from app.services import audit, notifications, self_update
 from app.services import settings as webui_settings
 from app.services.prompts import PromptSpec, detect, parse_marker, strip_ansi, to_payload
 
@@ -297,27 +297,15 @@ class JobManager:
         raise Ssdv2CtlError("jobs_unavailable", "gestionnaire de jobs non configuré")
 
     def _run_app_update(self, job_id: int, target: str, timeout: int) -> tuple[int, str | None]:
-        """Mise à jour « image seule » : pull + recréation, sans playbook SSDV2."""
+        """Mise à jour « image seule » via ssdv2ctl (ssdv2 : pull + recréation, sans playbook)."""
         client = self._docker_client()
-        if client is None:
-            raise Ssdv2CtlError("docker_unavailable", "Docker est indisponible")
-        settings = self._settings()
-        if self_update.is_self_update(client, target):
-            # La WebUI ne peut pas se recréer elle-même : on délègue à un
-            # conteneur d'assistance qui exécute le même service image-only.
-            for image in app_update.app_images(settings, client, target):
-                self._add_event(job_id, f"Récupération de l'image {image}")
-                try:
-                    client.images.pull(image)
-                except docker.errors.DockerException as exc:
-                    raise Ssdv2CtlError(
-                        "docker_pull_failed", f"échec du pull de {image}: {exc}"
-                    ) from exc
+        if client is not None and self_update.is_self_update(client, target):
+            # La WebUI ne peut pas se recréer elle-même : conteneur d'assistance.
             name = self_update.launch_updater(
                 client,
-                settings,
+                self._settings(),
                 target,
-                ["python", "-m", "app.services.app_update", target],
+                ["ssdv2ctl", "app", "update", target],
             )
             self._add_event(
                 job_id,
@@ -325,9 +313,15 @@ class JobManager:
                 "l'interface va redémarrer.",
             )
             return 0, None
-        return app_update.update_app(
-            client, settings, target, lambda line: self._add_event(job_id, line)
+        if self._runner_provider is None:
+            raise Ssdv2CtlError("jobs_unavailable", "gestionnaire de jobs non configuré")
+        runner = self._runner_provider()
+        code = runner.run_streaming(
+            ["app", "update", target], lambda line: self._add_event(job_id, line), timeout
         )
+        if code != 0:
+            return code, f"mise à jour de {target} en échec"
+        return 0, None
 
     def _steps_script(self, runner: Ssdv2BashRunner, target: str, steps: list[tuple]) -> str:
         storage = runner.settings.ssdv2_storage
@@ -431,9 +425,7 @@ class JobManager:
             raise Ssdv2CtlError("ssdv2ctl_invalid_output", "sortie auth set-many inattendue")
 
         client = self._docker_client()
-        if client is None:
-            raise Ssdv2CtlError("docker_unavailable", "Docker est indisponible")
-        settings = self._settings()
+        apply_timeout = ACTION_TIMEOUTS["app_update"]
 
         failed: list[str] = []
         for result in results:
@@ -448,7 +440,7 @@ class JobManager:
                 self._add_event(job_id, f"{app} : authentification déjà à jour, rien à appliquer")
                 continue
             self._add_event(job_id, f"{app} : authentification modifiée (label Traefik à recréer)")
-            if self_update.is_self_update(client, app):
+            if client is not None and self_update.is_self_update(client, app):
                 self._add_event(
                     job_id,
                     f"{app} : la WebUI ne peut pas appliquer sa propre authentification "
@@ -456,13 +448,13 @@ class JobManager:
                 )
                 failed.append(app)
                 continue
-            code, message = app_auth.apply_app_auth(
-                client, settings, app, auth, lambda line: self._add_event(job_id, line)
+            code = runner.run_streaming(
+                ["auth", "apply", app],
+                lambda line: self._add_event(job_id, line),
+                apply_timeout,
             )
             if code != 0:
                 failed.append(app)
-                if message:
-                    self._add_event(job_id, message)
 
         if failed:
             return 1, "échec pour : " + ", ".join(failed)

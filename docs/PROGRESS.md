@@ -6,22 +6,27 @@
 
 ## Chantier actif
 
-**Application de l'authentification en « label-only » (ADR-0029)**.
+**Mise à jour image-only et auth label-only portées dans SSDV2 (ADR-0028/0029)**.
 
-- Le job `auth_bulk` n'appelle plus `app_recreate` (playbook complet, cause de l'incident
-  Plex) : il applique le changement par une recréation minimale qui ne modifie que le
-  label `traefik.http.routers.<app>-rtr.middlewares` (SDK Docker, sans Ansible).
-- Seules les applications dont l'auth a changé sont recréées ; les routers secondaires
-  (bypass/public…) et le reste de la configuration sont conservés ; l'application à la
-  WebUI elle-même est bloquée pour l'instant.
-- Preuves : `ruff`/`format`/`pytest` backend (nouveau `tests/test_app_auth.py`) et
-  `lint`/`typecheck`/`test`/`build` front verts.
+- La logique a été **déplacée dans SSDV2** : `includes/config/scripts/recreate_app_container.py`
+  + fonctions `update_container` / `apply_auth_label`, exposées par `ssdv2ctl`
+  (`app update <app>`, `auth apply <app> [<type>]`, v0.5.0) et par le menu SSDV2
+  (« Mettre à jour Application (image seule) », `manage_auth.py` sans `launch_service`).
+- Côté WebUI : les jobs `app_update` et `auth_bulk` appellent désormais `ssdv2ctl`
+  (implémentations Docker SDK `app_update.py`/`app_auth.py` retirées) ; allowlist mise à
+  jour ; `ssdv2ctl` vendored resynchronisé depuis SSDV2.
+- Preuves : `ruff`/`format`/`pytest` backend et `lint`/`typecheck`/`test`/`build` front
+  verts ; tests réels `ssdv2ctl app update` / `auth apply` sur `dozzle`.
 
 ## Derniers chantiers terminés (2026-10-18)
 
 **Mises à jour « image seule » et `lxml` Ansible (ADR-0028)** — terminé : `lxml` ajouté à
-l'image ; job `app_update` (pull + recréation à l'identique, sans playbook) ; bouton
+l'image ; mise à jour image-only (désormais portée par SSDV2/`ssdv2ctl`) ; bouton
 « Mettre à jour » câblé sur l'action `update`.
+
+**Application de l'authentification en label-only (ADR-0029)** — terminé : `auth_bulk`
+n'appelle plus `app_recreate` ; application du seul label Traefik du router principal
+(désormais portée par SSDV2/`ssdv2ctl`).
 
 **Optimisation du chargement front (ADR-0027)** — terminé : JS initial réduit (coquille
 ~276 Ko + `react` ~211 Ko), compression SSE-safe, découpage par route, snapshot Docker

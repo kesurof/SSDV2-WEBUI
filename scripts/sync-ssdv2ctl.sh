@@ -3,7 +3,7 @@
 # Usage : scripts/sync-ssdv2ctl.sh  (SSDV2_REPO=/chemin/vers/ssdv2 pour surcharger)
 set -euo pipefail
 
-repo="${SSDV2_REPO:-$HOME/Developer/ssdv2}"
+repo="${SSDV2_REPO:-$HOME/seedbox-compose}"
 src="$repo/ssdv2ctl"
 dest="$(cd "$(dirname "$0")/.." && pwd)/vendor/ssdv2ctl/ssdv2ctl"
 

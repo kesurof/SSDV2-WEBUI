@@ -237,10 +237,8 @@ def test_run_job_actions_do_not_notify() -> None:
         assert len(after) == len(before)
 
 
-def make_auth_manager(payload: dict, settings, monkeypatch) -> tuple[JobManager, object, list]:
+def make_auth_manager(payload: dict, settings, monkeypatch) -> tuple[JobManager, object]:
     import docker
-
-    from app.services import app_auth
 
     init_db()
     manager = JobManager()
@@ -270,19 +268,11 @@ def make_auth_manager(payload: dict, settings, monkeypatch) -> tuple[JobManager,
         containers = FakeContainers()
 
     monkeypatch.setattr(manager, "_docker_client", lambda: FakeClient())
-    applied: list[tuple[str, str]] = []
-
-    def _apply(client, config, app, auth, on_event):
-        applied.append((app, auth))
-        on_event(f"{app}: authentification appliquée")
-        return 0, None
-
-    monkeypatch.setattr(app_auth, "apply_app_auth", _apply)
-    return manager, runner, applied
+    return manager, runner
 
 
 def test_run_job_auth_bulk_applies_label_only(settings, monkeypatch) -> None:
-    manager, runner, applied = make_auth_manager(
+    manager, runner = make_auth_manager(
         {
             "results": [
                 {"app": "sonarr", "changed": True, "error": None},
@@ -302,16 +292,17 @@ def test_run_job_auth_bulk_applies_label_only(settings, monkeypatch) -> None:
     manager.run_job(job.id)
 
     assert stored_job(job.id).status == "success"
-    assert runner.calls == [["auth", "set-many", "aucune", "sonarr", "radarr"]]
-    # Seules les apps dont l'auth a changé sont appliquées.
-    assert applied == [("sonarr", "aucune")]
+    assert runner.calls == [
+        ["auth", "set-many", "aucune", "sonarr", "radarr"],
+        ["auth", "apply", "sonarr"],
+    ]
     events = stored_events(job.id)
     assert any("radarr" in line and "déjà à jour" in line for line in events)
     assert not any("Recréation" in line for line in events)
 
 
 def test_run_job_auth_bulk_reports_partial_failure(settings, monkeypatch) -> None:
-    manager, _runner, applied = make_auth_manager(
+    manager, runner = make_auth_manager(
         {
             "results": [
                 {"app": "sonarr", "changed": True, "error": None},
@@ -334,26 +325,28 @@ def test_run_job_auth_bulk_reports_partial_failure(settings, monkeypatch) -> Non
     assert stored.status == "failed"
     assert "lidarr" in (stored.message or "")
     assert any("lidarr" in line and "pas installé" in line for line in stored_events(job.id))
-    assert applied == [("sonarr", "authelia")]
+    assert ["auth", "apply", "sonarr"] in runner.calls
 
 
 def test_run_job_auth_bulk_blocks_self(settings, monkeypatch) -> None:
-    from app.services import app_auth
-
     init_db()
     manager = JobManager()
 
     class AuthRunner:
         def __init__(self) -> None:
             self.settings = settings
+            self.calls: list[list[str]] = []
 
         def run(self, args, timeout=None) -> dict:
+            self.calls.append(args)
             return {"results": [{"app": "ssdv2webui", "changed": True, "error": None}]}
 
         def run_streaming(self, args, on_line, timeout=None) -> int:
+            self.calls.append(args)
             return 0
 
-    manager.configure(AuthRunner)
+    runner = AuthRunner()
+    manager.configure(lambda: runner)
 
     class SelfContainer:
         name = "ssdv2webui"
@@ -367,32 +360,36 @@ def test_run_job_auth_bulk_blocks_self(settings, monkeypatch) -> None:
         containers = FakeContainers()
 
     monkeypatch.setattr(manager, "_docker_client", lambda: FakeClient())
-    called: list[bool] = []
-    monkeypatch.setattr(
-        app_auth, "apply_app_auth", lambda *a, **k: called.append(True) or (0, None)
-    )
 
     job = manager.submit("auth_bulk", "aucune", "admin", {"apps": ["ssdv2webui"], "auth": "aucune"})
     manager.run_job(job.id)
 
     assert stored_job(job.id).status == "failed"
-    assert called == []
+    assert all(call[:3] != ["auth", "apply", "ssdv2webui"] for call in runner.calls)
     assert any("ssdv2webui" in line for line in stored_events(job.id))
 
 
-def test_run_job_app_update_invokes_image_only_service(settings, monkeypatch) -> None:
+def test_run_job_app_update_invokes_ssdv2ctl(settings, monkeypatch) -> None:
     import docker
-
-    from app.services import app_update
 
     init_db()
     manager = JobManager()
 
-    class RunnerWithSettings:
+    class UpdateRunner:
         def __init__(self) -> None:
             self.settings = settings
+            self.calls: list[list[str]] = []
 
-    manager.configure(RunnerWithSettings)
+        def run(self, args, timeout=None) -> dict:
+            self.calls.append(args)
+            return {}
+
+        def run_streaming(self, args, on_line, timeout=None) -> int:
+            self.calls.append(args)
+            return 0
+
+    runner = UpdateRunner()
+    manager.configure(lambda: runner)
 
     class FakeContainers:
         @staticmethod
@@ -403,15 +400,9 @@ def test_run_job_app_update_invokes_image_only_service(settings, monkeypatch) ->
         containers = FakeContainers()
 
     monkeypatch.setattr(manager, "_docker_client", lambda: FakeClient())
-    updated: list[str] = []
-    monkeypatch.setattr(
-        app_update,
-        "update_app",
-        lambda client, config, target, on_event: updated.append(target) or (0, None),
-    )
 
     job = manager.submit("app_update", "plex", "admin")
     manager.run_job(job.id)
 
     assert stored_job(job.id).status == "success"
-    assert updated == ["plex"]
+    assert runner.calls == [["app", "update", "plex"]]

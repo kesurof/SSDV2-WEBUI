@@ -691,9 +691,13 @@ pointe vers son remplaçant. Une décision non tranchée reste dans « Décision
   Watchtower) ; données (volumes nommés, binds) conservées ; SSDV2 inchangé ; les actions
   `recreate`/`reinstall` continuent de rejouer la configuration et bénéficient de `lxml`.
 - **Alternatives écartées** : déléguer à Watchtower (couplage, portée globale, hors
-  application) ; ajouter `app update` à `ssdv2ctl` (modification de SSDV2 interdite par
-  ADR-0010) ; conserver `recreate` pour les mises à jour (rejoue la configuration, incident
-  démontré).
+  application) ; conserver `recreate` pour les mises à jour (rejoue la configuration,
+  incident démontré).
+- **Mise à jour (2026-10-18)** : la logique image-only a été **déplacée dans SSDV2**
+  (`includes/config/scripts/recreate_app_container.py` + fonction `update_container`),
+  exposée par `ssdv2ctl app update <app>` et le menu SSDV2. La WebUI appelle désormais
+  `ssdv2ctl app update` (l'implémentation Docker SDK côté WebUI a été retirée) ; l'ajout
+  à `ssdv2ctl` est donc **retenu** (ADR-0010 levé pour cette évolution).
 - **Références** : ADR-0015, ADR-0022, ADR-0026 ; `ARCHITECTURE-CURRENT.md` ; `AGENTS.md`
   (règles 2, 4, 10).
 
@@ -725,6 +729,10 @@ pointe vers son remplaçant. Une décision non tranchée reste dans « Décision
   configuration, donc sans risque de type Plex ; cohérent avec ADR-0028.
 - **Alternatives écartées** : pur `restart` (les labels ne changent pas) ; bascule des
   middlewares en provider fichier Traefik par application (chantier plus large).
+- **Mise à jour (2026-10-18)** : la logique label-only a été **déplacée dans SSDV2**
+  (fonction `apply_auth_label`), exposée par `ssdv2ctl auth apply <app> [<type>]` et le
+  menu SSDV2 (`manage_auth.py` n'utilise plus `launch_service`). La WebUI appelle
+  `ssdv2ctl auth apply` (implémentation Docker SDK côté WebUI retirée).
 - **Références** : ADR-0024 (amendé), ADR-0026, ADR-0028 ; `ARCHITECTURE-CURRENT.md`.
 
 ## Décisions ouvertes
