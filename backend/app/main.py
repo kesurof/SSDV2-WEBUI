@@ -35,6 +35,7 @@ from app.db.session import get_session_factory, init_db
 from app.services import settings as webui_settings
 from app.services import setup as setup_service
 from app.services.jobs import job_manager
+from app.services.update_schedule import update_scheduler
 
 logger = logging.getLogger(__name__)
 
@@ -82,9 +83,11 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
         job_manager.configure_bash(lambda: Ssdv2BashRunner(settings))
         job_manager.reset_interrupted()
         job_manager.start()
+        update_scheduler.start()
     except (SQLAlchemyError, OSError) as exc:
         logger.error("Base de données indisponible au démarrage: %s", exc)
     yield
+    update_scheduler.stop()
     job_manager.stop()
 
 

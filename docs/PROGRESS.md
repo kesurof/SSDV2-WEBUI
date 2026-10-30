@@ -18,6 +18,18 @@
 - Preuves : `ruff`/`format`/`pytest` backend et `lint`/`typecheck`/`test`/`build` front
   verts ; tests réels `ssdv2ctl app update` / `auth apply` sur `dozzle`.
 
+## Derniers chantiers terminés (2026-10-30)
+
+**Mise à jour automatique quotidienne dans une tranche horaire (ADR-0032)** — terminé :
+réglages `updates_auto_*` dans `webui_settings`, planificateur interne
+(`app/services/update_schedule.py`, thread unique, une exécution par jour, fuseau du
+serveur), scan forcé puis jobs `app_update` un par un bornés par la tranche, exclusion de
+la WebUI, bilan par notification (`source=updates`) et audit `updates_auto` ;
+`GET`/`PATCH /api/v1/updates/schedule` ; carte de réglage sur la page Mises à jour
+(activation, début/fin, prochaine exécution). Preuves : backend `ruff`/`format`/`pytest`
+(**250** verts, dont `test_update_schedule` et `test_api_updates`) ; frontend
+`lint`/`typecheck`/`test` (**77** verts, dont `UpdateScheduleCard`)/`build` verts.
+
 ## Derniers chantiers terminés (2026-10-18)
 
 **Authentification `internal`/`proxy` + assistant `/setup` aligné Symlink (ADR-0031)** —

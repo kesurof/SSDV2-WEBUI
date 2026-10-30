@@ -31,7 +31,9 @@
   sonde TLS avec cache — ADR-0022), `GET /api/v1/apps/{app}/history` (jobs + audit +
   notifications + sauvegardes, filtrable), `GET /api/v1/apps/{app}/stats` (CPU/RAM par
   conteneur, cache) et `GET /api/v1/apps/{app}/env` (allowlist stricte), `GET /api/v1/updates`
-  (digest local vs registre par image d'application, cache),
+  (digest local vs registre par image d'application, cache) et
+  `GET`/`PATCH /api/v1/updates/schedule` (mise à jour automatique quotidienne dans une
+  tranche horaire, bilan notifié — ADR-0032),
   `GET /api/v1/diagnostics` et `POST /api/v1/diagnostics/rebuild-registries|
   `GET /api/v1/notifications` (liste + non-lues), `PATCH /notifications/{id}/read`,
   `POST /notifications/read-all`, `GET /notifications/events` (SSE),
@@ -60,7 +62,8 @@
   Volumes, Réseau/DNS, Variables, Historique ; actions avec confirmations graduées),
   pages Jobs (**deux colonnes** : liste filtrable + panneau de détail avec événements SSE,
   relance des jobs d'application), Notifications, Audit, **Santé**, Sauvegardes,
-  **Mises à jour** (rafraîchissement forcé au chargement et via le bouton), Authentification
+  **Mises à jour** (rafraîchissement forcé au chargement et via le bouton, réglage de
+  mise à jour automatique quotidienne — ADR-0032), Authentification
   (masse), Paramètres (lecture seule + sécurité), Diagnostics (réparations) et
   **Historique par application** (agrégé, export CSV) ; détail d'application : actions
   en en-tête (Ouvrir ↗ conditionnel, Démarrer/Arrêter, Redémarrer, Sauvegarder, menu),

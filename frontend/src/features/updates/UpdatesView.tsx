@@ -1,4 +1,5 @@
 import { ArrowUpCircle, DownloadCloud, RefreshCw } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { toast } from 'sonner'
 import { AppLink } from '@/components/app/app-link'
 import { MobileCards, MobileCard, MobileField } from '@/components/app/mobile-cards'
@@ -92,9 +93,11 @@ function UpdateRow({ entry, onUpdated, mobile = false }: { entry: UpdateEntry; o
 export function UpdatesView({
   updates,
   onRefresh,
+  scheduleSlot,
 }: {
   updates?: Updates
   onRefresh: () => void
+  scheduleSlot?: ReactNode
 }) {
   return (
     <div>
@@ -126,6 +129,8 @@ export function UpdatesView({
         <p className="mt-1 text-xs text-muted-foreground">{fr.updates.appsOnlyHint}</p>
       </BrandPanel>
       <BrandSectionHeading className="mb-3">Versions et disponibilité</BrandSectionHeading>
+
+      {scheduleSlot ? <div className="mb-4">{scheduleSlot}</div> : null}
 
       {!updates ? (
         <EmptyState icon={DownloadCloud} message={fr.common.loading} />

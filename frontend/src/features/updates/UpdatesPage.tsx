@@ -1,5 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query'
 
+import { UpdateScheduleCard } from '@/features/updates/UpdateScheduleCard'
 import { UpdatesView } from '@/features/updates/UpdatesView'
 import { useUpdates } from '@/features/system/useSystem'
 
@@ -11,6 +12,7 @@ export function UpdatesPage() {
     <UpdatesView
       updates={updates.data}
       onRefresh={() => queryClient.invalidateQueries({ queryKey: ['updates'] })}
+      scheduleSlot={<UpdateScheduleCard />}
     />
   )
 }

@@ -553,6 +553,21 @@ export const fr = {
     countAvailable: '{count} mise(s) à jour disponible(s)',
     unknownHint:
       'Les images sans digest comparable (registre privé ou limite atteinte) sont marquées inconnues.',
+    schedule: {
+      title: 'Mise à jour automatique',
+      hint:
+        "Chaque jour, scanne les images puis applique les mises à jour disponibles pendant la tranche horaire. La WebUI n'est pas concernée.",
+      enabled: 'Activer la mise à jour automatique',
+      start: 'Début',
+      end: 'Fin',
+      windowHint:
+        "Heure du serveur ({timezone}). La tranche doit rester dans la même journée (pas de passage de minuit). Une mise à jour déjà lancée à la fin de la tranche se termine ; les applications restantes sont reportées au lendemain.",
+      lastRun: 'Dernière exécution',
+      nextRun: 'Prochaine exécution',
+      save: 'Enregistrer',
+      saved: 'Réglage de mise à jour automatique enregistré',
+      invalidWindow: "L'heure de fin doit être postérieure à l'heure de début.",
+    },
   },
   history: {
     title: 'Historique — {app}',

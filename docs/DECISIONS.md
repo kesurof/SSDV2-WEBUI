@@ -811,6 +811,55 @@ pointe vers son remplaçant. Une décision non tranchée reste dans « Décision
 - **Références** : amende ADR-0018 ; ADR-0019 (assistant de premier démarrage) ;
   `ARCHITECTURE-CURRENT.md` ; `REVERSE-PROXY.md` ; `AGENTS.md`.
 
+## ADR-0032 — Mise à jour automatique quotidienne dans une tranche horaire
+
+- **Statut** : acceptée — 2026-10-30
+- **Contexte** : le centre de mises à jour ne scanne qu'à l'ouverture de la page (ou sur
+  action) et toute mise à jour est manuelle. Les redémarrages de conteneurs induits
+  doivent pouvoir être cantonnés à une plage nocturne définie par l'utilisateur, sans
+  ajouter de planificateur externe ni de second worker (ADR-0003, ADR-0007).
+- **Décision** :
+  - réglages propres à la WebUI dans `webui_settings` : `updates_auto_enabled`,
+    `updates_auto_start`, `updates_auto_end` (HH:MM), `updates_auto_last_run` (date et
+    heure de la dernière exécution) ; valeurs par défaut `03:00`–`05:00`, désactivé ;
+  - l'heure est interprétée dans le fuseau local du serveur (`TZ` du conteneur, exposé à
+    l'UI) ; la tranche doit avoir une fin postérieure au début et ne peut pas franchir
+    minuit (pas de plage 23:00–01:00) ;
+  - un thread interne (`app/services/update_schedule.py`) vérifie toutes les 30 s ; au
+    plus **une exécution par jour**, déclenchée à l'ouverture de la tranche (y compris si
+    la WebUI démarre pendant celle-ci) ; la date d'exécution est enregistrée **après un
+    scan réussi** (un échec transitoire est rejoué dans la tranche, avec un back-off de
+    5 min), donc une exécution interrompue n'est pas reprise le même jour ;
+  - le passage attend qu'aucun autre job ne soit `queued`/`running` avant de démarrer ;
+    un job long peut donc décaler le début ou empêcher le passage du jour ;
+  - l'exécution scanne les digests (`force=True`), puis soumet des jobs `app_update` au
+    worker unique **un par un**, tant que l'heure courante reste dans la tranche ; une
+    mise à jour déjà lancée va au terme, les applications restantes sont reportées au
+    lendemain ; une application ayant déjà un job `app_update` `queued`/`running` est
+    ignorée ; les jobs sont créés avec `created_by=scheduler` ;
+  - la WebUI elle-même est **exclue** (son auto-mise à jour recrée le conteneur et
+    interromprait le planificateur) ; elle reste mise à jour manuellement ; si son
+    conteneur ne peut pas être identifié, le passage est annulé (notification) plutôt que
+    de risquer son redémarrage ;
+  - à la fin, une notification de bilan (`source=updates`) et un événement d'audit
+    (`updates_auto`) résument mises à jour, échecs, jobs déjà en cours et reports ;
+    l'absence de mise à jour disponible ne produit pas de notification ;
+  - API : `GET`/`PATCH /api/v1/updates/schedule` (validation `HH:MM`, début < fin,
+    audit du changement) ; le front expose le réglage sur la page Mises à jour ;
+  - mode dégradé : base indisponible ou scan impossible → journalisation (et notification
+    d'erreur pour un scan impossible), jamais de crash-loop.
+- **Conséquences** : les applications peuvent redémarrer sans intervention pendant la
+  tranche ; l'utilisateur doit consulter le bilan en cas d'échec ; pas de rattrapage des
+  jours manqués ni de relance automatique des échecs. Le réglage est modifiable par tout
+  utilisateur authentifié (modèle mono-admin actuel, sans rôles). Le worker de jobs reste
+  le seul exécutant, aucun composant runtime supplémentaire.
+- **Alternatives écartées** : cron/systemd hôte ou conteneur dédié (hors modèle une image /
+  un conteneur, ADR-0003) ; tout lancer au début de la tranche sans borne de fin ;
+  inclure la WebUI (auto-redémarrage au milieu de la séquence) ; appliquer sans fenêtre
+  horaire.
+- **Références** : ADR-0002, ADR-0003, ADR-0007, ADR-0022, ADR-0028 ;
+  `ARCHITECTURE-CURRENT.md` ; `app/services/update_schedule.py`.
+
 ## Décisions ouvertes
 
 À trancher explicitement puis consigner en ADR (voir brief §72) :

@@ -824,6 +824,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/updates/schedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Update Schedule */
+        get: operations["get_update_schedule_api_v1_updates_schedule_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Update Schedule */
+        patch: operations["update_update_schedule_api_v1_updates_schedule_patch"];
+        trace?: never;
+    };
     "/api/v1/updates": {
         parameters: {
             query?: never;
@@ -1628,6 +1646,35 @@ export interface components {
              * @enum {string}
              */
             status: "up_to_date" | "available" | "unknown";
+        };
+        /** UpdateScheduleOut */
+        UpdateScheduleOut: {
+            /**
+             * Schema Version
+             * @default 1
+             */
+            schema_version: number;
+            /** Enabled */
+            enabled: boolean;
+            /** Start */
+            start: string;
+            /** End */
+            end: string;
+            /** Timezone */
+            timezone: string;
+            /** Last Run At */
+            last_run_at?: string | null;
+            /** Next Run At */
+            next_run_at?: string | null;
+        };
+        /** UpdateScheduleUpdateRequest */
+        UpdateScheduleUpdateRequest: {
+            /** Enabled */
+            enabled: boolean;
+            /** Start */
+            start: string;
+            /** End */
+            end: string;
         };
         /** UpdatesOut */
         UpdatesOut: {
@@ -3061,6 +3108,59 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SystemHealthOut"];
+                };
+            };
+        };
+    };
+    get_update_schedule_api_v1_updates_schedule_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UpdateScheduleOut"];
+                };
+            };
+        };
+    };
+    update_update_schedule_api_v1_updates_schedule_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateScheduleUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UpdateScheduleOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -10,8 +12,14 @@ AUTH_MODES = ("internal", "proxy")
 SETUP_COMPLETED_KEY = "setup_completed"
 INSTANCE_NAME_KEY = "instance_name"
 NOTIFY_JOB_SUCCESS_KEY = "notify_job_success"
+UPDATES_AUTO_ENABLED_KEY = "updates_auto_enabled"
+UPDATES_AUTO_START_KEY = "updates_auto_start"
+UPDATES_AUTO_END_KEY = "updates_auto_end"
+UPDATES_AUTO_LAST_RUN_KEY = "updates_auto_last_run"
 
 DEFAULT_INSTANCE_NAME = "SSDV2 WebUI"
+DEFAULT_UPDATES_AUTO_START = "03:00"
+DEFAULT_UPDATES_AUTO_END = "05:00"
 
 
 def get_setting(db: Session, key: str) -> str | None:
@@ -110,6 +118,44 @@ def notify_job_success_enabled(db: Session) -> bool:
 
 def set_notify_job_success(db: Session, enabled: bool) -> None:
     set_setting(db, NOTIFY_JOB_SUCCESS_KEY, "true" if enabled else "false")
+
+
+def updates_auto_enabled(db: Session) -> bool:
+    return get_setting(db, UPDATES_AUTO_ENABLED_KEY) == "true"
+
+
+def updates_auto_window(db: Session) -> tuple[str, str]:
+    """Renvoie (début, fin) au format HH:MM, avec des valeurs par défaut saines."""
+    start = get_setting(db, UPDATES_AUTO_START_KEY) or DEFAULT_UPDATES_AUTO_START
+    end = get_setting(db, UPDATES_AUTO_END_KEY) or DEFAULT_UPDATES_AUTO_END
+    return start, end
+
+
+def updates_auto_last_run(db: Session) -> datetime | None:
+    value = get_setting(db, UPDATES_AUTO_LAST_RUN_KEY)
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(value)
+    except ValueError:
+        return None
+
+
+def set_updates_auto(db: Session, *, enabled: bool, start: str, end: str) -> None:
+    _set_setting(db, UPDATES_AUTO_ENABLED_KEY, "true" if enabled else "false")
+    _set_setting(db, UPDATES_AUTO_START_KEY, start)
+    _set_setting(db, UPDATES_AUTO_END_KEY, end)
+    db.commit()
+
+
+def set_updates_auto_last_run(db: Session, value: datetime | None) -> None:
+    if value is None:
+        setting = db.get(WebuiSetting, UPDATES_AUTO_LAST_RUN_KEY)
+        if setting is not None:
+            db.delete(setting)
+        db.commit()
+        return
+    set_setting(db, UPDATES_AUTO_LAST_RUN_KEY, value.isoformat(timespec="seconds"))
 
 
 def complete_initial_setup(

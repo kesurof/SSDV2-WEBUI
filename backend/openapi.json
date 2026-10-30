@@ -1880,6 +1880,66 @@
         }
       }
     },
+    "/api/v1/updates/schedule": {
+      "get": {
+        "tags": [
+          "updates"
+        ],
+        "summary": "Get Update Schedule",
+        "operationId": "get_update_schedule_api_v1_updates_schedule_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateScheduleOut"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "updates"
+        ],
+        "summary": "Update Update Schedule",
+        "operationId": "update_update_schedule_api_v1_updates_schedule_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateScheduleUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateScheduleOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/updates": {
       "get": {
         "tags": [
@@ -4080,6 +4140,86 @@
           "image"
         ],
         "title": "UpdateEntry"
+      },
+      "UpdateScheduleOut": {
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "title": "Schema Version",
+            "default": 1
+          },
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled"
+          },
+          "start": {
+            "type": "string",
+            "title": "Start"
+          },
+          "end": {
+            "type": "string",
+            "title": "End"
+          },
+          "timezone": {
+            "type": "string",
+            "title": "Timezone"
+          },
+          "last_run_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Run At"
+          },
+          "next_run_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Run At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "enabled",
+          "start",
+          "end",
+          "timezone"
+        ],
+        "title": "UpdateScheduleOut"
+      },
+      "UpdateScheduleUpdateRequest": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled"
+          },
+          "start": {
+            "type": "string",
+            "title": "Start"
+          },
+          "end": {
+            "type": "string",
+            "title": "End"
+          }
+        },
+        "type": "object",
+        "required": [
+          "enabled",
+          "start",
+          "end"
+        ],
+        "title": "UpdateScheduleUpdateRequest"
       },
       "UpdatesOut": {
         "properties": {
