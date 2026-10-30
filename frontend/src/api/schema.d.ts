@@ -1646,6 +1646,11 @@ export interface components {
              * @enum {string}
              */
             status: "up_to_date" | "available" | "unknown";
+            /**
+             * Needs Recreate
+             * @default false
+             */
+            needs_recreate: boolean;
         };
         /** UpdateScheduleOut */
         UpdateScheduleOut: {

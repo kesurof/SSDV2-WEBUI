@@ -30,6 +30,15 @@ la WebUI, bilan par notification (`source=updates`) et audit `updates_auto` ;
 (**250** verts, dont `test_update_schedule` et `test_api_updates`) ; frontend
 `lint`/`typecheck`/`test` (**77** verts, dont `UpdateScheduleCard`)/`build` verts.
 
+**Détection des mises à jour conteneur/tag (ADR-0033)** — terminé : `AppStateOut` porte
+en interne les IDs d'image des conteneurs (champ exclu de l'API) ; `build_updates` compare
+l'image exécutée à celle du tag, marque `needs_recreate` et propose la recréation même si
+le tag est déjà à jour ou le registre injoignable ; cache invalidé après un job
+`app_update` réussi ; mention « Image déjà téléchargée — conteneur à recréer » sur la page
+Mises à jour. Preuves : backend `ruff`/`format`/`pytest` (**259** verts, dont les cas
+conteneur obsolète/registre absent/companion, invalidation des caches) ; frontend
+`lint`/`typecheck`/`test` (**93** verts, dont `UpdatesView`)/`build` verts.
+
 ## Derniers chantiers terminés (2026-10-18)
 
 **Authentification `internal`/`proxy` + assistant `/setup` aligné Symlink (ADR-0031)** —

@@ -35,6 +35,17 @@ def matching_containers(
     ]
 
 
+def main_container(name: str, containers: list[ContainerInfo]) -> ContainerInfo | None:
+    """Conteneur principal déterministe (les companions ne doivent pas être suivis)."""
+    if not containers:
+        return None
+    ordered = sorted(containers, key=lambda container: container.name)
+    for container in ordered:
+        if container.name == name or container.name.startswith(f"{name}-"):
+            return container
+    return ordered[0]
+
+
 def build_app_state(
     entry: CatalogueEntry,
     app_ssddb,
@@ -72,6 +83,11 @@ def build_app_state(
             runtime_status = "stopped"
 
     fqdn = _build_fqdn(app_ssddb.subdomain if app_ssddb else None, domain)
+    running_image_ids: dict[str, list[str]] = {}
+    for container in containers:
+        if container.image and container.image_id:
+            running_image_ids.setdefault(container.image, []).append(container.image_id)
+    main = main_container(entry.name, containers)
     return AppStateOut(
         name=entry.name,
         description=entry.description,
@@ -81,9 +97,10 @@ def build_app_state(
         healthy=healthy,
         url=f"https://{fqdn}" if fqdn else None,
         domain=fqdn,
-        image=containers[0].image if containers else None,
+        image=main.image if main is not None else None,
         containers=len(containers),
         warnings=warnings,
+        running_image_ids=running_image_ids,
     )
 
 

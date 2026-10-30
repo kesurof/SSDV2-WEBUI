@@ -31,7 +31,8 @@
   sonde TLS avec cache — ADR-0022), `GET /api/v1/apps/{app}/history` (jobs + audit +
   notifications + sauvegardes, filtrable), `GET /api/v1/apps/{app}/stats` (CPU/RAM par
   conteneur, cache) et `GET /api/v1/apps/{app}/env` (allowlist stricte), `GET /api/v1/updates`
-  (digest local vs registre par image d'application, cache) et
+  (digest du tag et de l'image du conteneur vs registre, `needs_recreate` si un conteneur
+  est resté sur une ancienne image, cache) et
   `GET`/`PATCH /api/v1/updates/schedule` (mise à jour automatique quotidienne dans une
   tranche horaire, bilan notifié — ADR-0032),
   `GET /api/v1/diagnostics` et `POST /api/v1/diagnostics/rebuild-registries|

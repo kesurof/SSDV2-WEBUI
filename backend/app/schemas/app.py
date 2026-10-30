@@ -22,6 +22,10 @@ class AppStateOut(BaseModel):
     image: str | None
     containers: int
     warnings: list[str]
+    # Interne (jamais sérialisé) : IDs d'image réellement utilisés par les conteneurs,
+    # par référence d'image. Permet de détecter un conteneur resté sur une ancienne
+    # image alors que le tag local a déjà été mis à jour (ADR-0033).
+    running_image_ids: dict[str, list[str]] = Field(default_factory=dict, exclude=True)
 
 
 class ContainerOut(BaseModel):

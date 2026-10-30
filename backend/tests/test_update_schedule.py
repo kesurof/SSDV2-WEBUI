@@ -70,6 +70,13 @@ def test_within_window_bounds() -> None:
     assert within_window(time(2, 59), time(3, 0), time(5, 0)) is False
 
 
+def test_container_app_name_uses_ssdv2_label() -> None:
+    container = SimpleNamespace(name="ssdv2webui-1", labels={"ssdv2.app": "ssdv2webui"})
+    assert update_schedule.container_app_name(container) == "ssdv2webui"
+    fallback = SimpleNamespace(name="ssdv2webui-1")
+    assert update_schedule.container_app_name(fallback) == "ssdv2webui-1"
+
+
 def test_next_run_disabled_returns_none() -> None:
     with get_session_factory()() as session:
         assert next_run(session, datetime(2026, 10, 30, 2, 0)) is None

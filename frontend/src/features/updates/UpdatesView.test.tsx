@@ -18,6 +18,7 @@ const UPDATES: Updates = {
       current_digest: 'aaaa11112222',
       available_digest: 'bbbb33334444',
       status: 'available',
+      needs_recreate: false,
     },
     {
       app: 'prowlarr',
@@ -25,6 +26,7 @@ const UPDATES: Updates = {
       current_digest: 'cccc55556666',
       available_digest: 'cccc55556666',
       status: 'up_to_date',
+      needs_recreate: false,
     },
   ],
 }
@@ -59,6 +61,17 @@ describe('UpdatesView', () => {
     expect(desktop.getByRole('button', { name: /Mettre à jour/ })).toBeInTheDocument()
   })
 
+  it('signale une image déjà téléchargée nécessitant une recréation', () => {
+    renderUpdates({
+      ...UPDATES,
+      entries: [{ ...UPDATES.entries[0], needs_recreate: true }],
+    })
+
+    expect(
+      screen.getAllByText('Image déjà téléchargée — conteneur à recréer').length,
+    ).toBeGreaterThan(0)
+  })
+
   it('renders unknown statuses', () => {
     renderUpdates({
       ...UPDATES,
@@ -70,6 +83,7 @@ describe('UpdatesView', () => {
           current_digest: null,
           available_digest: null,
           status: 'unknown',
+          needs_recreate: false,
         },
       ],
     })

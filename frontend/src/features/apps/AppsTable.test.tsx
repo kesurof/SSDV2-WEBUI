@@ -87,6 +87,7 @@ describe('AppsTable', () => {
         current_digest: 'aaaa11112222',
         available_digest: 'bbbb33334444',
         status: 'available',
+        needs_recreate: false,
       },
     })
 

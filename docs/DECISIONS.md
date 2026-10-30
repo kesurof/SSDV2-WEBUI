@@ -860,6 +860,43 @@ pointe vers son remplaçant. Une décision non tranchée reste dans « Décision
 - **Références** : ADR-0002, ADR-0003, ADR-0007, ADR-0022, ADR-0028 ;
   `ARCHITECTURE-CURRENT.md` ; `app/services/update_schedule.py`.
 
+## ADR-0033 — Détection des mises à jour basée sur l'image du conteneur en cours
+
+- **Statut** : acceptée — 2026-10-30
+- **Contexte** : `build_updates` comparait le digest du tag local au digest du registre.
+  Après un `docker pull` sans recréation du conteneur (ou une mise à jour partielle), le
+  tag est à jour mais le conteneur exécute encore l'ancienne image : la page affichait
+  « À jour » et ne proposait aucune action, alors que le frontend/backend réellement
+  exécutés étaient obsolètes. Cas rencontré sur un second serveur après mise à jour de
+  l'image.
+- **Décision** :
+  - `AppStateOut` porte un champ interne `running_image_ids` (référence d'image → IDs des
+    conteneurs), exclu de la sérialisation API ; il est alimenté par les conteneurs
+    appariés à l'application (`matching_containers`) ;
+  - `build_updates` compare l'image réellement utilisée par le conteneur à l'image du tag
+    local. Si elles diffèrent, l'entrée est marquée `needs_recreate` et `available` ; le
+    digest courant est lu depuis l'image du conteneur, le digest cible depuis le registre
+    (ou, à défaut, depuis le tag local). Le conteneur principal est choisi de façon
+    déterministe (nom de l'application, sinon ordre alphabétique) pour ne pas suivre un
+    companion ;
+  - l'action reste `app_update` (pull sans effet + recréation), y compris pour la WebUI
+    (auto-mise à jour par conteneur d'assistance) ; le planificateur peut donc recréer les
+    conteneurs restés sur une ancienne image (hors WebUI, exclue — ADR-0032,
+    identification par le label `ssdv2.app`) ;
+  - le cache des mises à jour et le snapshot Docker sont invalidés après un job de
+    mutation réussi (update, recreate, reinstall, install, remove) ;
+  - l'UI affiche « Image déjà téléchargée — conteneur à recréer » à côté du statut.
+- **Conséquences** : une mise à jour est proposée même sans registre joignable si le tag
+  local est déjà présent ; la comparaison reste limitée aux conteneurs dont la référence
+  correspond à l'image suivie, pour ne pas confondre les companions. Une recréation peut
+  être proposée si un conteneur utilise volontairement une autre image sous la même
+  référence (cas non supporté).
+- **Alternatives écartées** : comparer uniquement les digests du tag (rate le cas « image
+  téléchargée, conteneur obsolète ») ; proposer systématiquement une mise à jour (bruit) ;
+  imposer `relance_container` hors interface.
+- **Références** : amende ADR-0022/ADR-0028 ; ADR-0032 ;
+  `app/services/updates.py` ; `app/services/app_state.py` ; `ARCHITECTURE-CURRENT.md`.
+
 ## Décisions ouvertes
 
 À trancher explicitement puis consigner en ADR (voir brief §72) :

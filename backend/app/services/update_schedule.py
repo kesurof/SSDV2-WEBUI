@@ -48,6 +48,12 @@ def server_timezone() -> str:
     return datetime.now().astimezone().tzname() or "UTC"
 
 
+def container_app_name(container: docker.models.containers.Container) -> str:
+    """Nom d'application SSDV2 (label) plutôt que nom de conteneur, pour l'exclusion."""
+    labels = getattr(container, "labels", None) or {}
+    return labels.get("ssdv2.app") or container.name
+
+
 def next_run(db: Session, now: datetime | None = None) -> datetime | None:
     """Prochaine exécution prévue, dans l'heure locale du serveur, ou None si désactivé."""
     if not webui_settings.updates_auto_enabled(db):
@@ -285,14 +291,14 @@ class UpdateScheduler:
             return None
         container = self_update.self_container(client)
         if container is not None:
-            return container.name
+            return container_app_name(container)
         # Repli : certains environnements exposent un hostname qui n'est pas
         # directement un ID de conteneur ; on retrouve alors le conteneur par préfixe.
         hostname = socket.gethostname()
         try:
             for candidate in client.containers.list(all=True):
                 if candidate.id.startswith(hostname):
-                    return candidate.name
+                    return container_app_name(candidate)
         except docker.errors.DockerException:
             return None
         return None

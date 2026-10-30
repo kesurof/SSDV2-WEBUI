@@ -15,6 +15,8 @@ from app.db.models import Job, JobEvent, utcnow
 from app.db.session import get_session_factory
 from app.services import audit, notifications, self_update
 from app.services import settings as webui_settings
+from app.services import updates as updates_service
+from app.services.docker_state import clear_docker_cache
 from app.services.prompts import PromptSpec, detect, parse_marker, strip_ansi, to_payload
 
 logger = logging.getLogger(__name__)
@@ -60,6 +62,16 @@ NOTIFY_JOB_TYPES = (
     "app_update",
     "app_backup",
     "auth_bulk",
+)
+
+# Jobs qui changent l'image ou l'existence des conteneurs : le cache des mises à jour
+# et le snapshot Docker ne doivent pas rester périmés (ADR-0033).
+UPDATES_AFFECTING_JOB_TYPES = (
+    "app_update",
+    "app_recreate",
+    "app_reinstall",
+    "app_install",
+    "app_remove",
 )
 
 JOB_TYPE_ACTIONS = {
@@ -540,6 +552,11 @@ class JobManager:
         job_type = finished["type"]
         target = finished["target"]
         label = JOB_LABELS.get(job_type, job_type)
+        if status == "success" and job_type in UPDATES_AFFECTING_JOB_TYPES:
+            # Les conteneurs (et parfois le tag local) ont changé : ne pas servir un
+            # scan ou un snapshot périmés.
+            updates_service.clear_cache()
+            clear_docker_cache()
         audit.record(
             action=job_type,
             status=status,

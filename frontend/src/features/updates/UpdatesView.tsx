@@ -59,6 +59,9 @@ function UpdateRow({ entry, onUpdated, mobile = false }: { entry: UpdateEntry; o
           </MobileField>
           <MobileField label={fr.updates.columns.type}>{fr.updates.types.application}</MobileField>
         </dl>
+        {entry.needs_recreate && (
+          <p className="mt-2 text-xs text-muted-foreground">{fr.updates.needsRecreate}</p>
+        )}
         {updateButton && <div className="mt-3 border-t pt-3">{updateButton}</div>}
       </MobileCard>
     )
@@ -82,6 +85,9 @@ function UpdateRow({ entry, onUpdated, mobile = false }: { entry: UpdateEntry; o
         <StatusPill tone={STATUS_TONES[entry.status] ?? 'muted'}>
           {fr.updates.status[entry.status]}
         </StatusPill>
+        {entry.needs_recreate ? (
+          <p className="mt-1 text-xs text-muted-foreground">{fr.updates.needsRecreate}</p>
+        ) : null}
       </td>
       <td className="px-3 py-2.5 text-right">
         {updateButton}

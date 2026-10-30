@@ -15,6 +15,9 @@ class UpdateEntry(BaseModel):
     current_digest: str | None = None
     available_digest: str | None = None
     status: UpdateStatus = "unknown"
+    # Image déjà téléchargée mais conteneur resté sur une ancienne image :
+    # une recréation (pull sans effet + recreate) suffit (ADR-0033).
+    needs_recreate: bool = False
 
 
 class UpdatesOut(BaseModel):

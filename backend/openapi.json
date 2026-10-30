@@ -4132,6 +4132,11 @@
             ],
             "title": "Status",
             "default": "unknown"
+          },
+          "needs_recreate": {
+            "type": "boolean",
+            "title": "Needs Recreate",
+            "default": false
           }
         },
         "type": "object",

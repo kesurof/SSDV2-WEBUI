@@ -70,6 +70,41 @@ def test_build_job_args_unknown() -> None:
     assert error.value.code == "unknown_job_type"
 
 
+def test_publish_outcome_invalidates_caches_after_container_mutation(monkeypatch) -> None:
+    from app.services import jobs as jobs_service
+
+    manager, _runner = make_manager()
+    calls: list[str] = []
+    monkeypatch.setattr(
+        jobs_service.updates_service, "clear_cache", lambda: calls.append("updates")
+    )
+    monkeypatch.setattr(jobs_service, "clear_docker_cache", lambda: calls.append("docker"))
+
+    manager._publish_outcome(
+        1,
+        "success",
+        {
+            "username": "admin",
+            "type": "app_recreate",
+            "target": "sonarr",
+            "message": None,
+        },
+    )
+    assert calls == ["updates", "docker"]
+
+    manager._publish_outcome(
+        2,
+        "success",
+        {
+            "username": "admin",
+            "type": "app_restart",
+            "target": "sonarr",
+            "message": None,
+        },
+    )
+    assert calls == ["updates", "docker"]
+
+
 def make_manager(**runner_kwargs: object) -> tuple[JobManager, FakeStreamingRunner]:
     init_db()
     manager = JobManager()

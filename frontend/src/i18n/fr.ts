@@ -551,6 +551,7 @@ export const fr = {
     lastCheck: 'Dernière vérification',
     updateLaunched: 'Mise à jour de {app} lancée (job #{id})',
     countAvailable: '{count} mise(s) à jour disponible(s)',
+    needsRecreate: 'Image déjà téléchargée — conteneur à recréer',
     unknownHint:
       'Les images sans digest comparable (registre privé ou limite atteinte) sont marquées inconnues.',
     schedule: {

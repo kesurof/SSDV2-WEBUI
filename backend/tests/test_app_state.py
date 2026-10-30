@@ -54,6 +54,34 @@ def test_registry_match_without_label():
     assert WARNING_CONTAINERS_WITHOUT_SSDDB in app.warnings
 
 
+def test_main_container_ignores_companion_ordering():
+    companion = ContainerInfo(
+        name="sonarr-db",
+        image="img:db",
+        state="running",
+        health=None,
+        app_label="sonarr",
+        image_id="sha256:db",
+    )
+    main = ContainerInfo(
+        name="sonarr",
+        image="img:1",
+        state="running",
+        health=None,
+        app_label="sonarr",
+        image_id="sha256:main",
+    )
+    states = build_app_states(
+        [ENTRY],
+        _ssddb("sonarr"),
+        {},
+        DockerSnapshot([companion, main], None),
+    )
+    app = states[0]
+    assert app.image == "img:1"
+    assert app.running_image_ids == {"img:1": ["sha256:main"], "img:db": ["sha256:db"]}
+
+
 def test_installed_without_containers():
     states = build_app_states([ENTRY], _ssddb("sonarr"), {}, DockerSnapshot([], None))
     app = states[0]
