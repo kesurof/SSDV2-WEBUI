@@ -21,6 +21,7 @@ from app.api import (
     jobs,
     notifications,
     security,
+    security_watch,
     setup,
     system,
     updates,
@@ -108,6 +109,7 @@ def create_app() -> FastAPI:
     api_router.include_router(jobs.router)
     api_router.include_router(notifications.router)
     api_router.include_router(security.router)
+    api_router.include_router(security_watch.router)
     api_router.include_router(setup.router)
     api_router.include_router(system.router)
     api_router.include_router(updates.router)

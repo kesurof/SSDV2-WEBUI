@@ -13,6 +13,7 @@ recopie aucun contenu ; il oriente vers le document de référence.
 | Charte visuelle WebUI SSDv2 Control | [`VISUAL-DESIGN-SYSTEM.md`](VISUAL-DESIGN-SYSTEM.md) (référence pour les styles et la navigation, après branding) |
 | Maquette de référence UI (design) | [`SSDV2_WEBUI_MOCKUP_FINAL_UI.html`](SSDV2_WEBUI_MOCKUP_FINAL_UI.html) |
 | Décisions architecturales (ADR) | [`DECISIONS.md`](DECISIONS.md) |
+| Audit de sécurité (export Docker vers SSDv2 Security Watch) | [`SECURITY-WATCH.md`](SECURITY-WATCH.md) |
 | Hébergement derrière un reverse proxy (SSE, auth externe) | [`REVERSE-PROXY.md`](REVERSE-PROXY.md) |
 | Roadmap et phases | [`ROADMAP.md`](ROADMAP.md) |
 | Chantier en cours | [`PROGRESS.md`](PROGRESS.md) |

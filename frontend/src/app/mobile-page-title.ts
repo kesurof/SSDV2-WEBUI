@@ -4,7 +4,7 @@ const LABELS: Record<string, string> = {
   dashboard: fr.nav.dashboard, apps: fr.nav.apps, jobs: fr.nav.jobs,
   notifications: fr.nav.notifications, audit: fr.nav.audit,
   health: fr.nav.health, backups: fr.nav.backups,
-  diagnostics: fr.nav.diagnostics, updates: fr.nav.updates,
+  diagnostics: fr.nav.diagnostics, 'security-watch': 'Audit de sécurité', updates: fr.nav.updates,
   auth: fr.nav.auth, settings: fr.nav.settings,
 }
 

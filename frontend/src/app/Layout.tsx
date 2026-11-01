@@ -11,6 +11,7 @@ import {
   Search,
   Settings,
   ShieldCheck,
+  ShieldAlert,
   Wrench,
   X,
 } from 'lucide-react'
@@ -56,6 +57,7 @@ const NAV_SECTIONS: SidebarSection[] = [
       { to: '/health', label: fr.nav.health, icon: HeartPulse },
       { to: '/backups', label: fr.nav.backups, icon: DatabaseBackup },
       { to: '/diagnostics', label: fr.nav.diagnostics, icon: Wrench },
+      { to: '/security-watch', label: 'Audit de sécurité', icon: ShieldAlert },
       { to: '/updates', label: fr.nav.updates, icon: DownloadCloud, badge: 'updates' },
     ],
   },
