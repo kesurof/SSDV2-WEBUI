@@ -32,6 +32,7 @@ const NotificationsPage = lazyPage(
   () => import('@/features/notifications/NotificationsPage'),
   'NotificationsPage',
 )
+const SecurityWatchPage = lazyPage(() => import('@/features/security-watch/SecurityWatchPage'), 'SecurityWatchPage')
 const SettingsPage = lazyPage(() => import('@/features/settings/SettingsPage'), 'SettingsPage')
 const SetupPage = lazyPage(() => import('@/features/setup/SetupPage'), 'SetupPage')
 const UpdatesPage = lazyPage(() => import('@/features/updates/UpdatesPage'), 'UpdatesPage')
@@ -58,6 +59,7 @@ export const router = createBrowserRouter([
       { path: 'auth', element: <AuthAppsPage /> },
       { path: 'settings', element: <SettingsPage /> },
       { path: 'diagnostics', element: <DiagnosticsPage /> },
+      { path: 'security-watch', element: <SecurityWatchPage /> },
     ],
   },
 ])
