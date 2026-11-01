@@ -4,6 +4,7 @@ Ce module ne renvoie jamais les variables d'environnement, secrets, chemins
 de l'hôte, labels arbitraires, paramètres réseau internes ou montages de volumes.
 Les détails Docker restent sur l'hôte jusqu'au téléchargement demandé.
 """
+
 from datetime import UTC, datetime
 
 import docker
