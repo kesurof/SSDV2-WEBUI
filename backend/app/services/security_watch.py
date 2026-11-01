@@ -4,7 +4,7 @@ Ce module ne renvoie jamais les variables d'environnement, secrets, chemins
 de l'hôte, labels arbitraires, paramètres réseau internes ou montages de volumes.
 Les détails Docker restent sur l'hôte jusqu'au téléchargement demandé.
 """
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import docker
 
@@ -74,7 +74,7 @@ def build_inventory(client: docker.DockerClient | None) -> dict:
 
     return {
         "schema_version": 1,
-        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "generated_at": datetime.now(UTC).isoformat(),
         "scope": "local_read_only",
         "containers": entries,
     }
