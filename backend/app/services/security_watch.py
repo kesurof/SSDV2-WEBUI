@@ -55,8 +55,7 @@ def _safe_container(container) -> dict:
         "ports": ports,
         "privileged": host.get("Privileged") is True,
         "docker_socket": any(
-            isinstance(m, dict) and m.get("Destination") == "/var/run/docker.sock"
-            for m in mounts
+            isinstance(m, dict) and m.get("Destination") == "/var/run/docker.sock" for m in mounts
         ),
     }
 
