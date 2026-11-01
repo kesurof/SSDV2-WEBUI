@@ -1,4 +1,5 @@
 """Téléchargement authentifié d'un diagnostic portable pour SSDv2 Security Watch."""
+
 import json
 
 from fastapi import APIRouter, HTTPException
