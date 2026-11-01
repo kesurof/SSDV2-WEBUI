@@ -83,8 +83,17 @@ def test_inventory_download_matches_security_watch_contract(auth_client):
     assert "version_source" in exported
 
     raw = json.dumps(data)
-    for sensitive in ("very-secret", "API_KEY", "hidden", "/private/host/path",
-                      "/home/private", "10.1.2.3", "private.token", "Mounts", "NetworkSettings"):
+    for sensitive in (
+        "very-secret",
+        "API_KEY",
+        "hidden",
+        "/private/host/path",
+        "/home/private",
+        "10.1.2.3",
+        "private.token",
+        "Mounts",
+        "NetworkSettings",
+    ):
         assert sensitive not in raw
 
 
