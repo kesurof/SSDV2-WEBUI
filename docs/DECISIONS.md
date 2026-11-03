@@ -366,7 +366,7 @@ pointe vers son remplaçant. Une décision non tranchée reste dans « Décision
 
 ## ADR-0020 — Distribution comme application SSDV2 standard (`ssdv2webui`)
 
-- **Statut** : acceptée — 2026-09-17
+- **Statut** : acceptée — 2026-09-17 ; référence GHCR remplacée par ADR-0034 (2026-11-03)
 - **Contexte** : le déploiement de référence était un `compose.yaml` ad hoc, non géré par
   SSDV2 (pas de registre, pas de suppression/relance standard). L'objectif est une
   installation par le menu SSDV2 comme n'importe quelle application, sur n'importe quelle
@@ -896,6 +896,40 @@ pointe vers son remplaçant. Une décision non tranchée reste dans « Décision
   imposer `relance_container` hors interface.
 - **Références** : amende ADR-0022/ADR-0028 ; ADR-0032 ;
   `app/services/updates.py` ; `app/services/app_state.py` ; `ARCHITECTURE-CURRENT.md`.
+
+## ADR-0034 — Transfert vers l'organisation projetssd et nouvelle référence GHCR
+
+- **Statut** : acceptée — 2026-11-03
+- **Contexte** : le dépôt a été transféré de `kesurof/SSDV2-WEBUI` vers
+  `projetssd/SSDV2-webui` (l'ancienne URL redirige en 301, l'historique et les branches
+  sont conservés). Le workflow de publication utilisait encore
+  `ghcr.io/kesurof/ssdv2-webui` : après transfert, le `GITHUB_TOKEN` est limité au dépôt et
+  à l'organisation `projetssd`, et le paquet doit vivre dans le même espace de noms que le
+  dépôt.
+- **Décision** :
+  - la référence canonique de l'image devient `ghcr.io/projetssd/ssdv2-webui` (minuscules
+    obligatoires pour GHCR, alors que le dépôt s'appelle `SSDV2-webui`) ;
+  - `IMAGE` reste **hardcodé** dans `.github/workflows/ci.yml` ; les tags `:dev`/`:latest`
+    et la publication multiarchitecture (ADR-0021) sont inchangés ;
+  - un **nouveau paquet** GHCR est créé sous l'organisation ; l'ancien paquet
+    `kesurof/ssdv2-webui` reste public et figé le temps de la bascule des déploiements,
+    puis pourra être supprimé ;
+  - le paquet doit être rendu **public** après la première publication (GHCR crée les
+    paquets privés par défaut) et rester relié au dépôt ;
+  - les déploiements existants doivent mettre à jour leur définition SSDV2 (`ssdv2webui`) ;
+    aucune bascule serveur n'est incluse dans ce changement.
+- **Conséquences** : la première publication repart avec un cache GitHub Actions froid ;
+  un push sur `main` avant le changement de `IMAGE` échouerait (le `GITHUB_TOKEN` du dépôt
+  transféré ne peut pas écrire dans l'ancien espace de noms) ; l'ancien paquet reste
+  utilisable pour un retour arrière tant qu'il n'est pas supprimé ; aucun secret de dépôt
+  n'est nécessaire, seul `GITHUB_TOKEN` est utilisé.
+- **Alternatives écartées** : transférer l'ancien paquet GHCR (digests conservés mais
+  opération plus risquée et lien dépôt/paquet à reprendre) ; conserver l'ancien espace de
+  noms (publication impossible avec le jeton du dépôt et référence incohérente avec
+  l'organisation) ; dériver l'image de `${{ github.repository }}` (casse `SSDV2-webui`
+  incompatible avec GHCR).
+- **Références** : ADR-0020, ADR-0021 ; `.github/workflows/ci.yml` ; `README.md` ;
+  `ARCHITECTURE-CURRENT.md`.
 
 ## Décisions ouvertes
 

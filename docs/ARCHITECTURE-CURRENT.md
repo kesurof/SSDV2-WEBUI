@@ -142,7 +142,7 @@
   (services morts sur les ports 3000/8080) ont été neutralisés (`.disabled`) car ils
   capturaient `/api/v1` et provoquaient des 504 ; l'exposition de la WebUI est décrite par
   les labels générés par SSDV2.
-- Distribution : paquet GHCR **public** ; `docker pull ghcr.io/kesurof/ssdv2-webui:latest`
+- Distribution : paquet GHCR **public** ; `docker pull ghcr.io/projetssd/ssdv2-webui:latest`
   anonyme validé depuis le serveur et `app reinstall` avec pull effectif (image du
   conteneur = digest publié), données et compte admin conservés.
 
@@ -194,7 +194,7 @@
   WebUI : le centre de mises à jour couvre uniquement les images d'applications, désormais
   appliquées par l'action `update` (pull + recréation image-only, ADR-0028 ; ADR-0022 pour
   le reste, Phase 5).
-- `ghcr.io/kesurof/ssdv2-webui` publiée en multiarchitecture (tags `:latest` et `:dev`,
+- `ghcr.io/projetssd/ssdv2-webui` publiée en multiarchitecture (tags `:latest` et `:dev`,
   dépôt et paquet publics, licence GPL-3.0) ; release automatique sur push `main`
   (`:dev` + `:latest`), tag `v*` pour les versions (ADR-0021).
 - Aucune page Docker/réseau ni palette de commandes complète (la recherche globale filtre

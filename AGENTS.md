@@ -20,7 +20,7 @@ publication GHCR si vert — ADR-0023). Détails : `docs/ARCHITECTURE-CURRENT.md
   `npm run gen:api` — les deux fichiers sont versionnés.
 - Image : `docker build -t ssdv2-webui:local .`
 - Serveur de test privé (détails hors dépôt) : application SSDV2 `ssdv2webui`
-  (image `ghcr.io/kesurof/ssdv2-webui:latest`, définition
+  (image `ghcr.io/projetssd/ssdv2-webui:latest`, définition
   `includes/dockerapps/vars/ssdv2webui.yml` côté SSDV2, données sous
   `~/seedbox/docker/<utilisateur>/ssdv2webui/data`). Mise à jour : pousser sur `main`
   (publication automatique si la CI est verte), puis sur le serveur

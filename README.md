@@ -38,7 +38,7 @@ Au premier démarrage, deux chemins :
 2. **Automatisation** : fournir `WEBUI_ADMIN_USER` / `WEBUI_ADMIN_PASSWORD` au premier
    démarrage ; le compte est créé et l'assistant désactivé.
 
-Image publiée : `ghcr.io/kesurof/ssdv2-webui` (`linux/amd64`, `linux/arm64`). SSDV2 reste
+Image publiée : `ghcr.io/projetssd/ssdv2-webui` (`linux/amd64`, `linux/arm64`). SSDV2 reste
 fonctionnel sans cette WebUI.
 
 ## Licence

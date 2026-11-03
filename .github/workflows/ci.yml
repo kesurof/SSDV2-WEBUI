@@ -19,7 +19,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  IMAGE: ghcr.io/kesurof/ssdv2-webui
+  IMAGE: ghcr.io/projetssd/ssdv2-webui
 
 jobs:
   backend:

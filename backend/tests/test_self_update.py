@@ -36,7 +36,7 @@ class FakeClient:
 def _attrs() -> dict:
     return {
         "Config": {
-            "Image": "ghcr.io/kesurof/ssdv2-webui:latest",
+            "Image": "ghcr.io/projetssd/ssdv2-webui:latest",
             "Env": ["HOME=/home/kesurof", "PUID=1000", "SSDV2_NON_INTERACTIVE=0"],
         },
         "HostConfig": {
